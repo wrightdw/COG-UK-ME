@@ -1,0 +1,7 @@
+.Rproj.user/*
+*.csv
+*.html
+.Rhistory
+COG-UK.Rproj
+*.dcf
+*.rds

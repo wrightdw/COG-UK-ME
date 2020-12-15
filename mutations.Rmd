@@ -1,0 +1,24 @@
+---
+title: "Mutations"
+output: html_notebook
+---
+```{r libs}
+library(tidyverse)
+```
+
+```{r read}
+mutations <- 
+  read_csv("cog_global_2020-12-05_mutations.csv") %>% 
+  separate_rows(variants, sep = '\\|') %>% 
+  separate(variants, into = c("gene", "variant"), sep = ':') %>% 
+  drop_na() %>% 
+  filter(gene != "synSNP") %>% 
+  mutate(position = parse_number(variant))
+  
+
+mutations
+```
+```{r save}
+write_rds(mutations, file = "mutations.rds")
+```
+
