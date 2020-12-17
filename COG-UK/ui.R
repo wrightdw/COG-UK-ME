@@ -1,7 +1,6 @@
 library(shiny)
 library(DT)
 
-
 library(shinydashboard)
 
 dashboardPage(
@@ -25,7 +24,9 @@ dashboardPage(
             # First tab content
             tabItem(tabName = "dashboard",
                     fluidRow(
-                        box(plotOutput("mutation_time"), width = 12)
+                        box(plotOutput("mutation_time"), width = 12),
+                        box(h4("Counts of variant by country"),
+                            tableOutput("summary"), width = 6)
                     ), 
             ),
             

@@ -10,8 +10,6 @@
 library(shiny)
 library(tidyverse)
 
-
-
 shinyServer(function(input, output, session) {
 
     output$mutation_time <- renderPlot({
@@ -31,6 +29,15 @@ shinyServer(function(input, output, session) {
                & sample_date <= input$date_range[2])
     )
     
+    output$summary <- renderTable({
+        mutations %>% 
+            filter(gene == input$gene 
+                   & position == input$position 
+                   & variant == input$variant
+                   & sample_date >= input$date_range[1] 
+                   & sample_date <= input$date_range[2]) %>% count(country)
+    })
+
     observeEvent(input$gene, {
         updateSelectInput(session, "position",
                           choices = mutations %>% filter(gene == input$gene) %>% distinct(position) %>% arrange(position))

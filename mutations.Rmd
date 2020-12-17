@@ -4,21 +4,31 @@ output: html_notebook
 ---
 ```{r libs}
 library(tidyverse)
+library(magrittr)
 ```
 
 ```{r read}
 mutations <- 
-  read_csv("cog_global_2020-12-05_mutations.csv") %>% 
+  read_csv("cog_global_2020-12-09_mutations.csv") %>% 
   separate_rows(variants, sep = '\\|') %>% 
   separate(variants, into = c("gene", "variant"), sep = ':') %>% 
   drop_na() %>% 
   filter(gene != "synSNP") %>% 
   mutate(position = parse_number(variant))
-  
 
+public <- read_csv("cog_global_2020-12-09_public.csv")
+
+mutations %<>% inner_join(public)
 mutations
 ```
 ```{r save}
 write_rds(mutations, file = "mutations.rds")
+```
+Total UK count, normalised count (proportion of all sequenced), Observed in last 28 day, and sequenced as proportion of confirmed cases?
+
+Would be good in each to do this for all UK and then the 4 regions: England, Scotland etc.
+
+```{r summary}
+
 ```
 
