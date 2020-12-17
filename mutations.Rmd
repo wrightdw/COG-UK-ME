@@ -5,8 +5,11 @@ output: html_notebook
 ```{r libs}
 library(tidyverse)
 library(magrittr)
+library(wesanderson)
+library(RColorBrewer)
+library(scales)
 ```
-
+## COG-UK Mutations
 ```{r read}
 mutations <- 
   read_csv("cog_global_2020-12-09_mutations.csv") %>% 
@@ -24,11 +27,94 @@ mutations
 ```{r save}
 write_rds(mutations, file = "mutations.rds")
 ```
-Total UK count, normalised count (proportion of all sequenced), Observed in last 28 day, and sequenced as proportion of confirmed cases?
+## Microreact
+```{r microreact_read}
+microreact_uk <- 
+  read.csv("cog_global_2020-12-15_metadata_private.csv") %>%  
+  filter(country == "UK")
+```
+### Total sequences per epidemic week
 
-Would be good in each to do this for all UK and then the 4 regions: England, Scotland etc.
+```{r microreact_counts}
+n_uk <- microreact_uk %>% 
+  group_by(epi_week) %>%
+  summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
+            N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del"))
+n_uk
+```
 
-```{r summary}
+```{r}
+theme_set(theme_classic() + theme(legend.position = "none"))
 
+pal <- wes_palette("Cavalcanti1", type = "discrete")
+update_geom_defaults("point", list(color = pal[1]))
+update_geom_defaults("line", list(color = pal[1]))
+
+ ggplot(n_uk, aes(x = epi_week, y = sequences)) + 
+  geom_line() + geom_point() + labs(x = "Epidemic week", y = "Sequences", title = "Sequences per Week")
+
+ ggsave("Sequences.png")
+```
+```{r}
+# pal <- wes_palette("Darjeeling1", type = "discrete")
+pal <- brewer.pal(n = 5, name = "Dark2")
+update_geom_defaults("point", list(color = pal[2]))
+update_geom_defaults("line", list(color = pal[2]))
+
+ ggplot(n_uk, aes(x = epi_week, y = D614G / sequences)) + 
+  geom_line() + geom_point() + labs(x = "Epidemic week", y = "D614G (normalised)", title = "D614G") + ylim(0,1)
+ ggsave("D614G.png")
+
+```
+
+```{r}
+update_geom_defaults("point", list(color = pal[1]))
+update_geom_defaults("line", list(color = pal[1]))
+
+ ggplot(n_uk, aes(x = epi_week, y = A222V / sequences)) + 
+  geom_line() + geom_point() + labs(x = "Epidemic week", y = "A222V (normalised)", title = "A222V") + ylim(0,1)
+ ggsave("A222V.png")
+
+```
+```{r}
+update_geom_defaults("point", list(color = pal[4]))
+update_geom_defaults("line", list(color = pal[4]))
+
+ ggplot(n_uk, aes(x = epi_week, y = N439K / sequences)) + 
+  geom_line() + geom_point() + labs(x = "Epidemic week", y = "N439K (normalised)", title = "N439K") + ylim(0,1)
+ ggsave("N439K.png")
+
+```
+
+```{r}
+update_geom_defaults("point", list(color = pal[5]))
+update_geom_defaults("line", list(color = pal[5]))
+
+ ggplot(n_uk, aes(x = epi_week, y = N501Y / sequences)) + 
+  geom_line() + geom_point() + labs(x = "Epidemic week", y = "N501Y (normalised)", title = "N501Y") + ylim(0,1)
+ ggsave("N501Y.png")
+
+```
+```{r}
+update_geom_defaults("point", list(color = pal[3]))
+update_geom_defaults("line", list(color = pal[3]))
+
+ ggplot(n_uk, aes(x = epi_week, y = DEL_69_70 / sequences)) + 
+  geom_line() + geom_point() + labs(x = "Epidemic week", y = "Deletion 69-70 (normalised)", title = "Deletion 69-70") + ylim(0,1)
+ggsave("DEL_69_70.png")
+```
+```{r}
+n_uk_long <- n_uk %>% mutate_at(vars(D614G:DEL_69_70), funs(. / sequences * 100)) %>% select(-sequences) %>% gather(key = "variant", value = "seq_norm", -epi_week) 
+n_uk_long
+```
+
+```{r}
+theme_set(theme_classic())
+ggplot(n_uk_long, aes(x = epi_week, y = seq_norm)) + 
+  geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
+  labs(x = "Epidemic week", y = "Sequences (normalised)", title = "Variant Viral Sequences per Week") + ylim(0,1) +   theme(legend.title = element_blank()) + scale_color_manual(values = pal) + 
+# + scale_y_continuous(trans='log10') 
+scale_y_continuous(trans=pseudo_log_trans())
+ggsave("variants_overlay.png")
 ```
 
