@@ -12,36 +12,57 @@ library(scales)
 ## COG-UK Mutations
 ```{r read}
 mutations <- 
-  read_csv("cog_global_2020-12-09_mutations.csv") %>% 
+  read_csv("cog_global_2020-12-15_mutations.csv") %>% 
   separate_rows(variants, sep = '\\|') %>% 
   separate(variants, into = c("gene", "variant"), sep = ':') %>% 
-  drop_na() %>% 
-  filter(gene != "synSNP") %>% 
+  drop_na() %>%
+  filter(gene != "synSNP") %>%
   mutate(position = parse_number(variant))
 
-public <- read_csv("cog_global_2020-12-09_public.csv")
+public <- read_csv("cog_global_2020-12-15_public.csv")
 
 mutations %<>% inner_join(public)
 mutations
 ```
-```{r save}
+```{r save, eval=FALSE, include=FALSE}
 write_rds(mutations, file = "mutations.rds")
 ```
 ## Microreact
 ```{r microreact_read}
 microreact_uk <- 
-  read.csv("cog_global_2020-12-15_metadata_private.csv") %>%  
+  read_csv("cog_global_2020-12-15_metadata_private.csv") %>%  
   filter(country == "UK")
 ```
 ### Total sequences per epidemic week
 
 ```{r microreact_counts}
 n_uk <- microreact_uk %>% 
+  # filter(sample_date >= 2020-11-13) %>% 
+  # filter(epi_week < 50) %>%
+  group_by(epi_week) %>%
+  summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
+            N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del")) # %>%
+            # mutate_at(vars(D614G:DEL_69_70), cumsum) # cumulative counts
+            # mutate_at(vars(sequences:DEL_69_70), cumsum) # cumulative counts to normalise against cumulative sequences
+
+n_uk
+```
+```{r}
+n_uk %>% select(-epi_week) %>% summarise_all(funs(sum))
+```
+
+```{r}
+n_uk_28 <- microreact_uk %>% 
+  filter(sample_date >= "2020-11-13") %>%
   group_by(epi_week) %>%
   summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
             N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del"))
-n_uk
+n_uk_28
 ```
+```{r}
+n_uk_28 %>% select(-epi_week) %>% summarise_all(funs(sum))
+```
+
 
 ```{r}
 theme_set(theme_classic() + theme(legend.position = "none"))
@@ -56,8 +77,7 @@ update_geom_defaults("line", list(color = pal[1]))
  ggsave("Sequences.png")
 ```
 ```{r}
-# pal <- wes_palette("Darjeeling1", type = "discrete")
-pal <- brewer.pal(n = 5, name = "Dark2")
+pal <- brewer.pal(n = 5, name = "Set1")
 update_geom_defaults("point", list(color = pal[2]))
 update_geom_defaults("line", list(color = pal[2]))
 
@@ -104,17 +124,142 @@ update_geom_defaults("line", list(color = pal[3]))
 ggsave("DEL_69_70.png")
 ```
 ```{r}
-n_uk_long <- n_uk %>% mutate_at(vars(D614G:DEL_69_70), funs(. / sequences * 100)) %>% select(-sequences) %>% gather(key = "variant", value = "seq_norm", -epi_week) 
+n_uk_long <- 
+  n_uk %>% 
+  select(-c(sequences, D614G)) %>% 
+  gather(key = "variant", value = "seq_raw", -epi_week) 
+n_uk_long
+```
+```{r}
+n_uk_long_norm <- 
+  n_uk %>% 
+  mutate_at(vars(D614G:DEL_69_70), funs(. / sequences * 100)) %>%
+  select(-c(sequences, D614G)) %>% 
+  gather(key = "variant", value = "seq_norm", -epi_week) 
 n_uk_long
 ```
 
 ```{r}
 theme_set(theme_classic())
-ggplot(n_uk_long, aes(x = epi_week, y = seq_norm)) + 
+n_uk_long %>% 
+  ggplot(aes(x = epi_week, y = seq_raw)) + 
   geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
-  labs(x = "Epidemic week", y = "Sequences (normalised)", title = "Variant Viral Sequences per Week") + ylim(0,1) +   theme(legend.title = element_blank()) + scale_color_manual(values = pal) + 
-# + scale_y_continuous(trans='log10') 
-scale_y_continuous(trans=pseudo_log_trans())
+  labs(x = "Epidemic week", y = "Sequences", title = "Variant Viral Sequences per Week")  +  
+  # ylim(0,100) + 
+  theme(legend.title = element_blank()) + scale_color_manual(values = pal) 
 ggsave("variants_overlay.png")
+```
+```{r}
+theme_set(theme_classic())
+n_uk_long_norm %>% 
+ggplot(aes(x = epi_week, y = seq_norm)) + 
+  geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
+  labs(x = "Epidemic week", y = "% Sequences (normalised)", title = "Variant Viral Sequences per Week (Normalised)")  +  
+  # ylim(0,100) + 
+  theme(legend.title = element_blank()) + scale_color_manual(values = pal) 
+ggsave("variants_overlay_norm.png")
+```
+
+
+```{r}
+microreact_uk %>%  count(n501y, del_21765_6)
+```
+
+```{r}
+microreact_uk %>%  
+  filter(sample_date >= "2020-11-13") %>% 
+  count(n501y, del_21765_6)
+
+```
+```{r}
+microreact_uk %>%  
+  # filter(sample_date >= "2020-11-13") %>% 
+  count(n439k, del_21765_6)
+
+```
+```{r}
+microreact_uk %>%  
+  filter(sample_date >= "2020-11-13") %>% 
+  count(n439k, del_21765_6)
+
+```
+```{r}
+
+microreact_uk %>% filter(n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+```
+```{r}
+
+microreact_uk %>% filter(sample_date >= "2020-11-13" & n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+```
+```{r}
+
+microreact_uk %>% filter(n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+```
+```{r}
+
+microreact_uk %>% filter(sample_date >= "2020-11-13" & n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+```
+```{r}
+mutations %>% filter(country == "UK" & gene == "S") %>% summarise(n(), n_distinct(sequence_name))
+```
+```{r}
+mutations %>% filter(country == "UK" & gene == "S") %>% count(variant)  %>% filter(n >1) %>% summarise(sum(n))
+```
+
+
+```{r}
+mutations %>% filter(country == "UK" & gene == "S") %>% count(variant) %>% filter(n >100) %>% summarise(sum(n))
+```
+```{r}
+ # awk '/S:P681H/
+ #  && /S:N501Y/
+ #   && /orf1ab:T1001I/ 
+ #   && /orf1ab:A1708D/ 
+ #   && /orf1ab:I2230T/ 
+ #   && /S:A570D/ 
+ #   && /S:T716I/ 
+ #   && /S:S982A/ 
+ #   && /S:D1118H/ 
+ #   && /ORF8:Q27*/ 
+ #   && /ORF8:R52I/ 
+ #   && /ORF8:Y73C/ 
+ #   && /N:D3L/ 
+ #   && /N:S235F/ { print;}' /cephfs/covid/bham/results/phylogenetics/20201215/metadata/cog_global_2020-12-15_mutations.csv
+ 
+
+mutations_v <- mutations %>% filter(country == "UK" 
+                     # & sample_date >= "2020-11-13" 
+                     & (
+  (gene == "S" & variant == "P681H") | 
+  (gene == "S" & variant == "N501Y") | 
+  (gene == "orf1ab" & variant == "T1001I") | 
+  (gene == "orf1ab" & variant == "A1708D") | 
+  (gene == "orf1ab" & variant == "I2230T") | 
+  (gene == "S" & variant == "A570D") | 
+  (gene == "S" & variant == "T716I") | 
+  (gene == "S" & variant == "S982A") | 
+  (gene == "S" & variant == "D1118H") | 
+  (gene == "ORF8" & variant == "Q27*") | 
+  (gene == "ORF8" & variant == "R52I") |
+  (gene == "ORF8" & variant == "Y73C") | 
+  (gene == "N" & variant == "D3L") | 
+  (gene == "N" & variant == "S235F") 
+  )) %>% count(sequence_name) %>% filter(n == 14) %>% select(-n)
+
+mutations_v
+```
+
+```{r}
+
+# 21991-21993, 11288-11296, 21765 (del69-70)
+deletions_v <- 
+  read_tsv("uk_deletions.txt") %>% 
+  separate_rows(samples, sep = '\\|') %>% 
+  filter(ref_start %in% c(21991, 11288, 21765)) %>% 
+  count(samples) %>% 
+  filter(n == 3) %>% 
+  select(-n)
+
+deletions_v
 ```
 
