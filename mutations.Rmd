@@ -1,6 +1,14 @@
 ---
-title: "Mutations"
+title:  "Mutations"
 output: html_notebook
+params: 
+  mutations_csv:  "cog_global_2020-12-21_mutations.csv"
+  global_csv:     "cog_global_2020-12-21_public.csv"
+  microreact_csv: "cog_global_2020-12-21_metadata_private.csv"
+  consortium_csv: "cog_global_2020-12-21_consortium.csv"
+  sample_date_28: "2020-11-24"
+  sample_date_14: "2020-12-08"
+  
 ---
 ```{r libs}
 library(tidyverse)
@@ -12,25 +20,26 @@ library(scales)
 ## COG-UK Mutations
 ```{r read}
 mutations <- 
-  read_csv("cog_global_2020-12-15_mutations.csv") %>% 
+  read_csv(params$mutations_csv, col_types = cols(.default = col_character())) %>% 
+  type_convert %>% 
   separate_rows(variants, sep = '\\|') %>% 
   separate(variants, into = c("gene", "variant"), sep = ':') %>% 
   drop_na() %>%
   filter(gene != "synSNP") %>%
   mutate(position = parse_number(variant))
 
-public <- read_csv("cog_global_2020-12-15_public.csv")
+public <- 
+  read_csv(params$global_csv, col_types = cols(.default = col_character())) %>% 
+  type_convert
 
-mutations %<>% inner_join(public)
-mutations
-```
-```{r save, eval=FALSE, include=FALSE}
-write_rds(mutations, file = "mutations.rds")
+mutations %<>% inner_join(public) 
+mutations %T>% write_rds(file = "mutations.rds")
 ```
 ## Microreact
 ```{r microreact_read}
 microreact_uk <- 
-  read_csv("cog_global_2020-12-15_metadata_private.csv") %>%  
+  read_csv(params$microreact_csv, col_types = cols(.default = col_character())) %>%  
+  type_convert %>% 
   filter(country == "UK")
 ```
 ### Total sequences per epidemic week
@@ -41,7 +50,7 @@ n_uk <- microreact_uk %>%
   # filter(epi_week < 50) %>%
   group_by(epi_week) %>%
   summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
-            N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del")) # %>%
+            N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del")) #%>%
             # mutate_at(vars(D614G:DEL_69_70), cumsum) # cumulative counts
             # mutate_at(vars(sequences:DEL_69_70), cumsum) # cumulative counts to normalise against cumulative sequences
 
@@ -53,7 +62,7 @@ n_uk %>% select(-epi_week) %>% summarise_all(funs(sum))
 
 ```{r}
 n_uk_28 <- microreact_uk %>% 
-  filter(sample_date >= "2020-11-13") %>%
+  filter(sample_date >= params$sample_date_28) %>%
   group_by(epi_week) %>%
   summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
             N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del"))
@@ -133,10 +142,10 @@ n_uk_long
 ```{r}
 n_uk_long_norm <- 
   n_uk %>% 
-  mutate_at(vars(D614G:DEL_69_70), funs(. / sequences * 100)) %>%
+  mutate_at(vars(D614G:DEL_69_70), funs((. / sequences) * 100)) %>%
   select(-c(sequences, D614G)) %>% 
   gather(key = "variant", value = "seq_norm", -epi_week) 
-n_uk_long
+n_uk_long_norm
 ```
 
 ```{r}
@@ -167,7 +176,7 @@ microreact_uk %>%  count(n501y, del_21765_6)
 
 ```{r}
 microreact_uk %>%  
-  filter(sample_date >= "2020-11-13") %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
   count(n501y, del_21765_6)
 
 ```
@@ -179,7 +188,7 @@ microreact_uk %>%
 ```
 ```{r}
 microreact_uk %>%  
-  filter(sample_date >= "2020-11-13") %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
   count(n439k, del_21765_6)
 
 ```
@@ -189,7 +198,7 @@ microreact_uk %>% filter(n501y == "Y" & del_21765_6 == "del")  %>% count(lineage
 ```
 ```{r}
 
-microreact_uk %>% filter(sample_date >= "2020-11-13" & n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+microreact_uk %>% filter(sample_date >= params$sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
 ```
 ```{r}
 
@@ -197,7 +206,7 @@ microreact_uk %>% filter(n439k == "K" & del_21765_6 == "del")  %>% count(lineage
 ```
 ```{r}
 
-microreact_uk %>% filter(sample_date >= "2020-11-13" & n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+microreact_uk %>% filter(sample_date >= params$sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
 ```
 ```{r}
 mutations %>% filter(country == "UK" & gene == "S") %>% summarise(n(), n_distinct(sequence_name))
@@ -224,7 +233,7 @@ mutations %>% filter(country == "UK" & gene == "S") %>% count(variant) %>% filte
  #   && /ORF8:R52I/ 
  #   && /ORF8:Y73C/ 
  #   && /N:D3L/ 
- #   && /N:S235F/ { print;}' /cephfs/covid/bham/results/phylogenetics/20201215/metadata/cog_global_2020-12-15_mutations.csv
+ #   && /N:S235F/ { print;}' /cephfs/covid/bham/results/phylogenetics/20201215/metadata/cog_global_2020-12-20_mutations.csv
  
 
 mutations_v <- mutations %>% filter(country == "UK" 
@@ -261,5 +270,110 @@ deletions_v <-
   select(-n)
 
 deletions_v
+```
+
+```{r}
+consortium <- 
+  read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
+  type_convert
+
+consortium_uk <- consortium %>% filter(country == "UK")
+```
+```{r database}
+mutations_s_uk <- mutations %>% 
+  filter(country == "UK" & gene == "S")
+
+lineage_distinct <- 
+  mutations_s_uk %>% 
+  group_by(variant) %>% 
+  summarise(n_lineages = n_distinct(lineage), n_uk_lineages =  n_distinct(uk_lineage))
+
+lineages <- 
+  mutations_s_uk %>% 
+  distinct(variant, lineage) %>% 
+  group_by(variant) %>% 
+  arrange(variant, lineage, .by_group = TRUE) %>% 
+  summarise(lineages = toString(lineage))
+
+uk_lineages <-
+  mutations_s_uk %>%
+  distinct(variant, uk_lineage) %>%
+  group_by(variant) %>%
+  arrange(variant, uk_lineage, .by_group = TRUE) %>%
+  summarise(uk_lineages = toString(uk_lineage))
+
+## UK and nations
+# All sample dates
+variants_uk <- 
+  mutations_s_uk %>% 
+  count(variant, name = "UK")
+
+variants_nations <- 
+  mutations_s_uk %>% 
+  count(variant, adm1) %>% 
+  spread(adm1, n)
+
+# Sample dates in last 28 days
+variants_uk_28 <- 
+  mutations_s_uk %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  count(variant, name = "UK_28")
+
+variants_nations_28 <- 
+  mutations_s_uk %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  count(variant, adm1) %>% 
+  spread(adm1, n) %>% 
+  rename_with(~paste0(., "_28"))
+
+# Sample dates in last 14 days
+variants_nations_14 <- 
+  mutations_s_uk %>% 
+  filter(sample_date >= params$sample_date_14) %>% 
+  count(variant, adm1) %>% 
+  spread(adm1, n) %>% 
+  rename_with(~paste0(., "_14"))
+
+variants_uk_14 <- 
+  mutations_s_uk %>% 
+  filter(sample_date >= params$sample_date_14) %>% 
+  count(variant, name = "UK_14")
+
+database <- 
+  read_csv("database for Dashboard - Sheet1.csv", skip = 1, col_types = cols(.default = col_character())) %>% 
+  type_convert %>% 
+  select(-X1) %>% 
+  left_join(lineage_distinct, by = c("replacement" = "variant")) %>% 
+  left_join(lineages, by = c("replacement" = "variant")) %>% 
+  left_join(uk_lineages, by = c("replacement" = "variant")) %>% 
+  left_join(variants_uk,  by = c("replacement" = "variant")) %>% 
+  left_join(variants_nations,  by = c("replacement" = "variant")) %>% 
+  left_join(variants_uk_28,  by = c("replacement" = "variant")) %>% 
+  left_join(variants_nations_28,  by = c("replacement" = "variant_28")) %>% 
+  left_join(variants_uk_14,  by = c("replacement" = "variant")) %>% 
+  left_join(variants_nations_14,  by = c("replacement" = "variant_14"))
+
+database %<>% mutate(`# Global Lineages associated with` = n_lineages, 
+                    `# UK Lineages associated with` = n_uk_lineages, 
+                    `Global Lineages` = lineages, 
+                    `Uk Lineages` = uk_lineages,
+                    
+                    `numSeqs UK` = UK,
+                    `numSeqs Eng` = `UK-ENG`,
+                    `numSeqs NI` = `UK-NIR`,
+                    `numSeqs Scotland` = `UK-SCT`,
+                    `numSeqs Wales` = `UK-WLS`,
+
+                    `numSeqs UK 28 days` = UK_28,
+                    `numSeqs Eng 28 days` = `UK-ENG_28`,
+                    `numSeqs Scotland 28 days` = `UK-SCT_28`,
+                    `numSeqs Wales 28 days` = `UK-WLS_28`, 
+                    
+                    `numSeqs UK 14 days` = UK_14, 
+                    `numSeqs Eng 14 days` = `UK-ENG_14`, 
+                    `numSeqs Scotland 14 days` = `UK-SCT_14`, 
+                    `numSeqs Wales 14 days` = `UK-WLS_14`) %>% select(-(n_lineages:`UK-WLS_14`))
+
+database %T>% write_csv("database_2020-12-21.csv")
 ```
 
