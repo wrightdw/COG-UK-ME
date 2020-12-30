@@ -222,22 +222,28 @@ mutations %>% filter(country == "UK" & gene == "S") %>% count(variant) %>% filte
 ```{r}
  # awk '/S:P681H/
  #  && /S:N501Y/
- #   && /orf1ab:T1001I/ 
- #   && /orf1ab:A1708D/ 
- #   && /orf1ab:I2230T/ 
- #   && /S:A570D/ 
- #   && /S:T716I/ 
- #   && /S:S982A/ 
- #   && /S:D1118H/ 
- #   && /ORF8:Q27*/ 
- #   && /ORF8:R52I/ 
- #   && /ORF8:Y73C/ 
- #   && /N:D3L/ 
+ #   && /orf1ab:T1001I/
+ #   && /orf1ab:A1708D/
+ #   && /orf1ab:I2230T/
+ #   && /S:A570D/
+ #   && /S:T716I/
+ #   && /S:S982A/
+ #   && /S:D1118H/
+ #   && /ORF8:Q27*/
+ #   && /ORF8:R52I/
+ #   && /ORF8:Y73C/
+ #   && /N:D3L/
  #   && /N:S235F/ { print;}' /cephfs/covid/bham/results/phylogenetics/20201215/metadata/cog_global_2020-12-20_mutations.csv
- 
+ # 
 
-mutations_v <- mutations %>% filter(country == "UK" 
-                     # & sample_date >= "2020-11-13" 
+ # awk '/S:P681H/  && /S:N501Y/ && /orf1ab:T1001I/   && /orf1ab:A1708D/   && /orf1ab:I2230T/   && /S:A570D/   && /S:T716I/   && /S:S982A/   && /S:D1118H/ && /ORF8:Q27*/   && /ORF8:R52I/   && /ORF8:Y73C/   && /N:D3L/   && /N:S235F/ { print;}' cog_global_2020-12-20_mutations.csv 
+ # 
+ # 
+ #  awk '/S:P681H/  && /S:N501Y/ && /orf1ab:T1001I/   && /orf1ab:A1708D/   && /orf1ab:I2230T/   && /S:A570D/   && /S:T716I/   && /S:S982A/   && /S:D1118H/ && /ORF8:Q27*/   && /ORF8:R52I/   && /ORF8:Y73C/   && /N:D3L/   && /N:S235F/ { print;}' cog_global_2020-12-21_mutations.csv > mutations_v_020-12-21.csv
+
+
+mutations_v <- mutations %>% filter(country == "UK" & lineage == "B.1.1.7"
+                     & sample_date >= "2020-11-24"
                      & (
   (gene == "S" & variant == "P681H") | 
   (gene == "S" & variant == "N501Y") | 
@@ -248,25 +254,53 @@ mutations_v <- mutations %>% filter(country == "UK"
   (gene == "S" & variant == "T716I") | 
   (gene == "S" & variant == "S982A") | 
   (gene == "S" & variant == "D1118H") | 
-  (gene == "ORF8" & variant == "Q27*") | 
+  (gene == "ORF8" & variant == "Q27*") |  
   (gene == "ORF8" & variant == "R52I") |
   (gene == "ORF8" & variant == "Y73C") | 
   (gene == "N" & variant == "D3L") | 
   (gene == "N" & variant == "S235F") 
-  )) %>% count(sequence_name) %>% filter(n == 14) %>% select(-n)
+  )) %>% count(sequence_name, lineage) %>% filter(n == 14) #%>% select(-n)
 
 mutations_v
 ```
 
 ```{r}
+mutations %>% filter(country == "UK" 
+                     # & sample_date >= "2020-11-13" 
+                     & (
+  (gene == "S" & variant == "K417N") | 
+  (gene == "S" & variant == "E484K") | 
+  (gene == "S" & variant == "N501Y") 
+  )) %>% count(sequence_name) %>% filter(n == 3)
 
+
+```
+```{r cluster5}
+# Cluster 5 is Y453F, 69-70del, I692V and M1229I
+# 
+mutations %>% filter(country == "UK" 
+                     # & sample_date >= "2020-11-13" 
+                     & (
+  (gene == "S" && variant == "Y453F") | 
+  (gene == "S" & variant == "I692V") | 
+  (gene == "S" & variant == "M1229I") 
+  )) %>% count(sequence_name) %>% filter(n == 3)
+
+
+```
+
+
+```{r deletions_v}
 # 21991-21993, 11288-11296, 21765 (del69-70)
-deletions_v <- 
+deletions <- 
   read_tsv("uk_deletions.txt") %>% 
-  separate_rows(samples, sep = '\\|') %>% 
+  separate_rows(samples, sep = '\\|')
+
+deletions_v <- 
+  deletions %>% 
   filter(ref_start %in% c(21991, 11288, 21765)) %>% 
   count(samples) %>% 
-  filter(n == 3) %>% 
+  filter(n == 3) %>%
   select(-n)
 
 deletions_v
@@ -375,5 +409,32 @@ database %<>% mutate(`# Global Lineages associated with` = n_lineages,
                     `numSeqs Wales 14 days` = `UK-WLS_14`) %>% select(-(n_lineages:`UK-WLS_14`))
 
 database %T>% write_csv("database_2020-12-21.csv")
+```
+
+```{r}
+
+       # mutations %>% filter(gene == input$gene 
+       #                       & variant == input$variant
+       #                       & sample_date >= input$date_range[1] 
+       #                       & sample_date <= input$date_range[2]) %>% ggplot(aes(x = sample_date)) + geom_bar() + theme_minimal()
+
+# mutations_s_uk %>% filter(variant == "N501Y") %>% ggplot(aes(x = sample_date)) %>% geom_bar()
+
+# theme_set(theme_classic())
+# n_uk_long %>% 
+#   ggplot(aes(x = epi_week, y = seq_raw)) + 
+#   geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
+#   labs(x = "Epidemic week", y = "Sequences", title = "Variant Viral Sequences per Week")  +  
+#   # ylim(0,100) + 
+#   theme(legend.title = element_blank()) + scale_color_manual(values = pal) 
+
+```
+```{r}
+microreact_v <- microreact_uk %>% filter(n501y == "Y" & 
+                                           del_21765_6 == "del" &
+                                           sample_date >= "2020-11-24" &
+                                           lineage == "B.1.1.7"
+                                         )
+microreact_v
 ```
 
