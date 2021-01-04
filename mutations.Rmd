@@ -2,12 +2,13 @@
 title:  "Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2020-12-21_mutations.csv"
-  global_csv:     "cog_global_2020-12-21_public.csv"
-  microreact_csv: "cog_global_2020-12-21_metadata_private.csv"
-  consortium_csv: "cog_global_2020-12-21_consortium.csv"
-  sample_date_28: "2020-11-24"
-  sample_date_14: "2020-12-08"
+  mutations_csv:  "cog_global_2021-01-02_mutations.csv"
+  global_csv:     "cog_global_2021-01-02_public.csv"
+  microreact_csv: "cog_global_2021-01-02_metadata_private.csv"
+  consortium_csv: "cog_global_2021-01-02_consortium.csv"
+  sample_date_28: "2020-12-02"
+  sample_date_14: "2020-12-16"
+  # latest sample date 2020-12-29
   
 ---
 ```{r libs}
@@ -408,7 +409,7 @@ database %<>% mutate(`# Global Lineages associated with` = n_lineages,
                     `numSeqs Scotland 14 days` = `UK-SCT_14`, 
                     `numSeqs Wales 14 days` = `UK-WLS_14`) %>% select(-(n_lineages:`UK-WLS_14`))
 
-database %T>% write_csv("database_2020-12-21.csv")
+database %T>% write_csv("database_2021-01-02.csv")
 ```
 
 ```{r}
@@ -436,5 +437,19 @@ microreact_v <- microreact_uk %>% filter(n501y == "Y" &
                                            lineage == "B.1.1.7"
                                          )
 microreact_v
+```
+```{r}
+mutations_s_uk %>% summarise(n_distinct(variant))
+
+```
+```{r}
+mutations_s_uk %>% count(variant) %>% filter(n == 1) 
+```
+```{r}
+mutations_s_uk %>% count(variant) %>% filter(n >= 100) 
+```
+
+```{r table_1}
+database %>% slice_max(`numSeqs UK`, n = 15) %>% select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
 
