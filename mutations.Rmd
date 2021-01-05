@@ -4,7 +4,6 @@ output: html_notebook
 params: 
   mutations_csv:  "cog_global_2021-01-02_mutations.csv"
   global_csv:     "cog_global_2021-01-02_public.csv"
-  microreact_csv: "cog_global_2021-01-02_metadata_private.csv"
   consortium_csv: "cog_global_2021-01-02_consortium.csv"
   sample_date_28: "2020-12-02"
   sample_date_14: "2020-12-16"
@@ -36,17 +35,18 @@ public <-
 mutations %<>% inner_join(public) 
 mutations %T>% write_rds(file = "mutations.rds")
 ```
-## Microreact
-```{r microreact_read}
-microreact_uk <- 
-  read_csv(params$microreact_csv, col_types = cols(.default = col_character())) %>%  
+## Consortium
+```{r consortium_read}
+consortium_uk <- 
+  read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
   type_convert %>% 
   filter(country == "UK")
 ```
+
 ### Total sequences per epidemic week
 
-```{r microreact_counts}
-n_uk <- microreact_uk %>% 
+```{r consortium_counts}
+n_uk <- consortium_uk %>% 
   # filter(sample_date >= 2020-11-13) %>% 
   # filter(epi_week < 50) %>%
   group_by(epi_week) %>%
@@ -62,7 +62,7 @@ n_uk %>% select(-epi_week) %>% summarise_all(funs(sum))
 ```
 
 ```{r}
-n_uk_28 <- microreact_uk %>% 
+n_uk_28 <- consortium_uk %>% 
   filter(sample_date >= params$sample_date_28) %>%
   group_by(epi_week) %>%
   summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
@@ -172,42 +172,42 @@ ggsave("variants_overlay_norm.png")
 
 
 ```{r}
-microreact_uk %>%  count(n501y, del_21765_6)
+consortium_uk %>% count(n501y, del_21765_6)
 ```
 
 ```{r}
-microreact_uk %>%  
+consortium_uk %>%  
   filter(sample_date >= params$sample_date_28) %>% 
   count(n501y, del_21765_6)
 
 ```
 ```{r}
-microreact_uk %>%  
+consortium_uk %>%  
   # filter(sample_date >= "2020-11-13") %>% 
   count(n439k, del_21765_6)
 
 ```
 ```{r}
-microreact_uk %>%  
+consortium_uk %>%  
   filter(sample_date >= params$sample_date_28) %>% 
   count(n439k, del_21765_6)
 
 ```
 ```{r}
 
-microreact_uk %>% filter(n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+consortium_uk %>% filter(n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
 ```
 ```{r}
 
-microreact_uk %>% filter(sample_date >= params$sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+consortium_uk %>% filter(sample_date >= params$sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
 ```
 ```{r}
 
-microreact_uk %>% filter(n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+consortium_uk %>% filter(n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
 ```
 ```{r}
 
-microreact_uk %>% filter(sample_date >= params$sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+consortium_uk %>% filter(sample_date >= params$sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
 ```
 ```{r}
 mutations %>% filter(country == "UK" & gene == "S") %>% summarise(n(), n_distinct(sequence_name))
@@ -307,13 +307,6 @@ deletions_v <-
 deletions_v
 ```
 
-```{r}
-consortium <- 
-  read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
-  type_convert
-
-consortium_uk <- consortium %>% filter(country == "UK")
-```
 ```{r database}
 mutations_s_uk <- mutations %>% 
   filter(country == "UK" & gene == "S")
@@ -431,12 +424,12 @@ database %T>% write_csv("database_2021-01-02.csv")
 
 ```
 ```{r}
-microreact_v <- microreact_uk %>% filter(n501y == "Y" & 
+consortium_v <- consortium_uk %>% filter(n501y == "Y" & 
                                            del_21765_6 == "del" &
                                            sample_date >= "2020-11-24" &
                                            lineage == "B.1.1.7"
                                          )
-microreact_v
+consortium_v
 ```
 ```{r}
 mutations_s_uk %>% summarise(n_distinct(variant))
@@ -452,4 +445,76 @@ mutations_s_uk %>% count(variant) %>% filter(n >= 100)
 ```{r table_1}
 database %>% slice_max(`numSeqs UK`, n = 15) %>% select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
+```{r}
+setdiff(
+consortium_uk %>% filter(d614g == "G") %>% select(sequence_name),
+
+mutations_s_uk %>% filter(variant == "D614G") %>% select(sequence_name)
+)
+```
+## UK Lineages
+```{r lineage_counts}
+n_uk_lineages <- consortium_uk %>% 
+  # filter(sample_date >= params$sample_date_28) %>% 
+  group_by(lineage) %>%
+  summarise(sequences = n(), 
+            D614G = sum(d614g == "G"), 
+            A222V = sum(a222v == "V"), 
+            N439K = sum(n439k == "K"), 
+            N501Y = sum(n501y == "Y"), 
+            Y453F = sum(y453f == "F"),
+            DEL_69_70 = sum(del_21765_6 == "del"), 
+            N439K_DEL_69_70 = sum(n439k == "K" & del_21765_6 == "del"), 
+            N501Y_DEL_69_70 = sum(n501y == "Y" & del_21765_6 == "del"))
+
+n_uk_lineages
+```
+### B.1
+
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+```
+### B.1.177
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.177" | str_detect(lineage, "^B\\.1\\.177\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+```
+### B.1.141
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.141" | str_detect(lineage, "^B\\.1\\.141\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+```
+### B.1.258
+
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.258" | str_detect(lineage, "^B\\.1\\.258\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+```
+### B.1.1
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+```
+
+### B.1.1.7
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+```
+
+
+### B.1.1.70
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.1.70" | str_detect(lineage, "B\\.1\\.1\\.70\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+```
+
+### B.1.351
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.351\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+```
+
+### B.1.1.298
+```{r}
+n_uk_lineages %>% filter(lineage == "B.1.1.298" | str_detect(lineage, "B\\.1\\.1\\.298\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+```
+
 
