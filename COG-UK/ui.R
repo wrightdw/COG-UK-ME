@@ -33,7 +33,10 @@ dashboardPage(
             # Second tab content
             tabItem(tabName = "raw",
                     h2("Raw Data"), 
-                    DT::dataTableOutput("raw_table")
+                    h3("Mutations"),
+                    DT::dataTableOutput("raw_mutations"), 
+                    h3("Spike Database"),
+                    DT::dataTableOutput("raw_database")
             )
         )
     )
