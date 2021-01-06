@@ -1,10 +1,11 @@
 ---
-title:  "Mutations"
+title:  "COG-UK Mutations"
 output: html_notebook
 params: 
   mutations_csv:  "cog_global_2021-01-02_mutations.csv"
   global_csv:     "cog_global_2021-01-02_public.csv"
   consortium_csv: "cog_global_2021-01-02_consortium.csv"
+  spike_csv:      "spike_info_2020_12_27.csv"
   sample_date_28: "2020-12-02"
   sample_date_14: "2020-12-16"
   # latest sample date 2020-12-29
@@ -17,7 +18,6 @@ library(wesanderson)
 library(RColorBrewer)
 library(scales)
 ```
-## COG-UK Mutations
 ```{r read}
 mutations <- 
   read_csv(params$mutations_csv, col_types = cols(.default = col_character())) %>% 
@@ -58,7 +58,9 @@ n_uk <- consortium_uk %>%
 n_uk
 ```
 ```{r}
-n_uk %>% select(-epi_week) %>% summarise_all(funs(sum))
+n_uk %>% 
+  select(-epi_week) %>% 
+  summarise_all(funs(sum))
 ```
 
 ```{r}
@@ -183,7 +185,6 @@ consortium_uk %>%
 ```
 ```{r}
 consortium_uk %>%  
-  # filter(sample_date >= "2020-11-13") %>% 
   count(n439k, del_21765_6)
 
 ```
@@ -195,30 +196,48 @@ consortium_uk %>%
 ```
 ```{r}
 
-consortium_uk %>% filter(n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+consortium_uk %>% 
+  filter(n501y == "Y" & del_21765_6 == "del")  %>% 
+  count(lineage) %>% 
+  arrange(desc(n))
 ```
 ```{r}
 
-consortium_uk %>% filter(sample_date >= params$sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+consortium_uk %>% 
+  filter(sample_date >= params$sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% 
+  count(lineage) %>% 
+  arrange(desc(n))
+```
+```{r}
+consortium_uk %>% filter(n439k == "K" & del_21765_6 == "del")  %>% 
+  count(lineage) %>% 
+  arrange(desc(n))
 ```
 ```{r}
 
-consortium_uk %>% filter(n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
+consortium_uk %>% 
+  filter(sample_date >= params$sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% 
+  count(lineage) %>% 
+  arrange(desc(n))
 ```
 ```{r}
+mutations %>% 
+  filter(country == "UK" & gene == "S") %>% 
+  summarise(n(), n_distinct(sequence_name))
+```
+```{r}
+mutations %>% filter(country == "UK" & gene == "S") %>% 
+  count(variant) %>% 
+  filter(n >1) %>% 
+  summarise(sum(n))
+```
 
-consortium_uk %>% filter(sample_date >= params$sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% count(lineage) %>% arrange(desc(n))
-```
-```{r}
-mutations %>% filter(country == "UK" & gene == "S") %>% summarise(n(), n_distinct(sequence_name))
-```
-```{r}
-mutations %>% filter(country == "UK" & gene == "S") %>% count(variant)  %>% filter(n >1) %>% summarise(sum(n))
-```
-
 
 ```{r}
-mutations %>% filter(country == "UK" & gene == "S") %>% count(variant) %>% filter(n >100) %>% summarise(sum(n))
+mutations %>% 
+  filter(country == "UK" & gene == "S") %>% 
+  count(variant) %>% filter(n >100) %>% 
+  summarise(sum(n))
 ```
 ```{r}
  # awk '/S:P681H/
@@ -306,7 +325,7 @@ deletions_v <-
 
 deletions_v
 ```
-
+## Database
 ```{r database}
 mutations_s_uk <- mutations %>% 
   filter(country == "UK" & gene == "S")
@@ -354,34 +373,18 @@ variants_nations_28 <-
   spread(adm1, n) %>% 
   rename_with(~paste0(., "_28"))
 
-# Sample dates in last 14 days
-variants_nations_14 <- 
-  mutations_s_uk %>% 
-  filter(sample_date >= params$sample_date_14) %>% 
-  count(variant, adm1) %>% 
-  spread(adm1, n) %>% 
-  rename_with(~paste0(., "_14"))
-
-variants_uk_14 <- 
-  mutations_s_uk %>% 
-  filter(sample_date >= params$sample_date_14) %>% 
-  count(variant, name = "UK_14")
-
 database <- 
-  read_csv("database for Dashboard - Sheet1.csv", skip = 1, col_types = cols(.default = col_character())) %>% 
+  read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
   type_convert %>% 
-  select(-X1) %>% 
   left_join(lineage_distinct, by = c("replacement" = "variant")) %>% 
   left_join(lineages, by = c("replacement" = "variant")) %>% 
   left_join(uk_lineages, by = c("replacement" = "variant")) %>% 
   left_join(variants_uk,  by = c("replacement" = "variant")) %>% 
   left_join(variants_nations,  by = c("replacement" = "variant")) %>% 
   left_join(variants_uk_28,  by = c("replacement" = "variant")) %>% 
-  left_join(variants_nations_28,  by = c("replacement" = "variant_28")) %>% 
-  left_join(variants_uk_14,  by = c("replacement" = "variant")) %>% 
-  left_join(variants_nations_14,  by = c("replacement" = "variant_14"))
+  left_join(variants_nations_28,  by = c("replacement" = "variant_28")) 
 
-database %<>% mutate(`# Global Lineages associated with` = n_lineages, 
+database %<>% rename(`# Global Lineages associated with` = n_lineages, 
                     `# UK Lineages associated with` = n_uk_lineages, 
                     `Global Lineages` = lineages, 
                     `Uk Lineages` = uk_lineages,
@@ -396,33 +399,12 @@ database %<>% mutate(`# Global Lineages associated with` = n_lineages,
                     `numSeqs Eng 28 days` = `UK-ENG_28`,
                     `numSeqs Scotland 28 days` = `UK-SCT_28`,
                     `numSeqs Wales 28 days` = `UK-WLS_28`, 
-                    
-                    `numSeqs UK 14 days` = UK_14, 
-                    `numSeqs Eng 14 days` = `UK-ENG_14`, 
-                    `numSeqs Scotland 14 days` = `UK-SCT_14`, 
-                    `numSeqs Wales 14 days` = `UK-WLS_14`) %>% select(-(n_lineages:`UK-WLS_14`))
+                    `numSeqs NI 28 days` = `UK-NIR_28`
+                    ) 
 
-database %T>% write_csv("database_2021-01-02.csv")
+database %T>% write_rds("database.rds")
 ```
 
-```{r}
-
-       # mutations %>% filter(gene == input$gene 
-       #                       & variant == input$variant
-       #                       & sample_date >= input$date_range[1] 
-       #                       & sample_date <= input$date_range[2]) %>% ggplot(aes(x = sample_date)) + geom_bar() + theme_minimal()
-
-# mutations_s_uk %>% filter(variant == "N501Y") %>% ggplot(aes(x = sample_date)) %>% geom_bar()
-
-# theme_set(theme_classic())
-# n_uk_long %>% 
-#   ggplot(aes(x = epi_week, y = seq_raw)) + 
-#   geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
-#   labs(x = "Epidemic week", y = "Sequences", title = "Variant Viral Sequences per Week")  +  
-#   # ylim(0,100) + 
-#   theme(legend.title = element_blank()) + scale_color_manual(values = pal) 
-
-```
 ```{r}
 consortium_v <- consortium_uk %>% filter(n501y == "Y" & 
                                            del_21765_6 == "del" &
@@ -432,23 +414,28 @@ consortium_v <- consortium_uk %>% filter(n501y == "Y" &
 consortium_v
 ```
 ```{r}
-mutations_s_uk %>% summarise(n_distinct(variant))
-
+mutations_s_uk %>% 
+  summarise(n_distinct(variant))
 ```
 ```{r}
-mutations_s_uk %>% count(variant) %>% filter(n == 1) 
+mutations_s_uk %>% 
+  count(variant) %>% 
+  filter(n == 1) 
 ```
 ```{r}
-mutations_s_uk %>% count(variant) %>% filter(n >= 100) 
+mutations_s_uk %>% 
+  count(variant) %>% 
+  filter(n >= 100) 
 ```
 
 ```{r table_1}
-database %>% slice_max(`numSeqs UK`, n = 15) %>% select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
+database %>% 
+  slice_max(`numSeqs UK`, n = 15) %>% 
+  select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
 ```{r}
 setdiff(
 consortium_uk %>% filter(d614g == "G") %>% select(sequence_name),
-
 mutations_s_uk %>% filter(variant == "D614G") %>% select(sequence_name)
 )
 ```
