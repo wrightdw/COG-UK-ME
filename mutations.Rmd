@@ -376,13 +376,13 @@ variants_nations_28 <-
 database <- 
   read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
   type_convert %>% 
-  left_join(lineage_distinct, by = c("replacement" = "variant")) %>% 
-  left_join(lineages, by = c("replacement" = "variant")) %>% 
-  left_join(uk_lineages, by = c("replacement" = "variant")) %>% 
-  left_join(variants_uk,  by = c("replacement" = "variant")) %>% 
-  left_join(variants_nations,  by = c("replacement" = "variant")) %>% 
-  left_join(variants_uk_28,  by = c("replacement" = "variant")) %>% 
-  left_join(variants_nations_28,  by = c("replacement" = "variant_28")) 
+  full_join(lineage_distinct, by = c("replacement" = "variant")) %>% 
+  full_join(lineages, by = c("replacement" = "variant")) %>% 
+  full_join(uk_lineages, by = c("replacement" = "variant")) %>% 
+  full_join(variants_uk,  by = c("replacement" = "variant")) %>% 
+  full_join(variants_nations,  by = c("replacement" = "variant")) %>% 
+  full_join(variants_uk_28,  by = c("replacement" = "variant")) %>% 
+  full_join(variants_nations_28,  by = c("replacement" = "variant_28")) 
 
 database %<>% rename(`# Global Lineages associated with` = n_lineages, 
                     `# UK Lineages associated with` = n_uk_lineages, 
@@ -428,11 +428,28 @@ mutations_s_uk %>%
   filter(n >= 100) 
 ```
 
+```{r}
+mutations_s_uk %>% 
+  count(variant) %>% 
+  filter(n >= 5) %>% 
+  arrange(desc(n))
+
+```
+
+### Table 1
 ```{r table_1}
 database %>% 
   slice_max(`numSeqs UK`, n = 15) %>% 
   select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
+```{r appendix}
+database %>% 
+  filter(`numSeqs UK` >= 5) %>% 
+  arrange(desc(`numSeqs UK`)) %>% 
+  select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %T>% write_csv("appendix.csv")
+```
+
+
 ```{r}
 setdiff(
 consortium_uk %>% filter(d614g == "G") %>% select(sequence_name),
@@ -452,7 +469,9 @@ n_uk_lineages <- consortium_uk %>%
             Y453F = sum(y453f == "F"),
             DEL_69_70 = sum(del_21765_6 == "del"), 
             N439K_DEL_69_70 = sum(n439k == "K" & del_21765_6 == "del"), 
-            N501Y_DEL_69_70 = sum(n501y == "Y" & del_21765_6 == "del"))
+            N501Y_DEL_69_70 = sum(n501y == "Y" & del_21765_6 == "del"),
+            Y453F_DEL_69_70 = sum(y453f == "F" & del_21765_6 == "del")
+  )
 
 n_uk_lineages
 ```
@@ -463,8 +482,10 @@ n_uk_lineages %>% filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>%
 ```
 ### B.1.177
 ```{r}
-n_uk_lineages %>% filter(lineage == "B.1.177" | str_detect(lineage, "^B\\.1\\.177\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-
+n_uk_lineages %>% 
+  filter(lineage == "B.1.177" | str_detect(lineage, "^B\\.1\\.177\\.")) %>% 
+  select(-lineage) %>% 
+  summarise_all(funs(sum))
 ```
 ### B.1.141
 ```{r}
@@ -502,6 +523,107 @@ n_uk_lineages %>% filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.351
 ### B.1.1.298
 ```{r}
 n_uk_lineages %>% filter(lineage == "B.1.1.298" | str_detect(lineage, "B\\.1\\.1\\.298\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+```
+### E484K / B.1.351
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% count(lineage)
+```
+
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  count(lineage)
+```
+
+### E484K / B.1.351 Summary
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+  summarise("n_E484K_B.1.351" = n_distinct(sequence_name))
+```
+### E484K / B.1.351 Summary 28 Days
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  summarise("n_28_E484K_B.1.351 " = n_distinct(sequence_name))
+```
+### E484K / B.1.1.248
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>% summarise("n_E484K_B.1.1.248" = n_distinct(sequence_name))
+
+```
+### E484K / B.1.1.248
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  summarise("n_E484K_B.1.1.248" = n_distinct(sequence_name))
+```
+
+### E484K / B.1.1.7
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% summarise("n_E484K_B.1.1.7" = n_distinct(sequence_name))
+```
+### E484K / B.1.1.7 28 Days
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  summarise("n_E484K_B.1.1.7" = n_distinct(sequence_name))
+```
+
+### E484K / B.1.1
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K_B.1.1" = n_distinct(sequence_name))
+```
+### E484K / B.1.1
+```{r}
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K__28_B.1.1" = n_distinct(sequence_name))
+```
+### N501Y + E484K / B.1.351 Summary
+```{r}
+intersect(
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+  distinct(sequence_name),
+  
+consortium_uk %>% 
+  filter(n501y == "Y") %>% 
+  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+  distinct(sequence_name)
+)
+```
+```{r}
+intersect(
+mutations_s_uk %>% 
+  filter(variant == "E484K") %>% 
+  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  distinct(sequence_name),
+  
+consortium_uk %>% 
+  filter(n501y == "Y") %>% 
+  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+  filter(sample_date >= params$sample_date_28) %>% 
+  distinct(sequence_name)
+)
 ```
 
 
