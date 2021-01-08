@@ -3,6 +3,36 @@ library(tidyverse)
 
 shinyServer(function(input, output, session) {
 
+    output$table_1 <- renderTable(
+        database %>% 
+            slice_max(`numSeqs UK`, n = 15) %>% 
+            select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
+        
+    )
+    
+    output$table_2 <- renderTable({
+        n_uk_lineages <- 
+            consortium_uk %>% 
+            # filter(sample_date >= params$sample_date_28) %>% 
+            group_by(lineage) %>%
+            summarise(sequences = n(), 
+                      D614G = sum(d614g == "G"), 
+                      A222V = sum(a222v == "V"), 
+                      N439K = sum(n439k == "K"), 
+                      N501Y = sum(n501y == "Y"), 
+                      Y453F = sum(y453f == "F"),
+                      DEL_69_70 = sum(del_21765_6 == "del"), 
+                      N439K_DEL_69_70 = sum(n439k == "K" & del_21765_6 == "del"), 
+                      N501Y_DEL_69_70 = sum(n501y == "Y" & del_21765_6 == "del"),
+                      Y453F_DEL_69_70 = sum(y453f == "F" & del_21765_6 == "del")
+            )
+        
+        n_uk_lineages %>% 
+            filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% 
+            select(-lineage) %>% 
+            summarise_all(funs(sum))
+        
+    })
     # output$mutation_time <- renderPlot({
     #     
     #     mutations %>% filter(gene == input$gene 
@@ -20,12 +50,6 @@ shinyServer(function(input, output, session) {
     #            & sample_date <= input$date_range[2])
     # )
     
-    output$raw_database <- renderTable(
-        database %>% 
-            slice_max(`numSeqs UK`, n = 15) %>% 
-            select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
-        
-    )
     
     # output$summary <- renderTable({
     #     mutations %>% 
