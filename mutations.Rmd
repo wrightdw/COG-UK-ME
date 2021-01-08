@@ -625,5 +625,16 @@ consortium_uk %>%
   distinct(sequence_name)
 )
 ```
+```{r escape}
+escape <- 
+  read_csv("list_escape_2.csv", col_names = "replacement")
+
+database %>% 
+  right_join(escape) %>% 
+  select(replacement, `numSeqs UK`:`numSeqs Wales 28 days`) %>% 
+  mutate(
+    across(everything(), ~replace_na(.x, 0))
+  ) %T>% write_csv("escape_counts.csv")
+```
 
 
