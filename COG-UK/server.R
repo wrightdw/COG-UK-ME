@@ -1,37 +1,43 @@
 library(shiny)
 library(tidyverse)
 
+sample_date_28 <- "2020-12-02"
+lineages <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
+
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderTable(
         database %>% 
             slice_max(`numSeqs UK`, n = 15) %>% 
             select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
-        
     )
     
     output$table_2 <- renderTable({
-        n_uk_lineages <- 
-            consortium_uk %>% 
-            # filter(sample_date >= params$sample_date_28) %>% 
-            group_by(lineage) %>%
-            summarise(sequences = n(), 
-                      D614G = sum(d614g == "G"), 
-                      A222V = sum(a222v == "V"), 
-                      N439K = sum(n439k == "K"), 
-                      N501Y = sum(n501y == "Y"), 
-                      Y453F = sum(y453f == "F"),
-                      DEL_69_70 = sum(del_21765_6 == "del"), 
-                      N439K_DEL_69_70 = sum(n439k == "K" & del_21765_6 == "del"), 
-                      N501Y_DEL_69_70 = sum(n501y == "Y" & del_21765_6 == "del"),
-                      Y453F_DEL_69_70 = sum(y453f == "F" & del_21765_6 == "del")
-            )
+        n_uk_lineages <- sum_key_mutations_by_lineage_uk(lineages)  
         
-        n_uk_lineages %>% 
-            filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% 
-            select(-lineage) %>% 
-            summarise_all(funs(sum))
+        n_uk_lineages_28 <- 
+            sum_key_mutations_by_lineage_uk(lineages, date_from = sample_date_28)  %>% 
+            rename(n_sequences_28 = n_sequences)
         
+        inner_join(n_uk_lineages, n_uk_lineages_28) %>% 
+            filter(    (variant == "D614G" & lineage == "B.1" ) | 
+                           
+                       (variant == "A222V" & lineage == "B.1.177" ) | 
+                           
+                       (variant == "N439K" & lineage == "B.1.141" ) | 
+                       (variant == "N439K" & lineage == "B.1.258" ) |
+                       (variant == "N439K_DEL_69_70" & lineage == "B.1.258" ) |
+                           
+                       (variant == "DEL_69_70" & lineage == "B.1.1" ) |
+                       (variant == "DEL_69_70" & lineage == "B.1.258" ) |
+                           
+                       (variant == "N501Y_DEL_69_70" & lineage == "B.1.1.7" ) |
+                       (variant == "N501Y" & lineage == "B.1.1.70" ) |
+                           
+                       #TODO N501Y B.1.351 (+E484K)
+                       
+                       (variant == "Y453F" & lineage == "B.1.1" ) |
+                       (variant == "Y453F" & lineage == "B.1.1.298" ))
     })
     # output$mutation_time <- renderPlot({
     #     
