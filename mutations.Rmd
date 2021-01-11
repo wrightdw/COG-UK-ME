@@ -5,7 +5,7 @@ params:
   mutations_csv:  "cog_global_2021-01-02_mutations.csv"
   global_csv:     "cog_global_2021-01-02_public.csv"
   consortium_csv: "cog_global_2021-01-02_consortium.csv"
-  spike_csv:      "spike_info_2020_12_27.csv"
+  spike_csv:      "spike_info_2021_01_10.csv"
   sample_date_28: "2020-12-02"
   sample_date_14: "2020-12-16"
   # latest sample date 2020-12-29
@@ -664,6 +664,46 @@ database %>%
   right_join(escape) %>% 
   select(replacement, `numSeqs UK`:`numSeqs Wales 28 days`) %T>% 
   write_csv("escape_counts.csv")
+```
+
+### Escape mutations sample names
+
+```{r}
+escape_t4 <- 
+c(
+"G446V",
+"L452R",
+"E484Q",
+"K444R",
+"E484K",
+"Y508H",
+"N440K",
+"L455F",
+"A831V",
+"A475V",
+"F490S",
+"V483A",
+"R346K",
+"K378N",
+"K444N",
+'G446S',
+"N450D",
+"K150R",
+"R346S",
+"K150T",
+"V445A",
+"G446A",
+"Y449H",
+"E484A",
+"Y453F", "N439K"
+)  
+
+lapply(escape_t4,  function(x){
+  mutations_s_uk %>% 
+    filter(variant == x) %>% 
+    distinct(sequence_name) %T>% 
+    write_lines(paste0(x, ".txt"))
+})
 ```
 
 
