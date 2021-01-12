@@ -335,7 +335,8 @@ deletions_v
 ## Database
 ```{r database}
 mutations_s_uk <- mutations %>% 
-  filter(country == "UK" & gene == "S")
+  filter(country == "UK" & gene == "S") %>% 
+  write_rds("mutations_s_uk.rds")
 
 lineage_distinct <- 
   mutations_s_uk %>% 
@@ -668,7 +669,7 @@ database %>%
 
 ### Escape mutations sample names
 
-```{r}
+```{r escape_ids}
 escape_t4 <- 
 c(
 "G446V",
@@ -699,10 +700,13 @@ c(
 )  
 
 lapply(escape_t4,  function(x){
-  mutations_s_uk %>% 
+  escape_ids <- 
+    mutations_s_uk %>% 
     filter(variant == x) %>% 
-    distinct(sequence_name) %T>% 
-    write_lines(paste0(x, ".txt"))
+    distinct(sequence_name) 
+  
+  escape_ids %$% write_lines(sequence_name, paste0(x, ".txt"))
+  escape_ids
 })
 ```
 
