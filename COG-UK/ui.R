@@ -24,7 +24,8 @@ dashboardPage(
         tabItems(
             tabItem(tabName = "report",
                     fluidRow(
-                        h2("COG-UK report on SARS-CoV-2 Spike mutations of interest"),
+                        h2(paste0("COG-UK report on SARS-CoV-2 Spike mutations of interest")),
+                        h4("2nd January 2021"),
                         h3("Table 1: Spike mutations (top 15) present in the UK at high frequency"),
                         tableOutput("table_1"),
                         

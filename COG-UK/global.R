@@ -1,9 +1,11 @@
 library(tidyverse)
 library(lubridate)
+library(magrittr)
 
 # mutations <- read_rds("mutations.rds")
 database <- read_rds("database.rds")
 consortium_uk <- read_rds("consortium_uk.rds")
+mutations_s_uk <- read_rds("mutations_s_uk.rds")
 
 # Construct a regular expression to match the sublineages of a lineage
 sublineage_regex <- function(lineage){
@@ -28,10 +30,10 @@ sum_key_mutations_uk <- function(date_from = NULL){
             N439K = sum(n439k == "K"),
             N501Y = sum(n501y == "Y"),
             Y453F = sum(y453f == "F"),
-            DEL_69_70 = sum(del_21765_6 == "del"),
-            N439K_DEL_69_70 = sum(n439k == "K" & del_21765_6 == "del"),
-            N501Y_DEL_69_70 = sum(n501y == "Y" & del_21765_6 == "del"),
-            Y453F_DEL_69_70 = sum(y453f == "F" & del_21765_6 == "del")
+            `∆69-70` = sum(del_21765_6 == "del"),
+            `N439K + ∆69-70` = sum(n439k == "K" & del_21765_6 == "del"),
+            `N501Y + ∆69-70` = sum(n501y == "Y" & del_21765_6 == "del"),
+            `Y453F + ∆69-70` = sum(y453f == "F" & del_21765_6 == "del")
   )
 }
 
@@ -47,6 +49,6 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
     }) %>% 
       bind_rows() %>% 
       select(-sequences) %>% 
-      gather(key = "variant", value = "n_sequences", D614G:Y453F_DEL_69_70)
+      gather(key = "variant", value = "n_sequences", D614G:`Y453F + ∆69-70`)
   }
 }
