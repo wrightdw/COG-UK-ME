@@ -489,7 +489,6 @@ n_uk_lineages <-
 n_uk_lineages
 ```
 #### B.1
-
 ```{r}
 n_uk_lineages %>% 
   filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% 
@@ -505,10 +504,6 @@ n_uk_lineages %>%
   
   
 ```
-
-
-
-
 #### B.1.177
 ```{r}
 n_uk_lineages %>% 
