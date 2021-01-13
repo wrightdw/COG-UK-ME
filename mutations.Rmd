@@ -700,13 +700,10 @@ c(
 )  
 
 lapply(escape_t4,  function(x){
-  escape_ids <- 
-    mutations_s_uk %>% 
+  mutations_s_uk %>% 
     filter(variant == x) %>% 
-    distinct(sequence_name) 
-  
-  escape_ids %$% write_lines(sequence_name, paste0(x, ".txt"))
-  escape_ids
+    distinct(sequence_name) %T>% 
+    {. %$% write_lines(sequence_name, paste0(x, ".txt"))}
 })
 ```
 
