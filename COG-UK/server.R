@@ -85,8 +85,12 @@ shinyServer(function(input, output, session) {
         table_2
     })
     
-    
-    
+    output$table_3 <- renderTable({
+        sum_key_mutations_uk() %>% 
+            filter(lineage %in% c("B.1.1.7", "B.1.351"))
+
+    })
+    output$table_4 <- renderTable({})
     
     # output$mutation_time <- renderPlot({
     #     

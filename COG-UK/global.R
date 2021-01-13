@@ -45,7 +45,8 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
       n_uk_lineages %>% 
         filter(lineage == x | str_detect(lineage, sublineage_regex(x))) %>% 
         select(-lineage) %>% 
-        summarise_all(funs(sum)) %>% mutate(lineage = x, .before = 1)
+        summarise_all(funs(sum)) %>% #TODO replace deprecated funs
+        mutate(lineage = x, .before = 1)
     }) %>% 
       bind_rows() %>% 
       select(-sequences) %>% 

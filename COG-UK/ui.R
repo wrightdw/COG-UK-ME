@@ -26,12 +26,17 @@ dashboardPage(
                     fluidRow(
                         h2(paste0("COG-UK report on SARS-CoV-2 Spike mutations of interest")),
                         h4("2nd January 2021"),
-                        h3("Table 1: Spike mutations (top 15) present in the UK at high frequency"),
+                        h3("1. Spike mutations (top 15) present in the UK at high frequency"),
                         tableOutput("table_1"),
                         
-                        h3("Table 2: Spike gene mutations of potential importance"),
-                        tableOutput("table_2")
+                        h3("2. Spike gene mutations of potential importance"),
+                        tableOutput("table_2"),
                         
+                        h3("3. Variants of concern being monitored by UK PHAs"),
+                        tableOutput("table_3"),
+                        
+                        h3("4. Mutations with known antigenic role"),
+                        tableOutput("table_4")
                     )
             )
         ) # end tabItems
