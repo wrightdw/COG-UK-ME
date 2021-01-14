@@ -1,8 +1,8 @@
 library(shiny)
 library(tidyverse)
 
-sample_date_28 <- "2020-12-02"
-lineages <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
+lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
+lineages_t3 <- c("B.1.1.7", "B.1.351", "P.1")
 
 shinyServer(function(input, output, session) {
 
@@ -20,10 +20,10 @@ shinyServer(function(input, output, session) {
     )
     
     output$table_2 <- renderTable({
-        n_uk_lineages <- sum_key_mutations_by_lineage_uk(lineages)  
+        n_uk_lineages <- sum_key_mutations_by_lineage_uk(lineages_t2)  
         
         n_uk_lineages_28 <- 
-            sum_key_mutations_by_lineage_uk(lineages, date_from = sample_date_28)  %>% 
+            sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28)  %>% 
             rename(n_sequences_28 = n_sequences)
         
         table_2 <- 
@@ -86,9 +86,42 @@ shinyServer(function(input, output, session) {
     })
     
     output$table_3 <- renderTable({
-        sum_key_mutations_uk() %>% 
-            filter(lineage %in% c("B.1.1.7", "B.1.351"))
+        
+        # key_mutations <-
+        #     sum_key_mutations_uk() %>%
+        #     filter(lineage %in% key_lineages) %>%
+        #     select(lineage, sequences)
+        # 
+        # key_mutations_28  <- sum_key_mutations_uk(date_from = sample_date_28) %>% 
+        #     filter(lineage %in% key_lineages) %>% 
+        #     select(lineage, sequences) %>% 
+        #     rename(sequences_28 = sequences)
+        # 
+        # key_mutations %>% inner_join(key_mutations_28)
+        
+        # filter(lineage == x | ) %>% 
+        # 
 
+        key_lineages <- 
+        lapply(lineages_t3, function(x){
+            sum_key_mutations_uk() %>% 
+                filter(lineage == x | str_detect(lineage, sublineage_regex(x)) ) %>% 
+                select(-lineage) %>%
+                summarise(sequences_sum = sum(sequences)) %>% 
+                mutate(lineage = x, .before = 1)
+        }) %>% bind_rows()
+        
+        key_lineages_28 <- 
+            lapply(lineages_t3, function(x){
+                sum_key_mutations_uk(date_from = sample_date_28) %>% 
+                    filter(lineage == x | str_detect(lineage, sublineage_regex(x)) ) %>% 
+                    select(-lineage) %>%
+                    summarise(sequences_sum = sum(sequences)) %>% 
+                    mutate(lineage = x, .before = 1)
+            }) %>% bind_rows() %>% rename(sequences_sum_28 = sequences_sum)
+        
+        inner_join(key_lineages, key_lineages_28)
+        
     })
     output$table_4 <- renderTable({})
     
