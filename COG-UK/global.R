@@ -2,12 +2,13 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 
-# mutations <- read_rds("mutations.rds")
 database <- read_rds("database.rds")
 consortium_uk <- read_rds("consortium_uk.rds")
 mutations_s_uk <- read_rds("mutations_s_uk.rds")
 
-sample_date_28 <- "2020-12-02"
+dataset_date <- ymd("2021-01-02") #TODO derive from filename
+sample_date_28 <- ymd("2020-12-02") #TODO calculate 28 days previous to latest sample date
+
 #TODO Pre-load key mutations
 # key_mutations_uk <- sum_key_mutations_uk()
 # key_mutations_uk_28 <- sum_key_mutations_uk(date_from = sample_date_28)
