@@ -2,14 +2,13 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-01-02_mutations.csv"
-  global_csv:     "cog_global_2021-01-02_public.csv"
-  consortium_csv: "cog_global_2021-01-02_consortium.csv"
+  mutations_csv:  "cog_global_2021-01-13_mutations.csv"
+  global_csv:     "cog_global_2021-01-13_public.csv"
+  consortium_csv: "cog_global_2021-01-13_consortium.csv"
   spike_csv:      "spike_info_2021_01_10.csv"
-  sample_date_28: "2020-12-02"
-  sample_date_14: "2020-12-16"
-  # latest sample date 2020-12-29
-  
+  sample_date_28: "2020-12-11" # subtract 27 days
+  sample_date_14: "2020-12-25" # subtract 13 days
+  # latest UK sample date from consortium 2021-01-07
 ---
 ```{r libs}
 library(tidyverse)
