@@ -3,7 +3,13 @@ library(tidyverse)
 library(formattable)
 
 lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
-lineages_t3 <- c("B.1.1.7", "B.1.351", "P.1")
+
+lineages_t3 <- 
+    c("B.1.1.7" = "UK associated variant. Has 17 mutations (14 replacements and 3 deletions) including: T1001I, A1708D, I2230T, SGF 3675-3677 del In the ORF1ab; 69-70 del, Y144 del, N501Y, A570D, P681H, T716I, S982A and D1118H in the Spike; Q27stop, R52I and Y73C in ORF8; D3L and S235F in the N. Noteworthily, N501Y enhances ACE2 binding affinity, and P681H occurs at the furin cleavage site, known for biological significance in membrane fusion.", 
+      "B.1.351" = "Variant associated with South Africa. Has eight mutations in the Spike: D80A, D215G, E484K, N501Y, A701V, L18F, R246I and K417N. Three of these in the RBM, K417N, E484K and N501Y. K417N and E484K have been shown to escape some mAbs. ", 
+      "P.1" = "Variant associated with South Africa. Has eight mutations in the Spike: D80A, D215G, E484K, N501Y, A701V, L18F, R246I and K417N. Three of these in the RBM, K417N, E484K and N501Y. K417N and E484K have been shown to escape some mAbs. ") %>% 
+    enframe("lineage", "reason")
+
 escape_t4 <- c(
 "G446V",
 "L452R",
@@ -141,7 +147,7 @@ shinyServer(function(input, output, session) {
     
     output$table_3 <- renderTable({
         key_lineages <- 
-        lapply(lineages_t3, function(x){
+        lapply(lineages_t3$lineage, function(x){
             sum_key_mutations_uk() %>% 
                 filter(lineage == x | str_detect(lineage, sublineage_regex(x)) ) %>% 
                 select(-lineage) %>%
@@ -150,28 +156,34 @@ shinyServer(function(input, output, session) {
         }) %>% bind_rows()
         
         key_lineages_28 <- 
-            lapply(lineages_t3, function(x){
+            lapply(lineages_t3$lineage, function(x){
                 sum_key_mutations_uk(date_from = sample_date_28) %>% 
                     filter(lineage == x | str_detect(lineage, sublineage_regex(x)) ) %>% 
                     select(-lineage) %>%
                     summarise(sequences_sum = sum(sequences)) %>% 
-                    mutate(lineage = x, .before = 1) %>% rename(sequences_sum_28 = sequences_sum)
+                    mutate(lineage = x, .before = 1) %>% 
+                    rename(sequences_sum_28 = sequences_sum)
             }) %>% bind_rows() 
         
-        inner_join(key_lineages, key_lineages_28) %>% rename(`Variant/ lineage` = lineage,	
-                                                             `Cumulative sequences in UK` = sequences_sum,	 
-                                                             `Sequences over 28 days` = sequences_sum_28)
+        inner_join(key_lineages, key_lineages_28) %>% 
+            inner_join(lineages_t3) %>% 
+            relocate(reason, .after = lineage) %>% 
+            rename(`Variant/ lineage` = lineage,	
+                   `Cumulative sequences in UK` = sequences_sum,	 
+                   `Sequences over 28 days` = sequences_sum_28,                    
+                   `Reason for tracking` = reason)
     })
     output$table_4 <- renderTable({
         database %>%
             filter(replacement %in% escape_t4) %>%
             select(replacement, `numSeqs UK`, `numSeqs UK 28 days`) %>%  
-            mutate(replacement = factor(replacement, levels = escape_t4)) %>%
-            arrange(replacement) %>% 
+            arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), replacement) %>% 
             rename(`Amino acid replacement` = replacement, 
                    `Cumulative sequences in UK` = `numSeqs UK`,
                    `Sequences over 28 days` = `numSeqs UK 28 days`)
     })
+    
+    
     
     output$mutation_time <- renderPlot({
 
