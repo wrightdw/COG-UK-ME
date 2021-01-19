@@ -1,5 +1,6 @@
 library(shiny)
 library(tidyverse)
+library(formattable)
 
 lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
 lineages_t3 <- c("B.1.1.7", "B.1.351", "P.1")
@@ -37,6 +38,7 @@ shinyServer(function(input, output, session) {
         database %>% 
             slice_max(`numSeqs UK`, n = 15) %>% 
             select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
+            mutate(`Sequences over the last 28 days in UK (%)` = percent(`numSeqs UK 28 days` / `numSeqs UK`) %>% as.character, .after = `numSeqs UK`) %>% 
             rename(`Amino acid replacement` = replacement, 
                    `Cumulative sequences in UK` = `numSeqs UK`, 
                    `Sequences over 28 days` = `numSeqs UK 28 days`,
@@ -101,12 +103,12 @@ shinyServer(function(input, output, session) {
                 mutations_s_uk %>% 
                     filter(variant == "E484K") %>% 
                     filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
-                    distinct(sequence_name),
+                    select(sequence_name),
                 
                 consortium_uk %>% 
                     filter(n501y == "Y") %>% 
                     filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
-                    distinct(sequence_name)
+                    select(sequence_name)
             ) %>% nrow
         
         n_N501Y_E484K_28 <- 
@@ -115,13 +117,13 @@ shinyServer(function(input, output, session) {
                 filter(variant == "E484K") %>% 
                 filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
                 filter(sample_date >= sample_date_28) %>% 
-                distinct(sequence_name),
+                select(sequence_name),
             
             consortium_uk %>% 
                 filter(n501y == "Y") %>% 
                 filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
                 filter(sample_date >= sample_date_28) %>% 
-                distinct(sequence_name)
+                select(sequence_name)
         ) %>% nrow
         
         
