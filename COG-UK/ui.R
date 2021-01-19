@@ -1,6 +1,7 @@
 library(shiny)
 library(DT)
 library(shinydashboard)
+library(formattable)
 
 dashboardPage(
     dashboardHeader(title = tags$a(href='http://cogconsortium.uk', target = "_blank",
@@ -29,7 +30,8 @@ dashboardPage(
                     h3(dataset_date %>% format("%A %d %B %Y")),
                     
                     h2("Data source and processing"),
-                    p("The analysis described in this report is based on 166,075 UK-derived genomes sequenced by COG-UK (complete data in MRC-CLIMB database to ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"), "."), #TODO calculate genomes
+                    p("The analysis described in this report is based on ", n_distinct(consortium_uk$sequence_name) %>% comma(format = "d")
+," UK-derived genomes sequenced by COG-UK (complete data in MRC-CLIMB database to ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"), "."),
                     p("A report of the geographic distribution and prevalence of SARS-CoV-2 lineages in general, and global variants of interest, can be found ", a(href = "https://cov-lineages.org/global_report.html", target = "_blank", "here"), ". Amino acid replacement, insertion and deletion counts for all SARS-CoV-2 genes in the global GISAID database can be found ", a(href = "http://cov-glue.cvr.gla.ac.uk/", target = "_blank", "here"), "."),
                     
                     tabBox(
