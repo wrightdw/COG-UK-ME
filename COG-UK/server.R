@@ -72,16 +72,40 @@ shinyServer(function(input, output, session) {
                        (variant == "Y453F" & lineage == "B.1.1" ) |
                        (variant == "Y453F" & lineage == "B.1.1.298" ))
         
+        lineages_E484K <- c("B.1.351", "P.2", "P.1", "B.1.1.7")
+        table_2 %<>% bind_rows( 
+            inner_join(
+                lapply(lineages_E484K, function(x){
+                    mutations_s_uk %>% 
+                        filter(variant == "E484K") %>% 
+                        filter(lineage == x | str_detect(lineage, sublineage_regex(x))) %>% 
+                        summarise(!!x := n_distinct(sequence_name))
+                }) %>% 
+                    bind_cols() %>% 
+                    gather(key = "lineage", value = "n_sequences"),
+                
+                lapply(lineages_E484K, function(x){
+                    mutations_s_uk %>% 
+                        filter(variant == "E484K") %>% 
+                        filter(sample_date >= sample_date_28) %>% 
+                        filter(lineage == x | str_detect(lineage, sublineage_regex(x))) %>% 
+                        summarise(!!x := n_distinct(sequence_name))
+                }) %>% 
+                    bind_cols() %>% 
+                    gather(key = "lineage", value = "n_sequences_28")
+            ) %>% mutate(variant = "E484K") 
+        )
+        
         n_N501Y_E484K <-
             intersect(
                 mutations_s_uk %>% 
                     filter(variant == "E484K") %>% 
-                    filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+                    filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
                     distinct(sequence_name),
                 
                 consortium_uk %>% 
                     filter(n501y == "Y") %>% 
-                    filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+                    filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
                     distinct(sequence_name)
             ) %>% nrow
         
@@ -89,16 +113,17 @@ shinyServer(function(input, output, session) {
          intersect(
             mutations_s_uk %>% 
                 filter(variant == "E484K") %>% 
-                filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+                filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
                 filter(sample_date >= sample_date_28) %>% 
                 distinct(sequence_name),
             
             consortium_uk %>% 
                 filter(n501y == "Y") %>% 
-                filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
+                filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
                 filter(sample_date >= sample_date_28) %>% 
                 distinct(sequence_name)
         ) %>% nrow
+        
         
         table_2 %<>% 
             add_row(lineage = "B.1.351", variant = 'N501Y + E484K', 
