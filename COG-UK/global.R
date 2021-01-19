@@ -7,12 +7,10 @@ consortium_uk <- read_rds("consortium_uk.rds")
 mutations_s_uk <- read_rds("mutations_s_uk.rds")
 
 dataset_date <- ymd("2021-01-13") #TODO derive from filename
-sample_date_28 <- ymd("2020-12-11") #TODO calculate 28 days previous to latest sample date
+
+sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 
 #TODO Pre-load key mutations
-# key_mutations_uk <- sum_key_mutations_uk()
-# key_mutations_uk_28 <- sum_key_mutations_uk(date_from = sample_date_28)
-
 
 # Construct a regular expression to match the sublineages of a lineage
 sublineage_regex <- function(lineage){
