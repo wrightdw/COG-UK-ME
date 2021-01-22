@@ -5,7 +5,7 @@ params:
   mutations_csv:  "cog_global_2021-01-13_mutations.csv"
   global_csv:     "cog_global_2021-01-13_public.csv"
   consortium_csv: "cog_global_2021-01-13_consortium.csv"
-  spike_csv:      "spike_info_2021_01_10.csv"
+  spike_csv:      "spike_info_2021_01_19.csv"
   sample_date_28: "2020-12-11" # subtract 27 days
   sample_date_14: "2020-12-25" # subtract 13 days
   # latest UK sample date from consortium 2021-01-07
@@ -17,22 +17,29 @@ library(wesanderson)
 library(RColorBrewer)
 library(scales)
 ```
+## Mutations
 ```{r read}
-mutations <- 
+mutations <-   
   read_csv(params$mutations_csv, col_types = cols(.default = col_character())) %>% 
   type_convert %>% 
   separate_rows(variants, sep = '\\|') %>% 
   separate(variants, into = c("gene", "variant"), sep = ':') %>% 
   drop_na() %>%
   filter(gene != "synSNP") %>%
-  mutate(position = parse_number(variant))
+  mutate(position = parse_number(variant)) 
 
 public <- 
   read_csv(params$global_csv, col_types = cols(.default = col_character())) %>% 
   type_convert
 
-mutations %<>% inner_join(public) 
-mutations %T>% write_rds(file = "mutations.rds")
+mutations %<>% inner_join(public)
+
+mutations_uk <- 
+  mutations %>%
+  filter(country == "UK") %T>% 
+  write_rds(file = "mutations_uk.rds")
+
+mutations
 ```
 ## Consortium
 ```{r consortium_read}
