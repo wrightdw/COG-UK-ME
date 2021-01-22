@@ -2,6 +2,7 @@ library(shiny)
 library(DT)
 library(shinydashboard)
 library(formattable)
+library(plotly)
 
 dashboardPage(
     dashboardHeader(title = tags$a(href='http://cogconsortium.uk', target = "_blank",
@@ -14,12 +15,13 @@ dashboardPage(
         ),
         
         conditionalPanel(condition =  "input.sidebar_menu == 'dashboard'",
-                         selectInput("position", "S gene position:", mutations_s_uk %>% distinct(position) %>% arrange(position), selected = "614"),
-                         selectInput("variant", "Variant:", mutations_s_uk %>% distinct(variant) %>% arrange(variant), selected = "D614G"),
-                         dateRangeInput('date_range',
-                                        label = 'Date range:',
-                                        start = min(mutations_s_uk$sample_date), end = max(mutations_s_uk$sample_date)
-                         )
+                         selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), selected = "S"),
+                         selectInput("position", "Position:", mutations_uk %>% distinct(position) %>% arrange(position), selected = "614")
+                         # selectInput("variant", "Variant:", mutations_s_uk %>% distinct(variant) %>% arrange(variant), selected = "D614G"),
+                         # dateRangeInput('date_range',
+                         #                label = 'Date range:',
+                         #                start = min(mutations_s_uk$sample_date), end = max(mutations_s_uk$sample_date)
+                         # )
         )
     ),
     dashboardBody(
@@ -128,7 +130,7 @@ dashboardPage(
             
             tabItem(tabName = "dashboard",
                     fluidRow(
-                        box(plotOutput("mutation_time"), width = 12)
+                        box(plotlyOutput("mutation_time"), width = 12)
                     )
             )
         ) # end tabItems

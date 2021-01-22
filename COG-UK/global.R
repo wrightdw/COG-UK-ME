@@ -1,10 +1,28 @@
 library(tidyverse)
 library(lubridate)
 library(magrittr)
+library(RColorBrewer)
 
 database <- read_rds("database.rds")
 consortium_uk <- read_rds("consortium_uk.rds")
-mutations_s_uk <- read_rds("mutations_s_uk.rds")
+mutations_uk <- read_rds("mutations_uk.rds")
+
+epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
+
+consortium_uk %<>%
+  mutate(across(epi_week, as_factor)) %>%
+  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq)
+
+mutations_uk %<>%
+  mutate(across(c(epi_week, gene, position), as_factor)) %>%
+  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq)
+
+mutations_s_uk <- mutations_uk %>% filter(gene == "S")
+
+
+
+
+
 
 dataset_date <- ymd("2021-01-13") #TODO derive from filename
 
