@@ -130,7 +130,7 @@ dashboardPage(
             
             tabItem(tabName = "dashboard",
                     fluidRow(
-                        box(plotlyOutput("mutation_time"), width = 12)
+                        box(plotlyOutput("mutation_time", height = 1024), width = 12)
                     )
             )
         ) # end tabItems

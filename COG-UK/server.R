@@ -40,22 +40,6 @@ escape_t4 <- c(
 "E484R",
 "Q493R")
 
-sequences_by_week <- consortium_uk %>% count(epi_week, name = "n_sequences")
-
-positions_by_week <- 
-  mutations_uk %>%
-  group_by(epi_week, gene, position, .drop = FALSE) %>% # TODO don't count gene/position combinations that don't exist
-  summarise(n_variant_sequences = n_distinct(sequence_name))
-
-reference_counts <- inner_join(sequences_by_week, positions_by_week) %>% 
-  mutate( across(n_variant_sequences, ~replace_na(.x, 0L)) ) %>% 
-  mutate(n = n_sequences - n_variant_sequences, variant = "REF", .keep = "unused") 
-
-mutation_counts <- mutations_uk %>%
-  count(epi_week, gene, position, variant)
-
-mutation_reference_counts <- bind_rows(mutation_counts, reference_counts)
-
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderTable(
@@ -204,40 +188,6 @@ shinyServer(function(input, output, session) {
     
     
     output$mutation_time <- renderPlotly({
-# 
-#         mutations_s_uk %>% 
-#             filter(variant == input$variant
-#                                   & sample_date >= input$date_range[1]
-#                                   & sample_date <= input$date_range[2]) %>% 
-#             ggplot(aes(x = sample_date)) + geom_bar() + theme_minimal()
-      
-      
-      
-      # gg_bar <- mutations_s_uk %>%
-      #   # mutate(across(epi_week, as_factor)) %>%
-      #   ggplot(aes(x = epi_week)) + geom_bar() + theme_minimal() + scale_x_discrete(drop=FALSE)
-      # 
-      # gg_bar_plotly <- gg_bar %>% ggplotly
-      # gg_bar_plotly
-      
-      
-      
-      
-      # mutations_s_uk %>%
-      #   count(epi_week, position, variant) %>%
-      #   filter(position == 614) %>%
-      #   select(-position) %>%
-      #   pivot_wider(names_from = variant, values_from = n) %>%
-      #   # mutate(across(D614N, D614V), ~replace_na(.x, 0L)) %>%
-      #   plot_ly(x = ~epi_week, y = ~D614G, type = 'bar', name = 'D614G') %>%
-      #   add_trace(y = ~D614N, name = 'D614N') %>%
-      #   add_trace(y = ~D614V, name = 'D614V') %>%
-      #   layout(yaxis = list(title = 'Sequences'), barmode = 'stack')
-      # 
-      # 
-      # 
-      # 
-      
       gg_bar <- 
         mutation_reference_counts %>%
         filter(gene == input$gene & position == input$position
@@ -249,14 +199,13 @@ shinyServer(function(input, output, session) {
         geom_bar(position="stack", stat="identity") +
         scale_x_discrete(drop=FALSE) +
         theme_classic() +
-        # xlab("SNP") +
-        # ylab("Participants") +
-        # ggtitle(title) +
-        scale_fill_manual(values = brewer.pal(name = "Dark2", n = 7))
+        xlab("Epidemic week") +
+        ylab("Sequences") +
+        ggtitle(paste(input$gene, input$position, sep = " : ")) +
+        scale_fill_manual(values = brewer.pal(name = "Set2", n = 8))
       
       gg_bar_plotly <- gg_bar %>% ggplotly
       gg_bar_plotly
-      
     })
 
     observeEvent(input$gene, {
