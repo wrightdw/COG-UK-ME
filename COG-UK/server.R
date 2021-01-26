@@ -3,6 +3,7 @@ library(tidyverse)
 library(formattable)
 library(plotly)
 library(RColorBrewer)
+library(scales)
 
 lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
 
@@ -185,27 +186,33 @@ shinyServer(function(input, output, session) {
                    `Sequences over 28 days` = `numSeqs UK 28 days`)
     })
     
-    
-    
-    output$mutation_time <- renderPlotly({
-      gg_bar <- 
+    # Filter mutation data and create plot
+    mutation_plot <- reactive({
         mutation_reference_counts %>%
-        filter(gene == input$gene & position == input$position
-                # & sample_date >= input$date_range[1]
-                # & sample_date <= input$date_range[2]
-               ) %>%
+        filter(gene == input$gene & position == input$position) %>%
         select(-position, -gene) %>%
-        ggplot(aes(fill=variant, y=n, x=epi_week)) +
-        geom_bar(position="stack", stat="identity") +
+        ggplot(aes(fill=variant, y=n, x=epi_week) ) +
         scale_x_discrete(drop=FALSE) +
         theme_classic() +
         xlab("Epidemic week") +
         ylab("Sequences") +
         ggtitle(paste(input$gene, input$position, sep = " : ")) +
-        scale_fill_manual(values = brewer.pal(name = "Set2", n = 8))
-      
-      gg_bar_plotly <- gg_bar %>% ggplotly
-      gg_bar_plotly
+        scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) 
+    })
+    
+    # Display mutation plot with percentage option
+    output$mutation_time <- renderPlotly({
+      if(input$percentage){
+        gg_bar <- 
+          mutation_plot() +
+          geom_bar(position="fill", stat="identity") +
+          scale_y_continuous(labels = scales::percent_format())
+      } else {
+        gg_bar <- 
+          mutation_plot() +
+          geom_bar(position="stack", stat="identity")
+      }
+      gg_bar %>% ggplotly
     })
 
     observeEvent(input$gene, {
