@@ -4,7 +4,7 @@ output: html_notebook
 params: 
   mutations_csv:  "cog_global_2021-01-22_mutations.csv"
   global_csv:     "cog_global_2021-01-22_public.csv"
-  consortium_csv: "cog_global_2021-01-19_consortium.csv"
+  consortium_csv: "cog_global_2021-01-22_consortium.csv"
   spike_csv:      "spike_info_2021_01_19.csv"
 ---
 ```{r libs}
@@ -108,6 +108,9 @@ n_uk <-
 
 n_uk
 ```
+
+
+
 ```{r}
 n_uk %>% 
   select(-epi_week) %>% 
@@ -748,5 +751,17 @@ lapply(escape_t4,  function(x){
     distinct(sequence_name) %T>% 
     {. %$% write_lines(sequence_name, paste0(x, ".txt"))}
 })
+```
+## nsp12
+```{r nsp12}
+mutations_uk %>% 
+  mutate(across(position, as.character)) %>% 
+  mutate(across(position, as.numeric)) %>% 
+  filter(gene == "orf1ab" & between(position, 4393, 5324)) %>% 
+  mutate(nsp12_variant = str_c(str_sub(variant, 1, 1), position - 4392, str_sub(variant, -1, -1) ) ) %>% 
+  group_by(gene, variant, nsp12_variant) %>% 
+  summarise(sequences = n_distinct(sequence_name)) %>% 
+  ungroup %>% 
+  slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
 ```
 
