@@ -45,7 +45,7 @@ shinyServer(function(input, output, session) {
 
     output$table_1 <- renderTable(
         database %>% 
-            slice_max(`numSeqs UK`, n = 15) %>% 
+            slice_max(`numSeqs UK`, n = 20) %>% 
             select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
             mutate(`Sequences over the last 28 days in UK (%)` = percent(`numSeqs UK 28 days` / `numSeqs UK`) %>% as.character, .after = `numSeqs UK`) %>% 
             rename(`Amino acid replacement` = replacement, 
@@ -222,5 +222,4 @@ shinyServer(function(input, output, session) {
                           distinct(position) %>%
                           arrange(position))
     })
-
 })

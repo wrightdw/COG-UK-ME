@@ -17,7 +17,7 @@ dashboardPage(
         
         conditionalPanel(condition =  "input.sidebar_menu == 'dashboard'",
                          selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), selected = "S"),
-                         selectInput("position", "Position:", mutations_uk %>% distinct(position) %>% arrange(position), selected = "614"),
+                         selectInput("position", "Position:", mutations_uk %>% distinct(position) %>% arrange(position), selected = "614", selectize = FALSE),
                          materialSwitch("percentage", "Percentage:", FALSE, status = "info")
         )
     ),
@@ -34,12 +34,12 @@ dashboardPage(
                         id = "tabs_report",
                         tabPanel("Table 1", 
                                  h3("1. High frequency spike gene mutations"),
-                                 p("Individual amino acid replacements detected at the fifteen highest frequencies in UK
+                                 p("Individual amino acid replacements detected at the twenty highest frequencies in UK
                                  genomes are shown in Table 1. Table S1 (link to table S1) shows all amino acid
                                  replacements detected in complete SARS-CoV-2 genomes in the COG-UK dataset when
                                  present in 5 or more sequences. Insertions or deletions are not shown. "),
                                  
-                                 h4("Table 1. Spike mutations (top 15) present in the UK at high frequency"),
+                                 h4("Table 1. Spike mutations (top 20) present in the UK at high frequency"),
                                  p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
                                  tableOutput("table_1")
                         ),
