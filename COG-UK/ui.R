@@ -41,7 +41,14 @@ dashboardPage(
                                  
                                  h4("Table 1. Spike mutations (top 20) present in the UK at high frequency"),
                                  p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
-                                 tableOutput("table_1")
+                                 tableOutput("table_1"), 
+                                 
+                                 h4("Download data"),
+                                 p("Download a CSV file containing COG-UK sequence ID, global lineage, UK lineage and phylotype. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date, and by the selected amino acid replacement from table 1."), 
+                                 selectInput("dataset", "Choose amino acid replacement:",
+                                             choices = c(database %>% slice_max(`numSeqs UK`, n = 20) %$% replacement), 
+                                             selectize = FALSE),
+                                 downloadButton("downloadData", "Download", class = "btn-info")
                         ),
                         tabPanel("Table 2", 
                                  h3("2. Spike gene mutations of potential importance"),

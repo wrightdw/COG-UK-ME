@@ -57,6 +57,25 @@ shinyServer(function(input, output, session) {
                    `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`)
     )
     
+    # Reactive value to generate downloadable table for selected mutation
+    datasetInput <- reactive({
+      mutations_s_uk %>% 
+        filter(variant == input$dataset) %>% 
+        filter(sample_date >= sample_date_28) %>% 
+        select(sequence_name, lineage, uk_lineage, phylotype)
+    })
+    
+    # Downloadable CSV of selected mutation
+    output$downloadData <- downloadHandler(
+      filename = function() {
+        str_c(input$dataset, "_UK_28_days_", dataset_date, ".csv")
+      },
+      content = function(file) {
+        write_csv(datasetInput(), file)
+      },
+      contentType = "text/csv"
+    )
+    
     output$table_2 <- renderTable({
         n_uk_lineages <- sum_key_mutations_by_lineage_uk(lineages_t2)  
         
