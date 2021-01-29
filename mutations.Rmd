@@ -80,8 +80,8 @@ reference_counts <-
   positions_by_week %>%
   inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
   inner_join(sequences_by_week) %>% 
-  mutate(n = n_sequences - n_variant_sequences, variant = "REF", .keep = "unused") %>% # calculate reference / other
-  filter(n > 0) # remove zero REF entries (where all sequences are variants for an epi_week / position combo)
+  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
+  filter(n > 0) # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
 
 mutation_counts <- 
   mutations_uk %>%
