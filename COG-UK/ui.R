@@ -4,6 +4,7 @@ library(shinydashboard)
 library(formattable)
 library(plotly)
 library(shinyWidgets)
+library(shinyjs)
 
 dashboardPage(
     dashboardHeader(title = tags$a(href='http://cogconsortium.uk', target = "_blank",
@@ -16,18 +17,22 @@ dashboardPage(
         ),
         
         conditionalPanel(condition =  "input.sidebar_menu == 'dashboard'",
-                         selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), selected = "S"),
-                         selectInput("position", "Position:", mutations_uk %>% distinct(position) %>% arrange(position), selected = "614", selectize = FALSE),
-                         materialSwitch("percentage", "Percentage:", FALSE, status = "info")
+                         selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), 
+                                     selected = "S"),
+                         selectInput("position", "Position:", 
+                                     mutations_uk %>% distinct(position) %>% arrange(position), 
+                                     selected = "614", selectize = TRUE),
+                         prettySwitch("percentage", "Percentage", FALSE, status = "info"),
+                         prettySwitch("ref", "Wild type / other", TRUE,  status = "info")
         )
     ),
     dashboardBody(
+        useShinyjs(), # set up the dashboard to use shinyjs  
         tabItems(
             tabItem(tabName = "report",
                 fluidRow(
                     h1("COG-UK report on SARS-CoV-2 Spike mutations of interest"),
                     h3(dataset_date %>% format("%A %d %B %Y")),
-                    
                     
                     tabBox(
                         title = "Analysis", width = 12,
@@ -44,7 +49,7 @@ dashboardPage(
                                  tableOutput("table_1"), 
                                  
                                  h4("Download data"),
-                                 p("Download a CSV file containing COG-UK sequence ID, global lineage, UK lineage and phylotype. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date, and by the selected amino acid replacement from table 1."), 
+                                 p("Download a CSV file containing COG-UK sequence name, global lineage, UK lineage and phylotype. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date, and by the selected amino acid replacement from table 1."), 
                                  selectInput("dataset", "Choose amino acid replacement:",
                                              choices = c(database %>% slice_max(`numSeqs UK`, n = 20) %$% replacement), 
                                              selectize = FALSE),

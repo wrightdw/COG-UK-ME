@@ -4,6 +4,8 @@ library(formattable)
 library(plotly)
 library(RColorBrewer)
 library(scales)
+library(shinyWidgets)
+library(shinyjs)
 
 lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
 
@@ -62,7 +64,8 @@ shinyServer(function(input, output, session) {
       mutations_s_uk %>% 
         filter(variant == input$dataset) %>% 
         filter(sample_date >= sample_date_28) %>% 
-        select(sequence_name, lineage, uk_lineage, phylotype)
+        select(sequence_name, sample_date, epi_week, lineage, uk_lineage, phylotype) %>% 
+        arrange(desc(sample_date), lineage)
     })
     
     # Downloadable CSV of selected mutation
@@ -205,8 +208,26 @@ shinyServer(function(input, output, session) {
                    `Sequences over 28 days` = `numSeqs UK 28 days`)
     })
     
+    # always display wild type on percentage chart
+    observeEvent(input$percentage, {
+      if(input$percentage){
+        disable("ref")
+        updatePrettySwitch(
+          session = session,
+          inputId = "ref",
+          value = as.logical(input$percentage)
+        )
+      } else {
+        enable("ref")
+      }
+    })
+
     # Filter mutation data and create plot
     mutation_plot <- reactive({
+        if(!input$ref){
+          mutation_reference_counts %<>% filter(variant != "WT") 
+        }      
+      
         mutation_reference_counts %>%
         filter(gene == input$gene & position == input$position) %>%
         select(-position, -gene) %>%
@@ -217,10 +238,9 @@ shinyServer(function(input, output, session) {
         ylab("Sequences") +
         ggtitle(paste(input$gene, input$position, sep = " : ")) +
         scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) 
-    })
+    }) 
     
-    # Display mutation plot with percentage option
-    output$mutation_time <- renderPlotly({
+    mutation_plot_bar <- reactive({
       if(input$percentage){
         gg_bar <- 
           mutation_plot() +
@@ -231,7 +251,12 @@ shinyServer(function(input, output, session) {
           mutation_plot() +
           geom_bar(position="stack", stat="identity")
       }
-      gg_bar %>% ggplotly
+      gg_bar
+    }) %>% debounce(50) # allow 50ms to update percentage switch so don't display plot immediately
+    
+    # Display mutation plot with percentage option
+    output$mutation_time <- renderPlotly({
+      mutation_plot_bar() %>% ggplotly
     })
 
     observeEvent(input$gene, {
