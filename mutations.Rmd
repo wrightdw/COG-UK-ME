@@ -2,10 +2,11 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-01-25_mutations.csv"
-  global_csv:     "cog_global_2021-01-25_public.csv"
-  consortium_csv: "cog_global_2021-01-25_consortium.csv"
-  spike_csv:      "spike_info_2021_01_19.csv"
+  mutations_csv:  "cog_global_2021-01-29_mutations.csv"
+  global_csv:     "cog_global_2021-01-29_public.csv"
+  consortium_csv: "cog_global_2021-01-29_consortium.csv"
+  # spike_csv:      "spike_info_2021_01_19.csv"
+  spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
 library(tidyverse)
@@ -435,13 +436,20 @@ variants_nations_28 <-
 database <- 
   read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
   type_convert %>% 
-  full_join(lineage_distinct, by = c("replacement" = "variant")) %>% 
-  full_join(lineages, by = c("replacement" = "variant")) %>% 
-  full_join(uk_lineages, by = c("replacement" = "variant")) %>% 
-  full_join(variants_uk,  by = c("replacement" = "variant")) %>% 
-  full_join(variants_nations,  by = c("replacement" = "variant")) %>% 
-  full_join(variants_uk_28,  by = c("replacement" = "variant")) %>% 
-  full_join(variants_nations_28,  by = c("replacement" = "variant_28")) 
+  group_by(position, mutation) %>% 
+  summarise(escape = escape %>% unique %>% sort %>% toString, 
+            citation = citation %>% unique %>% toString, 
+            doi = doi %>% unique %>% toString) %>% 
+  ungroup
+  
+database %<>% 
+  full_join(lineage_distinct, by = c("mutation" = "variant")) %>% 
+  full_join(lineages, by = c("mutation" = "variant")) %>% 
+  full_join(uk_lineages, by = c("mutation" = "variant")) %>% 
+  full_join(variants_uk,  by = c("mutation" = "variant")) %>% 
+  full_join(variants_nations,  by = c("mutation" = "variant")) %>% 
+  full_join(variants_uk_28,  by = c("mutation" = "variant")) %>% 
+  full_join(variants_nations_28,  by = c("mutation" = "variant_28")) 
 
 database %<>% rename(`# Global Lineages associated with` = n_lineages, 
                     `# UK Lineages associated with` = n_uk_lineages, 
@@ -503,13 +511,13 @@ mutations_s_uk %>%
 ```{r table_1}
 database %>% 
   slice_max(`numSeqs UK`, n = 15) %>% 
-  select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
+  select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
 ```{r appendix}
 database %>% 
   filter(`numSeqs UK` >= 5) %>% 
   arrange(desc(`numSeqs UK`)) %>% 
-  select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %T>% write_csv("appendix.csv")
+  select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %T>% write_csv("appendix.csv")
 ```
 
 
@@ -705,11 +713,11 @@ consortium_uk %>%
 ### Escape Mutations
 ```{r escape}
 escape <- 
-  read_csv("list_escape_2.csv", col_names = "replacement")
+  read_csv("list_escape_2.csv", col_names = "mutation")
 
 database %>% 
   right_join(escape) %>% 
-  select(replacement, `numSeqs UK`:`numSeqs Wales 28 days`) %T>% 
+  select(mutation, `numSeqs UK`:`numSeqs Wales 28 days`) %T>% 
   write_csv("escape_counts.csv")
 ```
 
