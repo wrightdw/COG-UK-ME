@@ -15,42 +15,14 @@ lineages_t3 <-
       "P.1" = "Variant associated with Brazil. Has 10 mutations in the Spike including L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y,H655Y and T1027I. Noteworthy  E484K, N501Y and K417T have biological significance.") %>% 
     enframe("lineage", "reason")
 
-escape_t4 <- c(
-"G446V",
-"L452R",
-"E484Q",
-"K444R",
-"E484K",
-"Y508H",
-"N440K",
-"L455F",
-"A831V",
-"A475V",
-"F490S",
-"V483A",
-"R346K",
-"K378N",
-"K444N",
-"G446S",
-"N450D",
-"K150R",
-"R346S",
-"K150T",
-"V445A",
-"G446A",
-"Y449H",
-"E484A",
-"E484R",
-"Q493R")
-
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderTable(
         database %>% 
             slice_max(`numSeqs UK`, n = 20) %>% 
-            select(replacement, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
+            select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
             mutate(`Sequences over the last 28 days in UK (%)` = percent(`numSeqs UK 28 days` / `numSeqs UK`) %>% as.character, .after = `numSeqs UK`) %>% 
-            rename(`Amino acid replacement` = replacement, 
+            rename(`Amino acid replacement` = mutation, 
                    `Cumulative sequences in UK` = `numSeqs UK`, 
                    `Sequences over 28 days` = `numSeqs UK 28 days`,
                    `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
@@ -68,6 +40,14 @@ shinyServer(function(input, output, session) {
         arrange(desc(sample_date), lineage)
     })
     
+    # Reactive value to generate downloadable table for selected mutation
+    escapeInput <- reactive({
+      mutations_s_uk %>% 
+        filter(variant == input$escape) %>% 
+        select(sequence_name, sample_date, epi_week, lineage, uk_lineage, phylotype) %>% 
+        arrange(desc(sample_date), lineage)
+    })
+    
     # Downloadable CSV of selected mutation
     output$downloadData <- downloadHandler(
       filename = function() {
@@ -75,6 +55,17 @@ shinyServer(function(input, output, session) {
       },
       content = function(file) {
         write_csv(datasetInput(), file)
+      },
+      contentType = "text/csv"
+    )
+    
+    # Downloadable CSV of selected mutation
+    output$downloadEscape <- downloadHandler(
+      filename = function() {
+        str_c(input$escape, "_UK_cumulative_", dataset_date, ".csv")
+      },
+      content = function(file) {
+        write_csv(escapeInput(), file)
       },
       contentType = "text/csv"
     )
@@ -157,7 +148,6 @@ shinyServer(function(input, output, session) {
                 select(sequence_name)
         ) %>% nrow
         
-        
         table_2 %<>% 
             add_row(lineage = "B.1.351", variant = 'N501Y + E484K', 
                              n_sequences = n_N501Y_E484K, n_sequences_28 = n_N501Y_E484K_28) %>% 
@@ -198,15 +188,18 @@ shinyServer(function(input, output, session) {
                    `Sequences over 28 days` = sequences_sum_28,                    
                    `Reason for tracking` = reason)
     })
-    output$table_4 <- renderTable({
+    output$table_4 <- renderDataTable({
         database %>%
-            filter(replacement %in% escape_t4) %>%
-            select(replacement, `numSeqs UK`, `numSeqs UK 28 days`) %>%  
-            arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), replacement) %>% 
-            rename(`Amino acid replacement` = replacement, 
+            filter(!is.na(escape)) %>% 
+            select(mutation, escape, `numSeqs UK`, `numSeqs UK 28 days`, citation, doi) %>%  
+            arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
+            rename(`Amino acid replacement` = mutation, 
                    `Cumulative sequences in UK` = `numSeqs UK`,
-                   `Sequences over 28 days` = `numSeqs UK 28 days`)
-    })
+                   `Sequences over 28 days` = `numSeqs UK 28 days`,
+                   `Escape mutations details` = escape,
+                   `References` = citation,
+                   DOI = doi)
+        })
     
     # always display wild type on percentage chart
     observeEvent(input$percentage, {
@@ -252,7 +245,7 @@ shinyServer(function(input, output, session) {
           geom_bar(position="stack", stat="identity")
       }
       gg_bar
-    }) %>% debounce(50) # allow 50ms to update percentage switch so don't display plot immediately
+    }) %>% debounce(500) # allow 500ms to update percentage switch so don't display plot immediately
     
     # Display mutation plot with percentage option
     output$mutation_time <- renderPlotly({

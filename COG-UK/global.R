@@ -3,14 +3,14 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-database <- read_rds("2021-01-25/database.rds")
-consortium_uk <- read_rds("2021-01-25/consortium_uk.rds")
-mutations_uk <- read_rds("2021-01-25/mutations_uk.rds")
-mutation_reference_counts <- read_rds("2021-01-25/mutation_reference_counts.rds") # precomputed mutation counts 
+database <- read_rds("2021-01-29/database.rds")
+consortium_uk <- read_rds("2021-01-29/consortium_uk.rds")
+mutations_uk <- read_rds("2021-01-29/mutations_uk.rds")
+mutation_reference_counts <- read_rds("2021-01-29/mutation_reference_counts.rds") # precomputed mutation counts 
 
 mutations_s_uk <- mutations_uk %>% filter(gene == "S")
 
-dataset_date <- ymd("2021-01-25") #TODO derive from filename
+dataset_date <- ymd("2021-01-29") #TODO derive from filename
 
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 
