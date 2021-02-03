@@ -2,10 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-01-29_mutations.csv"
-  global_csv:     "cog_global_2021-01-29_public.csv"
-  consortium_csv: "cog_global_2021-01-29_consortium.csv"
-  # spike_csv:      "spike_info_2021_01_19.csv"
+  mutations_csv:  "cog_global_2021-01-31_mutations.csv"
+  global_csv:     "cog_global_2021-01-31_public.csv"
+  consortium_csv: "cog_global_2021-01-31_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
@@ -26,7 +25,7 @@ consortium_uk <-
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
 
 consortium_uk %<>% 
-  mutate(across(epi_week, as_factor)) %>%
+  mutate(across(c(epi_week, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
   write_rds("consortium_uk.rds")
 
@@ -55,7 +54,7 @@ mutations %<>% inner_join(public)
 mutations_uk <- 
   mutations %>%
   filter(country == "UK") %>% 
-  mutate(across(c(epi_week, gene, position), as_factor)) %>%
+  mutate(across(c(epi_week, gene, position, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
   write_rds(file = "mutations_uk.rds")
 
@@ -64,31 +63,64 @@ mutations_uk
 
 ## Mutation / REF counts
 ```{r}
+#### UK ### 
+# TODO calculate UK counts by summing nation counts
+genes_positions <- 
+  mutations_uk %>% 
+  distinct(gene, position) # gene / position combinations actually found in mutations
+
 sequences_by_week <- 
   consortium_uk %>% 
   count(epi_week, name = "n_sequences")
 
 positions_by_week <- 
   mutations_uk %>%
-  group_by(epi_week, gene, position, .drop = FALSE) %>% # count all possible epi_week/gene/position combinations 
-  summarise(n_variant_sequences = n_distinct(sequence_name))
-
-genes_positions <- 
-  mutations_uk %>% 
-  distinct(gene, position) # gene / position combinations actually found in mutations
+  count(epi_week, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
 
 reference_counts <- 
   positions_by_week %>%
   inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
   inner_join(sequences_by_week) %>% 
   mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
-  filter(n > 0) # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
+  filter(n > 0) %>%  # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
+  mutate(adm1 = "UK")
 
 mutation_counts <- 
   mutations_uk %>%
-  count(epi_week, gene, position, variant)
+  count(epi_week, gene, position, variant) %>% 
+  mutate(adm1 = "UK")
 
-mutation_reference_counts <- bind_rows(mutation_counts, reference_counts) %T>% write_rds("mutation_reference_counts.rds")
+#### Nations ####
+levels_adm1 <- c(Scotland = "UK-SCT",
+                 Wales = "UK-WLS", 
+                 England = "UK-ENG", 
+                 Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
+
+sequences_by_week_nations <-
+  consortium_uk %>%
+  count(epi_week, adm1, name = "n_sequences")
+
+positions_by_week_nations <-
+  mutations_uk %>%
+  mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
+  count(epi_week, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
+
+reference_counts_nations <- 
+  positions_by_week_nations %>%
+  inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
+  inner_join(sequences_by_week_nations) %>% 
+  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
+  filter(n > 0) # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
+
+mutation_counts_nations <- 
+  mutations_uk %>%
+  mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
+  count(epi_week, gene, position, variant, adm1)
+
+mutation_reference_counts <- 
+  bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %T>%
+  write_rds("mutation_reference_counts.rds")
+
 mutation_reference_counts
 ```
 
