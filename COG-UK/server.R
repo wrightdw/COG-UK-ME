@@ -217,18 +217,19 @@ shinyServer(function(input, output, session) {
 
     # Filter mutation data and create plot
     mutation_plot <- reactive({
+        
         if(!input$ref){
           mutation_reference_counts %<>% filter(variant != "WT") 
         }      
       
-        mutation_reference_counts %>%
+        mutation_reference_counts %>% 
+        filter(adm1 == input$nation) %>%
         filter(gene == input$gene & position == input$position) %>%
         select(-position, -gene) %>%
         ggplot(aes(fill=variant, y=n, x=epi_week) ) +
         scale_x_discrete(drop=FALSE) +
         theme_classic() +
-        xlab("Epidemic week") +
-        ylab("Sequences") +
+        labs(x = "Epidemic week", y = "Sequences", fill = "Variant") +
         ggtitle(paste(input$gene, input$position, sep = " : ")) +
         scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) 
     }) 
