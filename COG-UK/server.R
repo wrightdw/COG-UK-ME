@@ -222,11 +222,11 @@ shinyServer(function(input, output, session) {
       }
       
       mutation_reference_counts %>% 
-        filter(adm1 == input$nation) %>%
         filter(gene == input$gene & position == input$position) %>%
+        mutate(variant = variant %>% as_factor %>% fct_infreq) %>% # fix variant colour by frequency
+        filter(adm1 == input$nation) %>%
         filter(epi_week %in% c(input$epi_week[1]:input$epi_week[2])) %>% # match because epi_week is factor
         mutate(epi_week = fct_drop(epi_week)) %>% # drop filtered epi_weeks to exclude from x-axis
-        select(-position, -gene) %>%
         ggplot(aes(fill=variant, y=n, x=epi_week) ) +
         scale_x_discrete(drop=FALSE) +
         theme_classic() +
