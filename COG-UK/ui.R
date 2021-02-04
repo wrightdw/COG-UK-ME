@@ -33,6 +33,17 @@ dashboardPage(
                              status = "info",
                              fill = TRUE,
                              selected = "UK"
+                         ),
+                         
+                         chooseSliderSkin("Modern"),
+                         setSliderColor("#5bc0de", 1), # Boostrap info colour
+                         sliderTextInput(
+                             inputId = "epi_week",
+                             label = "Epidemic week range:", 
+                             choices = consortium_uk$epi_week %>% levels,
+                             selected = c(consortium_uk$epi_week %>% levels %>% first, 
+                                          consortium_uk$epi_week %>% levels %>% last),
+                             animate = FALSE
                          )
         )
     ),
