@@ -43,7 +43,7 @@ dashboardPage(
                              choices = consortium_uk$epi_week %>% levels,
                              selected = c(consortium_uk$epi_week %>% levels %>% first, 
                                           consortium_uk$epi_week %>% levels %>% last),
-                             animate = FALSE
+                             animate = TRUE
                          )
         )
     ),
