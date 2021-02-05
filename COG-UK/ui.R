@@ -71,18 +71,17 @@ dashboardPage(
                         title = "Analysis", width = 12,
                         id = "tabs_report",
                         tabPanel("Table 1", 
-                                 h3("1. High frequency spike gene mutations"),
-                                 p("Individual amino acid replacements detected at the twenty highest frequencies in UK
-                                 genomes are shown in Table 1. Table S1 (link to table S1) shows all amino acid
-                                 replacements detected in complete SARS-CoV-2 genomes in the COG-UK dataset when
-                                 present in 5 or more sequences. Insertions or deletions are not shown. "),
+                                 h3("1. Spike gene mutations"),
+                                 p("Individual amino acid replacements detected in UK
+                                 genomes are shown in Table 1. Amino acid
+                                 replacements detected in 5 or more complete SARS-CoV-2 genomes in the COG-UK dataset are included, ranked by the frequency of the replacement. Neither insertions nor deletions are included."),
                                  
-                                 h4("Table 1. Spike mutations (top 20) present in the UK at high frequency"),
+                                 h4("Table 1. Spike mutations present in the UK"),
                                  p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
-                                 tableOutput("table_1"), 
+                                 dataTableOutput("table_1"), 
                                  
-                                 h4("Download data"),
-                                 p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date, and by the selected amino acid replacement from table 1."), 
+                                 h4("Download data (top 20)"),
+                                 p("Download a CSV file, for each of the top 20 amino acid replacements by frequency, comprising COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date."), 
                                  selectInput("dataset", "Choose amino acid replacement:",
                                              choices = database %>% slice_max(`numSeqs UK`, n = 20) %$% mutation, 
                                              selectize = FALSE),

@@ -18,19 +18,20 @@ lineages_t3 <-
 
 shinyServer(function(input, output, session) {
 
-    output$table_1 <- renderTable(
-        database %>% 
-            slice_max(`numSeqs UK`, n = 20) %>% 
-            select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
-            mutate(`Sequences over the last 28 days in UK (%)` = percent(`numSeqs UK 28 days` / `numSeqs UK`) %>% as.character, .after = `numSeqs UK`) %>% 
-            rename(`Amino acid replacement` = mutation, 
-                   `Cumulative sequences in UK` = `numSeqs UK`, 
-                   `Sequences over 28 days` = `numSeqs UK 28 days`,
-                   `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
-                   `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
-                   `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
-                   `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`)
-    )
+    output$table_1 <- renderDataTable({
+      database %>% 
+        arrange(desc(`numSeqs UK`)) %>% 
+        filter(`numSeqs UK` >= 5) %>% 
+        select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
+        mutate(`Sequences over the last 28 days in UK (%)` = percent(`numSeqs UK 28 days` / `numSeqs UK`) %>% as.character, .after = `numSeqs UK`) %>% 
+        rename(`Amino acid replacement` = mutation, 
+               `Cumulative sequences in UK` = `numSeqs UK`, 
+               `Sequences over 28 days` = `numSeqs UK 28 days`,
+               `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
+               `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
+               `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
+               `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`)
+    }, options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20))
     
     # Reactive value to generate downloadable table for selected mutation
     datasetInput <- reactive({
