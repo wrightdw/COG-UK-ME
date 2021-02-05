@@ -7,7 +7,8 @@ library(scales)
 library(shinyWidgets)
 library(shinyjs)
 
-lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298")
+lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298", 
+                 "P.2", "P.1")
 
 lineages_t3 <- 
     c("B.1.1.7" = "UK associated variant. Has 17 mutations (14 replacements and 3 deletions) including: T1001I, A1708D, I2230T, SGF 3675-3677 del In the ORF1ab; 69-70 del, Y144 del, N501Y, A570D, P681H, T716I, S982A and D1118H in the Spike; Q27stop, R52I and Y73C in ORF8; D3L and S235F in the N. Noteworthily, N501Y enhances ACE2 binding affinity, and P681H occurs at the furin cleavage site, known for biological significance in membrane fusion.", 
@@ -94,63 +95,17 @@ shinyServer(function(input, output, session) {
                        (variant == "N501Y" & lineage == "B.1.1.70" ) |
                            
                        (variant == "Y453F" & lineage == "B.1.1" ) |
-                       (variant == "Y453F" & lineage == "B.1.1.298" ))
-        
-        lineages_E484K <- c("B.1.351", "P.2", "P.1", "B.1.1.7")
-        table_2 %<>% bind_rows( 
-            inner_join(
-                lapply(lineages_E484K, function(x){
-                    mutations_s_uk %>% 
-                        filter(variant == "E484K") %>% 
-                        filter(lineage == x | str_detect(lineage, sublineage_regex(x))) %>% 
-                        summarise(!!x := n_distinct(sequence_name))
-                }) %>% 
-                    bind_cols() %>% 
-                    gather(key = "lineage", value = "n_sequences"),
-                
-                lapply(lineages_E484K, function(x){
-                    mutations_s_uk %>% 
-                        filter(variant == "E484K") %>% 
-                        filter(sample_date >= sample_date_28) %>% 
-                        filter(lineage == x | str_detect(lineage, sublineage_regex(x))) %>% 
-                        summarise(!!x := n_distinct(sequence_name))
-                }) %>% 
-                    bind_cols() %>% 
-                    gather(key = "lineage", value = "n_sequences_28")
-            ) %>% mutate(variant = "E484K") 
-        )
-        
-        n_N501Y_E484K <-
-            intersect(
-                mutations_s_uk %>% 
-                    filter(variant == "E484K") %>% 
-                    filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
-                    select(sequence_name),
-                
-                consortium_uk %>% 
-                    filter(n501y == "Y") %>% 
-                    filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
-                    select(sequence_name)
-            ) %>% nrow
-        
-        n_N501Y_E484K_28 <- 
-         intersect(
-            mutations_s_uk %>% 
-                filter(variant == "E484K") %>% 
-                filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
-                filter(sample_date >= sample_date_28) %>% 
-                select(sequence_name),
-            
-            consortium_uk %>% 
-                filter(n501y == "Y") %>% 
-                filter(lineage == "B.1.351" | str_detect(lineage, sublineage_regex("B.1.351"))) %>% 
-                filter(sample_date >= sample_date_28) %>% 
-                select(sequence_name)
-        ) %>% nrow
+                       (variant == "Y453F" & lineage == "B.1.1.298" ) |
+                       
+                       (variant == "E484K" & lineage == "B.1.351" ) |
+                       (variant == "E484K" & lineage == "P.2" ) |
+                       (variant == "E484K" & lineage == "P.1" ) |
+                       (variant == "E484K" & lineage == "B.1.1.7" ) |
+                         
+                       (variant == "N501Y + E484K" & lineage == "B.1.351") |
+                       (variant == "N501Y + E484K" & lineage == "B.1.1.7"))
         
         table_2 %<>% 
-            add_row(lineage = "B.1.351", variant = 'N501Y + E484K', 
-                             n_sequences = n_N501Y_E484K, n_sequences_28 = n_N501Y_E484K_28) %>% 
             relocate(variant) %>% 
             arrange(variant, lineage) %>% 
             rename(Mutation = variant, 
