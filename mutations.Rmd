@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-01-31_mutations.csv"
-  global_csv:     "cog_global_2021-01-31_public.csv"
-  consortium_csv: "cog_global_2021-01-31_consortium.csv"
+  mutations_csv:  "cog_global_2021-02-02_mutations.csv"
+  global_csv:     "cog_global_2021-02-02_public.csv"
+  consortium_csv: "cog_global_2021-02-02_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
@@ -19,6 +19,7 @@ library(lubridate)
 ```{r consortium_read}
 consortium_uk <- 
   read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
+  select(-starts_with("adm2")) %>% # remove adm2 columns
   type_convert %>% 
   filter(country == "UK")  
 
@@ -754,7 +755,6 @@ database %>%
 ```
 
 ### Escape mutations sample names
-
 ```{r escape_ids}
 escape_t4 <- 
 c(
@@ -786,10 +786,10 @@ c(
 )  
 
 lapply(escape_t4,  function(x){
-  mutations_s_uk %>% 
-    filter(variant == x) %>% 
-    distinct(sequence_name) %T>% 
-    {. %$% write_lines(sequence_name, paste0(x, ".txt"))}
+    mutations_s_uk %>% 
+        filter(variant == x) %>% 
+        distinct(sequence_name) %T>% {{.} %$% 
+        write_lines(sequence_name, paste0(x, ".txt"))}
 })
 ```
 ## nsp12
