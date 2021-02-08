@@ -8,7 +8,7 @@ library(shinyWidgets)
 library(shinyjs)
 
 lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298", 
-                 "P.2", "P.1")
+                 "P.2", "P.1", "B.1.222", "A", "B.1.1.119", "B.1.177.4")
 
 lineages_t3 <- 
     c("B.1.1.7" = "UK associated variant. Has 17 mutations (14 replacements and 3 deletions) including: T1001I, A1708D, I2230T, SGF 3675-3677 del In the ORF1ab; 69-70 del, Y144 del, N501Y, A570D, P681H, T716I, S982A and D1118H in the Spike; Q27stop, R52I and Y73C in ORF8; D3L and S235F in the N. Noteworthily, N501Y enhances ACE2 binding affinity, and P681H occurs at the furin cleavage site, known for biological significance in membrane fusion.", 
@@ -101,8 +101,14 @@ shinyServer(function(input, output, session) {
                        (variant == "E484K" & lineage == "B.1.351" ) |
                        (variant == "E484K" & lineage == "P.2" ) |
                        (variant == "E484K" & lineage == "P.1" ) |
-                       (variant == "E484K" & lineage == "B.1.1.7" ) |
-                         
+                       
+                       (variant == "E484K" & lineage == "A" ) |
+                       (variant == "E484K" & lineage == "B.1.1.119" ) |
+                       (variant == "E484K" & lineage == "B.1.177.4" ) |
+                       (variant == "E484K" & lineage == "B.1.222" ) |
+                       (variant == "E484K" & lineage == "B.1.177" ) |
+                       (variant == "E484K" & lineage == "B.1" ) |
+                       
                        (variant == "N501Y + E484K" & lineage == "B.1.351") |
                        (variant == "N501Y + E484K" & lineage == "B.1.1.7"))
         
