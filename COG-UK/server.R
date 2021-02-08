@@ -182,7 +182,11 @@ shinyServer(function(input, output, session) {
         mutate(variant = variant %>% as_factor %>% fct_infreq) %>% # fix variant colour by frequency
         filter(adm1 == input$nation) %>%
         filter(epi_week %in% c(input$epi_week[1]:input$epi_week[2])) %>% # match because epi_week is factor
-        mutate(epi_week = fct_drop(epi_week)) %>% # drop filtered epi_weeks to exclude from x-axis
+        mutate(epi_week = fct_drop(epi_week, only = {.} %$% 
+                                                    levels(epi_week) %>% 
+                                                    as.numeric %>% 
+                                                    keep(~ .x < input$epi_week[1] | .x > input$epi_week[2]) %>% 
+                                                    as.character)) %>% # drop filtered epi_weeks to exclude from x-axis
         ggplot(aes(fill=variant, y=n, x=epi_week) ) +
         scale_x_discrete(drop=FALSE) +
         theme_classic() +
