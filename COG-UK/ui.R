@@ -9,7 +9,7 @@ library(plotly)
 
 dashboardPage(
     title = "COG-UK Mutation Explorer",
-    skin = "yellow",
+    skin = "blue",
     
     header = dashboardHeader(title = tags$a(href='http://cogconsortium.uk', target = "_blank",
                                    tags$img(src='image2.png', height = "50px"))),
@@ -122,7 +122,7 @@ dashboardPage(
                                  tableOutput("table_2")
                         ), 
                         tabPanel("Table 3",
-                                 h3("3. Global variants of interest"),
+                                 h3("3. Global variants of concern"),
                                  h4("Table 3. Variants of concern being monitored by UK PHAs"),
                                  tableOutput("table_3")
                         ), 
@@ -208,8 +208,10 @@ dashboardPage(
         ) # end tabItems
     ), # end dashboardBody
     
-    footer = dashboardFooter(left = tags$a(href='http://cogconsortium.uk', target = "_blank",
-                                           tags$img(src='image2.png', height = "50px")), 
-                             right = tags$a(href='http://cogconsortium.uk', target = "_blank",
-                                            tags$img(src='image2.png', height = "50px")))
+    footer = dashboardFooter(
+        left = fluidRow(
+            column(4, tags$a(img(src = "CVR.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
+            column(4, tags$a(img(src = "UOG.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/", target = "_blank")),
+            column(4, tags$a(img(src = "MRC.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://mrc.ukri.org/", target = "_blank"))),
+     )
 )

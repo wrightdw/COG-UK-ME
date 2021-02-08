@@ -5,7 +5,7 @@
 *.dcf
 *.rds
 *.Rproj
-*.png
 *.txt
 *.xlsx
 *.md
+/*.png
