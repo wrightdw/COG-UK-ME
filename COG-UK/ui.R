@@ -210,8 +210,9 @@ dashboardPage(
     
     footer = dashboardFooter(
         left = fluidRow(
-            column(4, tags$a(img(src = "CVR.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
-            column(4, tags$a(img(src = "UOG.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/", target = "_blank")),
-            column(4, tags$a(img(src = "MRC.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://mrc.ukri.org/", target = "_blank"))),
+            column(3, tags$a(img(src = "CVR.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
+            column(3, tags$a(img(src = "UoG_colour.png", width = "229px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/", target = "_blank")),
+            column(3, tags$a(img(src = "CLIMB.png", width = "234px", height = "71px", class = "img-responsive center-block"), href="https://www.climb.ac.uk/", target = "_blank")),
+        column(3, tags$a(img(src = "UOE.png", width = "294px", height = "71px", class = "img-responsive center-block"), href="https://www.ed.ac.uk", target = "_blank")))
      )
 )
