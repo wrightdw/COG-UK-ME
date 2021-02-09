@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-02-04_mutations.csv"
-  global_csv:     "cog_global_2021-02-04_public.csv"
-  consortium_csv: "cog_global_2021-02-04_consortium.csv"
+  mutations_csv:  "cog_global_2021-02-06_mutations.csv"
+  global_csv:     "cog_global_2021-02-06_public.csv"
+  consortium_csv: "cog_global_2021-02-06_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
@@ -118,6 +118,7 @@ mutation_counts_nations <-
   mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
   count(epi_week, gene, position, variant, adm1)
 
+# TODO calculate UK counts by summing the nation counts
 mutation_reference_counts <- 
   bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %T>%
   write_rds("mutation_reference_counts.rds")
