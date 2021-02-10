@@ -17,8 +17,8 @@ dashboardPage(
     sidebar = dashboardSidebar(
         sidebarMenu(id="sidebar_menu",
             menuItem("COG-UK Report", tabName = "report", icon = icon("table")), 
-            menuItem("Mutation Tracker", tabName = "dashboard", icon = icon("virus")),
-            menuItem("Immunology", tabName = "immunology", icon = icon("shield-virus")),
+            menuItem("Visualiser", tabName = "dashboard", icon = icon("virus")),
+            menuItem("Antigenic", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -66,7 +66,7 @@ dashboardPage(
                             tags$li("high frequency individual amino acid replacements (Table 1), a subset of which may be important"),
                             tags$li("mutations of potential or known clinical and public health importance based on current evidence (Table 2)"),
                             tags$li("the designated global variants of concern and their structural context (Table 3)"),
-                            tags$li("mutations of potential immunogenic significance as indicated by experimental studies: shown to lead to weaker neutralisation of the virus by convalescent plasma from people who have been infected with SARS-CoV-2 and/or demonstrated escape from some monoclonal antibodies (mAbs) that may be given to patients with COVID-19 (Table 4).")
+                            tags$li("mutations of potential antigenic significance as indicated by experimental studies: shown to lead to weaker neutralisation of the virus by convalescent plasma from people who have been infected with SARS-CoV-2 and/or demonstrated escape from some monoclonal antibodies (mAbs) that may be given to patients with COVID-19 (Antigenic).")
                         ),
                         p(em("Notes"), " provides an explanation of scientific terms and a few limitations."),
                         p("The dashboard provides visualisations and frequency plots for mutations at specific residue on SARS-CoV-2 genes."),
@@ -76,7 +76,7 @@ dashboardPage(
                     )),
             tabItem(tabName = "report",
                 fluidRow(
-                    
+                    h1("COG-UK / Mutation Explorer"),
                     h2("COG-UK report on SARS-CoV-2 Spike mutations of interest"),
                     h3(dataset_date %>% format("%A %d %B %Y")),
                     
@@ -186,19 +186,20 @@ dashboardPage(
             ),
             
             tabItem(tabName = "immunology",
+                    h2("Antigenic Data"),
                     h3("Spike protein gene mutations of potential immunogenic significance significance detected in the UK"),
-                    p('Table 4 lists those mutations in the spike gene identified in the UK dataset that have been
+                    p('The table lists those mutations in the spike gene identified in the UK dataset that have been
                                  associated with weaker neutralisation of the virus by convalescent plasma from people who
                                  have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
                                  COVID-19 (referred to below as "escape").'),
                     p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
                                  vaccines or the immune response to natural SARS-CoV-2 infection.")),
                     
-                    h4('Table 4. Reported "escape" mutations in the spike gene detected in the UK'),
+                    h4('Reported "escape" mutations in the spike gene detected in the UK'),
                     DTOutput("table_4"),
                     
                     h4("Download data"),
-                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected amino acid replacement from table 4."), 
+                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected amino acid replacement."), 
                     selectInput("escape", "Choose amino acid replacement:",
                                 choices = database %>% 
                                     filter(!is.na(escape)) %>% 
