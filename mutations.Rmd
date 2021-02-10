@@ -473,7 +473,11 @@ database <-
   group_by(position, mutation) %>% 
   summarise(escape = escape %>% unique %>% sort %>% toString, 
             citation = citation %>% unique %>% toString, 
-            doi = doi %>% unique %>% toString) %>% 
+            doi = doi %>% unique %>% toString,
+            mab = mab %>% any,
+            plasma = plasma %>% any,
+            vaccine_sera = vaccine_sera %>% any,
+            support = support %>% unique %>% toString) %>% 
   ungroup
   
 database %<>% 
@@ -485,7 +489,8 @@ database %<>%
   full_join(variants_uk_28,  by = c("mutation" = "variant")) %>% 
   full_join(variants_nations_28,  by = c("mutation" = "variant_28")) 
 
-database %<>% rename(`# Global Lineages associated with` = n_lineages, 
+database %<>% 
+  rename(`# Global Lineages associated with` = n_lineages, 
                     `# UK Lineages associated with` = n_uk_lineages, 
                     `Global Lineages` = lineages, 
                     `Uk Lineages` = uk_lineages,
@@ -500,10 +505,9 @@ database %<>% rename(`# Global Lineages associated with` = n_lineages,
                     `numSeqs Eng 28 days` = `UK-ENG_28`,
                     `numSeqs Scotland 28 days` = `UK-SCT_28`,
                     `numSeqs Wales 28 days` = `UK-WLS_28`, 
-                    `numSeqs NI 28 days` = `UK-NIR_28`
-                    ) %>% mutate(
-                            across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))
-                          )
+                    `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
+  mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
+  mutate(across(c(mutation, support), as_factor))
 
 database %T>% write_rds("database.rds")
 ```

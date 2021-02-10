@@ -18,6 +18,7 @@ dashboardPage(
         sidebarMenu(id="sidebar_menu",
             menuItem("COG-UK Report", tabName = "report", icon = icon("table")), 
             menuItem("Mutation Tracker", tabName = "dashboard", icon = icon("virus")),
+            menuItem("Immunology", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -126,29 +127,6 @@ dashboardPage(
                                  h4("Table 3. Variants of concern being monitored by UK PHAs"),
                                  tableOutput("table_3")
                         ), 
-                        tabPanel("Table 4",                         
-                                 h3("4. Escape mutations in the Spike protein gene present in the UK"),
-                                 p("Table 4 lists those mutations in the spike gene identified in the UK dataset that have been
-                                 associated with weaker neutralisation of the virus by convalescent plasma from people who
-                                 have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
-                                 COVID-19 (referred to below as ‘escape’)."),
-                                 p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
-                                 vaccines or the immune response to natural SARS-CoV-2 infection.")),
-                                 
-                                 h4("Table 4. Reported ‘escape’ mutations in the spike gene present in the UK"),
-                                 dataTableOutput("table_4"),
-                                 
-                                 h4("Download data"),
-                                 p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected amino acid replacement from table 4."), 
-                                 selectInput("escape", "Choose amino acid replacement:",
-                                             choices = database %>% 
-                                                 filter(!is.na(escape)) %>% 
-                                                 filter(`numSeqs UK` > 0) %>% 
-                                                 arrange(desc(`numSeqs UK`), mutation) %$% 
-                                                 mutation, 
-                                             selectize = FALSE),
-                                 downloadButton("downloadEscape", "Download", class = "btn-info")
-                        ),
                         tabPanel("Notes",                         
                                  h2("Data source and processing"),
                                  p("The analysis described in this report is based on ", n_distinct(consortium_uk$sequence_name) %>% comma(format = "d")
@@ -196,6 +174,7 @@ dashboardPage(
                         12, variant 01) and subsequently redesignated as VOC-202012/01 (Variant of Concern 202012/01).")
                                  )
                         )
+                        
                     ) # end tabBox
                 ) # end fluidRow
             ), # end tabItem
@@ -204,6 +183,30 @@ dashboardPage(
                     fluidRow(
                         box(plotlyOutput("mutation_time", height = 748), width = 12)
                     )
+            ),
+            
+            tabItem(tabName = "immunology",
+                    h3("Spike protein gene mutations of potential immunogenic significance significance detected in the UK"),
+                    p('Table 4 lists those mutations in the spike gene identified in the UK dataset that have been
+                                 associated with weaker neutralisation of the virus by convalescent plasma from people who
+                                 have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
+                                 COVID-19 (referred to below as "escape").'),
+                    p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
+                                 vaccines or the immune response to natural SARS-CoV-2 infection.")),
+                    
+                    h4('Table 4. Reported "escape" mutations in the spike gene detected in the UK'),
+                    DTOutput("table_4"),
+                    
+                    h4("Download data"),
+                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected amino acid replacement from table 4."), 
+                    selectInput("escape", "Choose amino acid replacement:",
+                                choices = database %>% 
+                                    filter(!is.na(escape)) %>% 
+                                    filter(`numSeqs UK` > 0) %>% 
+                                    arrange(desc(`numSeqs UK`), mutation) %$% 
+                                    mutation, 
+                                selectize = FALSE),
+                    downloadButton("downloadEscape", "Download", class = "btn-info")
             )
         ) # end tabItems
     ), # end dashboardBody

@@ -1,11 +1,12 @@
 library(shiny)
 library(tidyverse)
-library(formattable)
 library(plotly)
 library(RColorBrewer)
 library(scales)
+library(formattable)
 library(shinyWidgets)
 library(shinyjs)
+library(DT)
 
 lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298", 
                  "P.2", "P.1", "B.1.222", "A", "B.1.1.119", "B.1.177.4")
@@ -23,7 +24,8 @@ shinyServer(function(input, output, session) {
         arrange(desc(`numSeqs UK`)) %>% 
         filter(`numSeqs UK` >= 5) %>% 
         select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
-        mutate(`Sequences over the last 28 days in UK (%)` = percent(`numSeqs UK 28 days` / `numSeqs UK`) %>% as.character, .after = `numSeqs UK`) %>% 
+        mutate(`Sequences over the last 28 days in UK (%)` = formattable::percent(`numSeqs UK 28 days` / `numSeqs UK`, digits = 1L) %>% as.character, 
+               .after = `numSeqs UK`) %>% 
         rename(`Amino acid replacement` = mutation, 
                `Cumulative sequences in UK` = `numSeqs UK`, 
                `Sequences over 28 days` = `numSeqs UK 28 days`,
@@ -150,17 +152,28 @@ shinyServer(function(input, output, session) {
                    `Sequences over 28 days` = sequences_sum_28,                    
                    `Reason for tracking` = reason)
     })
-    output$table_4 <- renderDataTable({
+    output$table_4 <- renderDT({
         database %>%
             filter(!is.na(escape)) %>% 
-            select(mutation, escape, `numSeqs UK`, `numSeqs UK 28 days`, citation, doi) %>%  
+            mutate(mutation = fct_drop(mutation)) %>%
+            select(mutation, escape, `numSeqs UK`, `numSeqs UK 28 days`, mab, plasma, vaccine_sera, support, citation, doi) %>%  
             arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
             rename(`Amino acid replacement` = mutation, 
                    `Cumulative sequences in UK` = `numSeqs UK`,
                    `Sequences over 28 days` = `numSeqs UK 28 days`,
                    `Escape mutations details` = escape,
                    `References` = citation,
-                   DOI = doi)
+                   DOI = doi, 
+                   `Monoclonal Ab` = mab,
+                   `Convalescent sera` = plasma,
+                   `Vaccine sera` = vaccine_sera,
+                   Confidence = support) %>% 
+        datatable(filter = "top") %>% 
+        formatStyle(
+          'Confidence',
+          target = 'row',
+          backgroundColor = styleEqual(c("low", "medium", "high"), c('LemonChiffon', 'DarkOrange', 'FireBrick')), 
+          color = styleEqual(c("low", "medium", "high"), c('DarkSlateGray', 'White', 'Snow')))
         })
     
     # always display wild type on percentage chart
