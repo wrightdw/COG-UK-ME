@@ -14,7 +14,14 @@ dataset_date <- ymd("2021-02-06") #TODO derive from filename
 
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 
-#TODO Pre-load key mutations
+lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298", 
+                 "P.2", "P.1", "B.1.222", "A", "B.1.1.119", "B.1.177.4")
+
+lineages_t3 <- 
+  c("B.1.1.7" = "UK associated variant. Has 17 mutations (14 replacements and 3 deletions) including: T1001I, A1708D, I2230T, SGF 3675-3677 del In the ORF1ab; 69-70 del, Y144 del, N501Y, A570D, P681H, T716I, S982A and D1118H in the Spike; Q27stop, R52I and Y73C in ORF8; D3L and S235F in the N. Noteworthily, N501Y enhances ACE2 binding affinity, and P681H occurs at the furin cleavage site, known for biological significance in membrane fusion.", 
+    "B.1.351" = "Variant associated with South Africa. Has eight mutations in the Spike: D80A, D215G, E484K, N501Y, A701V, L18F, R246I and K417N. Three of these in the RBM, K417N, E484K and N501Y. K417N and E484K have been shown to escape some mAbs.", 
+    "P.1" = "Variant associated with Brazil. Has 10 mutations in the Spike including L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y,H655Y and T1027I. Noteworthy  E484K, N501Y and K417T have biological significance.") %>% 
+  enframe("lineage", "reason")
 
 # Construct a regular expression to match the sublineages of a lineage
 sublineage_regex <- function(lineage){
@@ -60,7 +67,11 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
         mutate(lineage = x, .before = 1)
     }) %>% 
       bind_rows() %>% 
-      select(-sequences) %>% 
-      gather(key = "variant", value = "n_sequences", D614G:`N501Y + E484K`)
+      # select(-sequences) %>% 
+      gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
   }
 }
+
+n_uk_lineages_all <- inner_join(sum_key_mutations_by_lineage_uk(lineages_t2), 
+                                sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>% 
+                                  rename(n_sequences_28 = n_sequences))
