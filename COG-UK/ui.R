@@ -72,14 +72,12 @@ dashboardPage(
                         p(em("Notes"), " provides an explanation of scientific terms and a few limitations."),
                         
                         h3("Credits"),
-                        p("COG-UK/ME is developed within and funded by the COVID-19 Genomics UK Consortium by Derek W. Wright, Joseph Hughes, William Harvey, Ben Jackson, Andrew Rambaut, David L. Roberson, Alessandro M. Carabelli. COG-UK/ME is based on the CLIMB framework, and maintained by the MRC-University of Glasgow Centre for Virus Research. Please see the 'How to cite' page if you intend to use data from this web site. CLIMB data provided via this web application is subject to CLIMB Terms and Conditions. Contact Derek.Wright@glasgow.ac.uk with questions or feedback. Follow COG-UK to be notified of updates.")
+                        p("COG-UK/ME is developed within and funded by the COVID-19 Genomics UK Consortium by Derek W. Wright, Joseph Hughes, William Harvey, Ben Jackson, Andrew Rambaut, David L. Roberson, Alessandro M. Carabelli. COG-UK/ME is based on the CLIMB framework, and maintained by the MRC-University of Glasgow Centre for Virus Research. Please see the 'How to cite' page if you intend to use data from this web site. CLIMB data provided via this web application is subject to CLIMB Terms and Conditions. Contact", a(href = "mailto:Derek.Wright@glasgow.ac.uk", "Derek.Wright@glasgow.ac.uk"), "with questions or feedback. Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.")
                     )),
             tabItem(tabName = "report",
                 fluidRow(
                     h1("COG-UK / Mutation Explorer"),
-                    h2("COG-UK report on SARS-CoV-2 Spike mutations of interest"),
-                    h3(dataset_date %>% format("%A %d %B %Y")),
-                    h4("Latest UK sequence:", max(consortium_uk$sample_date) %>% format("%A %d %B %Y")),
+                    h3("Latest UK sequence:", max(consortium_uk$sample_date) %>% format("%A %d %B %Y")),
                     
                     tabBox(
                         title = "Analysis", width = 12,
@@ -90,7 +88,6 @@ dashboardPage(
                                  genomes are shown in Table 1. Amino acid
                                  replacements detected in 5 or more complete SARS-CoV-2 genomes in the COG-UK dataset are included, ranked by the frequency of the replacement. Neither insertions nor deletions are included."),
                                  
-                                 h4("Table 1. Spike mutations present in the UK"),
                                  p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
                                  dataTableOutput("table_1"), 
                                  
@@ -128,9 +125,7 @@ dashboardPage(
                                  tableOutput("table_2")
                         ), 
                         tabPanel("Table 3",
-                                 h3("3. Global variants of concern"),
-                                 
-                                 h4("Table 3. Variants of concern being monitored by UK PHAs"),
+                                 h3("3. Global variants of concern being monitored by UK PHAs"),
                                  tableOutput("table_3"),
                                  
                                  h4("Download data"),
@@ -143,8 +138,8 @@ dashboardPage(
                         tabPanel("Notes",                         
                                  h2("Data source and processing"),
                                  p(str_c("The analysis described in this report is based on ", n_distinct(consortium_uk$sequence_name) %>% comma(format = "d")
-                                   ," UK-derived genomes sequenced by COG-UK (complete data in MRC-CLIMB database to ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"), ".")),
-                                 p("A report of the geographic distribution and prevalence of SARS-CoV-2 lineages in general, and global variants of interest, can be found ", a(href = "https://cov-lineages.org/global_report.html", target = "_blank", "here"), ". Amino acid replacement, insertion and deletion counts for all SARS-CoV-2 genes in the global GISAID database can be found ", a(href = "http://cov-glue.cvr.gla.ac.uk/", target = "_blank", "here"), "."),
+                                   ," UK-derived genomes sequenced by COG-UK: complete data in the MRC-CLIMB database to ", dataset_date %>% format("%d/%m/%Y"), ", with the latest sequence from ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"),  ".")),
+                                 p("A report of the geographic distribution and prevalence of SARS-CoV-2 lineages in general, and global variants of interest, can be found ", a(href = "https://cov-lineages.org/global_report.html", target = "_blank", "here", .noWS = "outside"), ". Amino acid replacement, insertion and deletion counts for all SARS-CoV-2 genes in the global GISAID database can be found ", a(href = "http://cov-glue.cvr.gla.ac.uk/", target = "_blank", "here", .noWS = "outside"), ".", .noWS = c("after-begin", "before-end")),
                                  h2("Limitations"),
                                  tags$ol(
                                      tags$li("This report is for information only. The clinical and public health importance of any single mutation, or combination of mutations cannot be determined from sequence data alone."),
