@@ -161,24 +161,25 @@ shinyServer(function(input, output, session) {
         database %>%
             filter(!is.na(escape)) %>% 
             mutate(mutation = fct_drop(mutation)) %>%
-            select(mutation, escape, `numSeqs UK`, `numSeqs UK 28 days`, mab, plasma, vaccine_sera, support, citation, doi) %>%  
+            select(mutation, domain, escape, `numSeqs UK`, `numSeqs UK 28 days`, mab, plasma, vaccine_sera, support, anchor) %>%  
             arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
             rename(`Amino acid replacement` = mutation, 
                    `Cumulative sequences in UK` = `numSeqs UK`,
                    `Sequences over 28 days` = `numSeqs UK 28 days`,
                    `Escape mutations details` = escape,
-                   `References` = citation,
-                   DOI = doi, 
+                   `References` = anchor,
+                   # DOI = doi, 
                    `Monoclonal Ab` = mab,
                    `Convalescent sera` = plasma,
                    `Vaccine sera` = vaccine_sera,
-                   Confidence = support) %>% 
-        datatable(filter = "top") %>% 
+                   Confidence = support, 
+                   Domain = domain) %>% 
+        datatable(filter = "top", escape = FALSE) %>% 
         formatStyle(
           'Confidence',
           target = 'row',
           backgroundColor = styleEqual(c("low", "medium", "high"), c('LemonChiffon', 'DarkOrange', 'FireBrick')), 
-          color = styleEqual(c("low", "medium", "high"), c('DarkSlateGray', 'White', 'Snow')))
+          color = styleEqual(c("low", "medium", "high"), c('DarkSlateGray', 'White', 'Snow'))) # TODO anchor colour
         })
     
     # always display wild type on percentage chart

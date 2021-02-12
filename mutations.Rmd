@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-02-06_mutations.csv"
-  global_csv:     "cog_global_2021-02-06_public.csv"
-  consortium_csv: "cog_global_2021-02-06_consortium.csv"
+  mutations_csv:  "cog_global_2021-02-09_mutations.csv"
+  global_csv:     "cog_global_2021-02-09_public.csv"
+  consortium_csv: "cog_global_2021-02-09_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
@@ -470,14 +470,17 @@ variants_nations_28 <-
 database <- 
   read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
   type_convert %>% 
+  mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>% 
   group_by(position, mutation) %>% 
   summarise(escape = escape %>% unique %>% sort %>% toString, 
-            citation = citation %>% unique %>% toString, 
-            doi = doi %>% unique %>% toString,
+            # citation = citation %>% unique %>% toString, 
+            # doi = doi %>% unique %>% toString,
+            anchor = anchor %>% unique %>% str_c(collapse = "<br>"),
             mab = mab %>% any,
             plasma = plasma %>% any,
             vaccine_sera = vaccine_sera %>% any,
-            support = support %>% unique %>% toString) %>% 
+            support = support %>% unique %>% toString,
+            domain = domain %>% unique %>% toString) %>% 
   ungroup
   
 database %<>% 
@@ -507,7 +510,7 @@ database %<>%
                     `numSeqs Wales 28 days` = `UK-WLS_28`, 
                     `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
-  mutate(across(c(mutation, support), as_factor))
+  mutate(across(c(mutation, support, domain), as_factor))
 
 database %T>% write_rds("database.rds")
 ```
