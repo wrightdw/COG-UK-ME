@@ -12,7 +12,14 @@ dashboardPage(
     skin = "blue",
     
     header = dashboardHeader(title = tags$a(href='http://cogconsortium.uk', target = "_blank",
-                                   tags$img(src='image2.png', height = "50px"))),
+                                   tags$img(src='image2.png', height = "50px")),
+                             
+                             tags$li(class = "dropdown", 
+                                     div(dashboardLabel("For research purposes only", status = "warning", style = "square"), 
+                                         style = "padding:15px")
+                                     
+                                     )
+                             ),
     
     sidebar = dashboardSidebar(
         sidebarMenu(id="sidebar_menu",
@@ -102,6 +109,7 @@ dashboardPage(
                                              selectize = FALSE),
                                  downloadButton("downloadData", "Download", class = "btn-info")
                         ),
+                        
                         tabPanel("Table 2", 
                                  h3("2. Spike gene mutations of potential importance"),
                                  p("Single spike gene mutations of potential or clinical and public health importance based on
@@ -124,16 +132,27 @@ dashboardPage(
                                  p(em("NB Numbers are lower than in Table 1 because Table 2 only considers specific lineages.")),
                                  tableOutput("table_2")
                         ), 
-                        tabPanel("Table 3",
-                                 h3("3. Global variants of concern being monitored by UK PHAs"),
-                                 tableOutput("table_3"),
+                        
+                        tabPanel("Table 3", h3("3. Global variants of concern being monitored by UK PHAs"),
+                                 fluidRow(
+                                     tableOutput("table_3"),
+                                     hr()
+                                 ),
                                  
-                                 h4("Download data"),
-                                 p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected lineage of concern."), 
-                                 selectInput("concern", "Choose lineage:",
-                                             choices = c(lineages_t3$lineage, "B.1.1.7 + E484K") %>% sort, # TODO exclude zero count lineages
-                                             selectize = FALSE),
-                                 downloadButton("downloadConcern", "Download", class = "btn-info")
+                                 fluidRow(
+                                     box(title = "Download data", closable = FALSE, width = 6, 
+                                         status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                         p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected lineage of concern."), 
+                                         selectInput("concern", "Choose lineage:",
+                                                     choices = c(lineages_t3$lineage, "B.1.1.7 + E484K") %>% sort, # TODO exclude zero count lineages
+                                                     selectize = FALSE),
+                                         downloadButton("downloadConcern", "Download", class = "btn-info")),
+                                     
+                                     box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 6, 
+                                         status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                                         img(src = "structure.png", class = "center-block"))
+                                 )
+                                 
                         ), 
                         tabPanel("Notes",                         
                                  h2("Data source and processing"),
@@ -195,15 +214,13 @@ dashboardPage(
             
             tabItem(tabName = "immunology",
                     h2("Antigenic Information"),
-                    h3("Spike protein gene mutations of potential immunogenic significance significance detected in the UK"),
+                    h3("Spike protein gene mutations of potential immunogenic significance detected in the UK"),
                     p('The table lists those mutations in the spike gene identified in the UK dataset that have been
                                  associated with weaker neutralisation of the virus by convalescent plasma from people who
                                  have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
                                  COVID-19 (referred to below as "escape").'),
                     p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
                                  vaccines or the immune response to natural SARS-CoV-2 infection.")),
-                    
-                    h4('Reported "escape" mutations in the spike gene detected in the UK'),
                     DTOutput("table_4"),
                     
                     h4("Download data"),
