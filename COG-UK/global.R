@@ -3,16 +3,21 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-database <- read_rds("2021-02-12/database.rds")
-consortium_uk <- read_rds("2021-02-12/consortium_uk.rds")
-mutations_uk <- read_rds("2021-02-12/mutations_uk.rds")
-mutation_reference_counts <- read_rds("2021-02-12/mutation_reference_counts.rds") # precomputed mutation counts 
+database <- read_rds("2021-02-14/database.rds")
+consortium_uk <- read_rds("2021-02-14/consortium_uk.rds")
+mutations_uk <- read_rds("2021-02-14/mutations_uk.rds")
+mutation_reference_counts <- read_rds("2021-02-14/mutation_reference_counts.rds") # precomputed mutation counts 
 
 mutations_s_uk <- mutations_uk %>% filter(gene == "S")
 
-dataset_date <- ymd("2021-02-12") #TODO derive from filename
-
+dataset_date <- ymd("2021-02-14") #TODO derive from filename
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
+
+total_sequences <- n_distinct(consortium_uk$sequence_name)
+total_sequences_28 <- 
+  consortium_uk %>% 
+  filter(sample_date >= sample_date_28) %$% 
+  n_distinct(sequence_name)
 
 lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298", 
                  "P.2", "P.1", "B.1.222", "A", "B.1.1.119", "B.1.177.4")

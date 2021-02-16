@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-02-12_mutations.csv"
-  global_csv:     "cog_global_2021-02-12_public.csv"
-  consortium_csv: "cog_global_2021-02-12_consortium.csv"
+  mutations_csv:  "cog_global_2021-02-14_mutations.csv"
+  global_csv:     "cog_global_2021-02-14_public.csv"
+  consortium_csv: "cog_global_2021-02-14_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
@@ -421,7 +421,8 @@ deletions_v
 ```
 ## Database
 ```{r database}
-mutations_s_uk <- mutations_uk %>% 
+mutations_s_uk <- 
+  mutations_uk %>% 
   filter(gene == "S")
 
 lineage_distinct <- 
@@ -447,7 +448,8 @@ uk_lineages <-
 # All sample dates
 variants_uk <- 
   mutations_s_uk %>% 
-  count(variant, name = "UK")
+  group_by(variant) %>% 
+  summarise(UK = n(), earliest = min(sample_date))
 
 variants_nations <- 
   mutations_s_uk %>% 
@@ -470,12 +472,10 @@ variants_nations_28 <-
 database <- 
   read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
   type_convert %>% 
-  mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>% 
+  mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>% # hyperlink to citation DOI
   group_by(position, mutation) %>% 
   summarise(escape = escape %>% unique %>% sort %>% toString, 
-            # citation = citation %>% unique %>% toString, 
-            # doi = doi %>% unique %>% toString,
-            anchor = anchor %>% unique %>% str_c(collapse = "<br>"),
+            anchor = anchor %>% unique %>% str_c(collapse = "<br>"), # line breaks between hyperlinks
             mab = mab %>% any,
             plasma = plasma %>% any,
             vaccine_sera = vaccine_sera %>% any,
