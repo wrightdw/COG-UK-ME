@@ -9,13 +9,13 @@ library(plotly)
 
 dashboardPage(
     title = "COG-UK Mutation Explorer",
-    skin = "blue",
+    skin = "black",
     
     header = dashboardHeader(title = tags$a(href='http://cogconsortium.uk', target = "_blank",
                                    tags$img(src='image2.png', height = "50px")),
                              
                              tags$li(class = "dropdown", 
-                                     div(dashboardLabel("For research purposes only", status = "warning", style = "square"), 
+                                     div(dashboardLabel("FOR RESEARCH PURPOSES ONLY", status = "primary", style = "square"), 
                                          style = "padding:15px")
                                      
                                      )
@@ -30,6 +30,7 @@ dashboardPage(
         ),
         
         conditionalPanel(condition =  "input.sidebar_menu == 'dashboard'",
+                         hr(),
                          selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), 
                                      selected = "S"),
                          selectInput("position", "Position:", 
@@ -58,11 +59,19 @@ dashboardPage(
                                           consortium_uk$epi_week %>% levels %>% last),
                              animate = TRUE
                          )
+        ),
+        conditionalPanel(condition =  "input.sidebar_menu == 'immunology'", 
+                         hr(),
+                         prettyCheckboxGroup("escape", "Escape:",
+                                              c("Monoclonal Ab" = "monoclonal",
+                                                "Convalescent sera" = "convalescent",
+                                                "Vaccine sera" = "vaccine"))
         )
     ),
     
     body = dashboardBody(
         useShinyjs(), # set up the dashboard to use shinyjs  
+        tags$head(tags$link(rel = "shortcut icon", href = "favicon.ico")),
         tabItems(
             tabItem(tabName = "about",
                     fluidRow(
@@ -114,21 +123,11 @@ dashboardPage(
                                  h3("2. Spike gene mutations of potential importance"),
                                  p("Single spike gene mutations of potential or clinical and public health importance based on
                                  current evidence are listed in Table 2."),
+                                 p(strong("Caveats:"), "the table aims to provide information on individual mutations, but this is rapidly
+                                 becoming an over-simplification because mutations are increasingly arising in a
+                                 range of combinations."),
                                  
-                                 h5("CAVEATS:"),
-                                 tags$ul(
-                                     tags$li("The table aims to provide information on individual mutations, but this is rapidly
-                                     becoming an over-simplification because mutations are increasingly arising in a
-                                     range of combinations."),
-                                     
-                                     tags$li("The term ‘escape’ is used in the table as shorthand to mean weaker neutralisation of
-                                     the virus by convalescent plasma from people who have been infected with SARS-
-                                         COV-2, and/or some monoclonal antibodies (mAbs) that may be given to patients
-                                     with COVID-19.")
-                                 ),
-                                 
-                                 h4("Table 2. Spike S gene mutations, lineage associations and reason for interest, UK
-                                 lineages"),
+                                 h4("Table 2. Spike S gene mutations, lineage associations, lineages detected in the UK"),
                                  p(em("NB Numbers are lower than in Table 1 because Table 2 only considers specific lineages.")),
                                  tableOutput("table_2")
                         ), 
@@ -150,13 +149,25 @@ dashboardPage(
                                      
                                      box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 6, 
                                          status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                         img(src = "structure.png", class = "center-block"))
+                                         img(src = "structure.png", class = "center-block img-responsive")),
+                                     
+                                     box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 4, 
+                                         status = "orange", collapsible = TRUE, icon = icon("microscope"), height = 480,
+                                         img(src = "mutants_lineage_B.1.351.png", class = "center-block img-responsive")),
+                                     
+                                     box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 4, 
+                                         status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                                         img(src = "mutants_lineage_P.1.png", class = "center-block img-responsive")),
+                                     
+                                     box(title = "Spike protein mutations (B.1.1.7)", closable = FALSE, width = 4, 
+                                         status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                                         img(src = "lineage_B.1.1.7.png", height = "480px", class = "center-block img-responsive"))
+                                     
                                  )
-                                 
                         ), 
                         tabPanel("Notes",                         
                                  h2("Data source and processing"),
-                                 p(str_c("The analysis described in this report is based on ", n_distinct(consortium_uk$sequence_name) %>% comma(format = "d")
+                                 p(str_c("The analysis described in this report is based on ", total_sequences %>% comma(format = "d")
                                    ," UK-derived genomes sequenced by COG-UK: complete data in the MRC-CLIMB database to ", dataset_date %>% format("%d/%m/%Y"), ", with the latest sequence from ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"),  ".")),
                                  p("A report of the geographic distribution and prevalence of SARS-CoV-2 lineages in general, and global variants of interest, can be found ", a(href = "https://cov-lineages.org/global_report.html", target = "_blank", "here", .noWS = "outside"), ". Amino acid replacement, insertion and deletion counts for all SARS-CoV-2 genes in the global GISAID database can be found ", a(href = "http://cov-glue.cvr.gla.ac.uk/", target = "_blank", "here", .noWS = "outside"), ".", .noWS = c("after-begin", "before-end")),
                                  h2("Limitations"),
@@ -222,6 +233,23 @@ dashboardPage(
                     p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
                                  vaccines or the immune response to natural SARS-CoV-2 infection.")),
                     DTOutput("table_4"),
+                    
+                    h4("Notes"),
+                    h5("Confidence"),
+                    tags$ul(
+                        tags$li("High: Antigenic role of mutation is supported by multiple studies including at least one that reports an effect observed with (post-infection serum) convalescent plasma."),
+                        tags$li("Medium: Antigenic role of mutation is supported by multiple studies. "),
+                        tags$li("Low: Mutation is supported by a single study.")
+                    ),
+                    
+                    h5("Spike protein domain definitions"),
+                    tags$ul(
+                        tags$li("SP, signal protein (residues 1-13)"),
+                        tags$li("NTD, N-terminal domain (14-303)"),
+                        tags$li("RBD, receptor-binding domain (330-530) which includes the RBM, receptor-binding motif (437-508)"),
+                        tags$li("FP, fusion peptide (815-834)"),
+                        tags$li("Residues outside of these specific domains are labelled by subunit, S1 (residues 1-685) or S2 (residues 686-1173)")
+                    ),
                     
                     h4("Download data"),
                     p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected amino acid replacement."), 

@@ -14,16 +14,20 @@ shinyServer(function(input, output, session) {
       database %>% 
         arrange(desc(`numSeqs UK`)) %>% 
         filter(`numSeqs UK` >= 5) %>% 
-        select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %>% 
-        mutate(`Sequences over the last 28 days in UK (%)` = formattable::percent(`numSeqs UK 28 days` / `numSeqs UK`, digits = 1L) %>% as.character, 
+        select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
+        mutate(`Cumulative sequences in UK (%)` = formattable::percent(`numSeqs UK` / total_sequences, digits = 1L) %>% as.character,
                .after = `numSeqs UK`) %>% 
+        mutate(`Sequences over the last 28 days in UK (%)` = formattable::percent(`numSeqs UK 28 days` / total_sequences_28, digits = 1L) %>% as.character,
+               `Proportion of variant over last 28 days in UK (%)` = formattable::percent(`numSeqs UK 28 days` / `numSeqs UK`, digits = 1L) %>% as.character,
+               .after = `numSeqs UK 28 days`) %>% 
         rename(`Amino acid replacement` = mutation, 
                `Cumulative sequences in UK` = `numSeqs UK`, 
-               `Sequences over 28 days` = `numSeqs UK 28 days`,
+               `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
                `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
                `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
                `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
-               `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`)
+               `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
+               `Date of first appearance in UK` = earliest)
     }, options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20))
     
     # Reactive value to generate downloadable table for selected mutation
@@ -131,9 +135,9 @@ shinyServer(function(input, output, session) {
             relocate(variant) %>% 
             arrange(variant, lineage) %>% 
             rename(Mutation = variant, 
-                   `Lineage(s) in which it has been detected` = lineage, 
-                   `Cumulative sequences in UK` = n_sequences, 
-                   `Sequences over 28 days` = n_sequences_28)
+                   `Lineage(s) in which detected` = lineage, 
+                   `Cumulative UK sequences` = n_sequences, 
+                   `UK Sequences over 28 days` = n_sequences_28)
         table_2
     })
     
@@ -158,22 +162,33 @@ shinyServer(function(input, output, session) {
     })
     
     output$table_4 <- renderDT({
-        database %>%
-            filter(!is.na(escape)) %>% 
-            mutate(mutation = fct_drop(mutation)) %>%
-            select(mutation, domain, escape, `numSeqs UK`, `numSeqs UK 28 days`, mab, plasma, vaccine_sera, support, anchor) %>%  
-            arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
-            rename(`Amino acid replacement` = mutation, 
-                   `Cumulative sequences in UK` = `numSeqs UK`,
-                   `Sequences over 28 days` = `numSeqs UK 28 days`,
-                   `Escape mutations details` = escape,
-                   `References` = anchor,
-                   # DOI = doi, 
-                   `Monoclonal Ab` = mab,
-                   `Convalescent sera` = plasma,
-                   `Vaccine sera` = vaccine_sera,
-                   Confidence = support, 
-                   Domain = domain) %>% 
+      if("monoclonal" %in% input$escape){
+        database %<>% filter(mab == TRUE)
+      }
+      
+      if("convalescent" %in% input$escape){
+        database %<>% filter(plasma == TRUE)
+      }
+      
+      if("vaccine" %in% input$escape){
+        database %<>% filter(vaccine_sera == TRUE)
+      }
+      
+      database %>%
+        filter(!is.na(escape)) %>% 
+          mutate(mutation = fct_drop(mutation)) %>%
+          select(mutation, domain, escape, `numSeqs UK`, `numSeqs UK 28 days`, support, anchor) %>%  
+          arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
+          rename(`Amino acid replacement` = mutation, 
+                 `Cumulative sequences in UK` = `numSeqs UK`,
+                 `Sequences over 28 days` = `numSeqs UK 28 days`,
+                 `Escape mutations details` = escape,
+                 `References` = anchor,
+                 # `Monoclonal Ab` = mab,
+                 # `Convalescent sera` = plasma,
+                 # `Vaccine sera` = vaccine_sera,
+                 Confidence = support, 
+                 Domain = domain) %>% 
         datatable(filter = "top", escape = FALSE) %>% 
         formatStyle(
           'Confidence',
