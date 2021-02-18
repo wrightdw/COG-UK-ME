@@ -18,7 +18,6 @@ shinyServer(function(input, output, session) {
         mutate(`Cumulative sequences in UK (%)` = formattable::percent(`numSeqs UK` / total_sequences, digits = 1L) %>% as.character,
                .after = `numSeqs UK`) %>% 
         mutate(`Sequences over the last 28 days in UK (%)` = formattable::percent(`numSeqs UK 28 days` / total_sequences_28, digits = 1L) %>% as.character,
-               `Proportion of variant over last 28 days in UK (%)` = formattable::percent(`numSeqs UK 28 days` / `numSeqs UK`, digits = 1L) %>% as.character,
                .after = `numSeqs UK 28 days`) %>% 
         rename(`Amino acid replacement` = mutation, 
                `Cumulative sequences in UK` = `numSeqs UK`, 
