@@ -87,6 +87,12 @@ dashboardPage(
                         ),
                         p(em("Notes"), " provides an explanation of scientific terms and a few limitations."),
                         
+                        h3("Disclaimer"),
+                        p("Dashboard reports are not advice.
+                          They capture research findings which are always necessarily provisional.
+                          They are for research use only.
+                          Commercial use/resale is not permitted,"),
+                        
                         h3("Credits"),
                         p("COG-UK/ME is developed within and funded by the COVID-19 Genomics UK Consortium by Derek W. Wright, Joseph Hughes, William Harvey, Ben Jackson, Andrew Rambaut, David L. Roberson, Alessandro M. Carabelli. COG-UK/ME is based on the CLIMB framework, and maintained by the MRC-University of Glasgow Centre for Virus Research. Please see the 'How to cite' page if you intend to use data from this web site. CLIMB data provided via this web application is subject to CLIMB Terms and Conditions. Contact", a(href = "mailto:Derek.Wright@glasgow.ac.uk", "Derek.Wright@glasgow.ac.uk"), "with questions or feedback. Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.")
                     )),
@@ -100,10 +106,8 @@ dashboardPage(
                         id = "tabs_report",
                         tabPanel("Table 1", 
                                  h3("1. Spike gene mutations"),
-                                 p("Individual amino acid replacements detected in UK
-                                 genomes are shown in Table 1. Amino acid
-                                 replacements detected in 5 or more complete SARS-CoV-2 genomes in the COG-UK dataset are included, ranked by the frequency of the replacement. Neither insertions nor deletions are included."),
-                                 
+                                 p("Individual amino acid replacements detected in UK genomes are shown in Table 1 (sequences ≥ 5).
+                                 Neither insertions nor deletions, nor synonymous mutations are included."),
                                  p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
                                  dataTableOutput("table_1"), 
                                  
@@ -121,13 +125,11 @@ dashboardPage(
                         
                         tabPanel("Table 2", 
                                  h3("2. Spike gene mutations of potential importance"),
-                                 p("Single spike gene mutations of potential or clinical and public health importance based on
-                                 current evidence are listed in Table 2."),
-                                 p(strong("Caveats:"), "the table aims to provide information on individual mutations, but this is rapidly
+                                 p("Single spike gene mutations of potential or clinical and public health importance, based on
+                                 current evidence, are listed in Table 2."),
+                                 p(strong("Caveat:"), "the table aims to provide information on individual mutations, but this is rapidly
                                  becoming an over-simplification because mutations are increasingly arising in a
                                  range of combinations."),
-                                 
-                                 h4("Table 2. Spike S gene mutations, lineage associations, lineages detected in the UK"),
                                  p(em("NB Numbers are lower than in Table 1 because Table 2 only considers specific lineages.")),
                                  tableOutput("table_2")
                         ), 
