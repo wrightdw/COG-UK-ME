@@ -192,8 +192,8 @@ shinyServer(function(input, output, session) {
         formatStyle(
           'Confidence',
           target = 'row',
-          backgroundColor = styleEqual(c("low", "medium", "high"), c('LemonChiffon', 'DarkOrange', 'FireBrick')), 
-          color = styleEqual(c("low", "medium", "high"), c('DarkSlateGray', 'White', 'Snow'))) # TODO anchor colour
+          backgroundColor = styleEqual(c("lower", "medium", "high"), c('LemonChiffon', 'DarkOrange', 'FireBrick')), 
+          color = styleEqual(c("lower", "medium", "high"), c('DarkSlateGray', 'White', 'Snow'))) # TODO anchor colour
         })
     
     # always display wild type on percentage chart

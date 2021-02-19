@@ -11,13 +11,12 @@ dashboardPage(
     title = "COG-UK Mutation Explorer",
     skin = "black",
     
-    header = dashboardHeader(title = tags$a(href='http://cogconsortium.uk', target = "_blank",
-                                   tags$img(src='image2.png', height = "50px")),
+    header = dashboardHeader(title = tags$a(href='.',
+                                   tags$img(src='COG_ME_LOGO-ORIZCOLORI.png', width = "200px")),
                              
                              tags$li(class = "dropdown", 
                                      div(dashboardLabel("FOR RESEARCH PURPOSES ONLY", status = "primary", style = "square"), 
                                          style = "padding:15px")
-                                     
                                      )
                              ),
     
@@ -91,10 +90,12 @@ dashboardPage(
                         p("Dashboard reports are not advice.
                           They capture research findings which are always necessarily provisional.
                           They are for research use only.
-                          Commercial use/resale is not permitted,"),
+                          Commercial use/resale is not permitted."),
                         
                         h3("Credits"),
-                        p("COG-UK/ME is developed within and funded by the COVID-19 Genomics UK Consortium by Derek W. Wright, Joseph Hughes, William Harvey, Ben Jackson, Andrew Rambaut, David L. Roberson, Alessandro M. Carabelli. COG-UK/ME is based on the CLIMB framework, and maintained by the MRC-University of Glasgow Centre for Virus Research. Please see the 'How to cite' page if you intend to use data from this web site. CLIMB data provided via this web application is subject to CLIMB Terms and Conditions. Contact", a(href = "mailto:Derek.Wright@glasgow.ac.uk", "Derek.Wright@glasgow.ac.uk"), "with questions or feedback. Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.")
+                        p("COG-UK/ME is developed within and funded by the COVID-19 Genomics UK Consortium by Derek W. Wright, Joseph Hughes, William Harvey, Ben Jackson, Andrew Rambaut, David L. Roberson, Alessandro M. Carabelli.",
+                          "COG-UK/ME is based on the CLIMB framework, and maintained by the ", a(href = "https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank", .noWS = "outside", "MRC-University of Glasgow Centre for Virus Research"), ".",
+                          "Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.", .noWS = c("after-begin", "before-end"))
                     )),
             tabItem(tabName = "report",
                 fluidRow(
@@ -239,9 +240,9 @@ dashboardPage(
                     h4("Notes"),
                     h5("Confidence"),
                     tags$ul(
-                        tags$li("High: Antigenic role of mutation is supported by multiple studies including at least one that reports an effect observed with (post-infection serum) convalescent plasma."),
-                        tags$li("Medium: Antigenic role of mutation is supported by multiple studies. "),
-                        tags$li("Low: Mutation is supported by a single study.")
+                        tags$li(span(style ="background-color:firebrick; color:snow", "High", .noWS = "after"), ": Antigenic role of mutation is supported by multiple studies including at least one that reports an effect observed with (post-infection serum) convalescent plasma.", .noWS = c("after-begin", "before-end")),
+                        tags$li(span(style ="background-color:darkorange; color:white", "Medium", .noWS = "after"), ": Antigenic role of mutation is supported by multiple studies.", .noWS = c("after-begin", "before-end")),
+                        tags$li(span(style ="background-color:lemonchiffon; color:darkslategrey", "Lower", .noWS = "after"), ": Mutation is supported by a single study.", .noWS = c("after-begin", "before-end"))
                     ),
                     
                     h5("Spike protein domain definitions"),
@@ -269,9 +270,12 @@ dashboardPage(
     
     footer = dashboardFooter(
         left = fluidRow(
-            column(3, tags$a(img(src = "CVR.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
-            column(3, tags$a(img(src = "UoG_colour.png", width = "229px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/", target = "_blank")),
-            column(3, tags$a(img(src = "CLIMB.png", width = "234px", height = "71px", class = "img-responsive center-block"), href="https://www.climb.ac.uk/", target = "_blank")),
-        column(3, tags$a(img(src = "UOE.png", width = "294px", height = "71px", class = "img-responsive center-block"), href="https://www.ed.ac.uk", target = "_blank")))
+            column(2, tags$a(img(src = "CVR.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
+            column(2, tags$a(img(src = "UoG_colour.png", width = "229px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/", target = "_blank")),
+            column(2, tags$a(img(src = "CLIMB.png", width = "234px", height = "71px", class = "img-responsive center-block"), href="https://www.climb.ac.uk/", target = "_blank")),
+            column(2, tags$a(img(src = "UOE.png", width = "294px", height = "71px", class = "img-responsive center-block"), href="https://www.ed.ac.uk", target = "_blank")), # TODO remove left and right padding
+            column(2, tags$a(img(src = "UOC.png", width = "264px", height = "71px", class = "img-responsive center-block"), href="https://www.cam.ac.uk", target = "_blank")),
+            column(2, tags$a(img(src = "cog-uk.png", width = "195px", height = "71px", class = "img-responsive center-block"), href="https://www.cogconsortium.uk", target = "_blank"))
+        )
      )
 )
