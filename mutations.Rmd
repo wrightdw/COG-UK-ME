@@ -126,9 +126,6 @@ mutation_reference_counts <-
 
 mutation_reference_counts
 ```
-
-
-
 ### Total sequences per epidemic week
 
 ```{r consortium_counts}
@@ -424,7 +421,8 @@ deletions_v
 ```{r database}
 mutations_s_uk <- 
   mutations_uk %>% 
-  filter(gene == "S")
+  filter(gene == "S") %>% 
+  mutate(across(c(variant, position), fct_drop))
 
 lineage_distinct <- 
   mutations_s_uk %>% 
