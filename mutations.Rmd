@@ -55,7 +55,7 @@ mutations %<>% inner_join(public)
 mutations_uk <- 
   mutations %>%
   filter(country == "UK") %>% 
-  mutate(across(c(epi_week, gene, position, adm1), as_factor)) %>%
+  mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
   write_rds(file = "mutations_uk.rds")
 
@@ -120,7 +120,8 @@ mutation_counts_nations <-
 
 # TODO calculate UK counts by summing the nation counts
 mutation_reference_counts <- 
-  bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %T>%
+  bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %>% 
+  mutate(across(variant, as_factor)) %T>%
   write_rds("mutation_reference_counts.rds")
 
 mutation_reference_counts
@@ -427,51 +428,52 @@ mutations_s_uk <-
 
 lineage_distinct <- 
   mutations_s_uk %>% 
-  group_by(variant) %>% 
-  summarise(n_lineages = n_distinct(lineage), n_uk_lineages =  n_distinct(uk_lineage))
+  group_by(position, variant) %>% 
+  summarise(n_lineages = n_distinct(lineage), n_uk_lineages =  n_distinct(uk_lineage), .groups = "drop") 
 
 lineages <- 
   mutations_s_uk %>% 
-  distinct(variant, lineage) %>% 
-  group_by(variant) %>% 
-  arrange(variant, lineage, .by_group = TRUE) %>% 
-  summarise(lineages = toString(lineage))
+  distinct(position, variant, lineage) %>% 
+  group_by(position, variant) %>% 
+  arrange(position, variant, lineage, .by_group = TRUE) %>% 
+  summarise(lineages = toString(lineage), .groups = "drop")
 
 uk_lineages <-
   mutations_s_uk %>%
-  distinct(variant, uk_lineage) %>%
-  group_by(variant) %>%
-  arrange(variant, uk_lineage, .by_group = TRUE) %>%
-  summarise(uk_lineages = toString(uk_lineage))
+  distinct(position, variant, uk_lineage) %>%
+  group_by(position, variant) %>%
+  arrange(position, variant, uk_lineage, .by_group = TRUE) %>%
+  summarise(uk_lineages = toString(uk_lineage), .groups = "drop")
 
 ## UK and nations
 # All sample dates
-variants_uk <- 
+variants_uk <-
   mutations_s_uk %>% 
-  group_by(variant) %>% 
-  summarise(UK = n(), earliest = min(sample_date))
+  group_by(position, variant) %>% 
+  summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
 
 variants_nations <- 
   mutations_s_uk %>% 
-  count(variant, adm1) %>% 
-  spread(adm1, n)
+  count(position, variant, adm1) %>% 
+  pivot_wider(names_from = adm1, values_from = n)
 
 # Sample dates in last 28 days
 variants_uk_28 <- 
   mutations_s_uk %>% 
   filter(sample_date >= sample_date_28) %>% 
-  count(variant, name = "UK_28")
+  count(position, variant, name = "UK_28")
 
-variants_nations_28 <- 
+variants_nations_28 <-
   mutations_s_uk %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  count(variant, adm1) %>% 
-  spread(adm1, n) %>% 
-  rename_with(~paste0(., "_28"))
+    filter(sample_date >= sample_date_28) %>% 
+    count(position, variant, adm1) %>% 
+    pivot_wider(names_from = adm1, values_from = n) %>% 
+    rename_with(~paste0(., "_28"), .cols = starts_with("UK-"))
 
 database <- 
   read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
   type_convert %>% 
+  mutate(across(c(mutation, position), as_factor)) %>% 
   mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>% # hyperlink to citation DOI
   group_by(position, mutation) %>% 
   summarise(escape = escape %>% unique %>% sort %>% toString, 
@@ -480,19 +482,21 @@ database <-
             plasma = plasma %>% any,
             vaccine_sera = vaccine_sera %>% any,
             support = support %>% unique %>% toString,
-            domain = domain %>% unique %>% toString) %>% 
-  ungroup
-  
-database %<>% 
-  full_join(lineage_distinct, by = c("mutation" = "variant")) %>% 
-  full_join(lineages, by = c("mutation" = "variant")) %>% 
-  full_join(uk_lineages, by = c("mutation" = "variant")) %>% 
-  full_join(variants_uk,  by = c("mutation" = "variant")) %>% 
-  full_join(variants_nations,  by = c("mutation" = "variant")) %>% 
-  full_join(variants_uk_28,  by = c("mutation" = "variant")) %>% 
-  full_join(variants_nations_28,  by = c("mutation" = "variant_28")) 
+            domain = domain %>% unique %>% toString, 
+            .groups = "drop")
+
+join_cols <- c("mutation" = "variant", "position" = "position")
 
 database %<>% 
+  full_join(lineage_distinct, by = join_cols) %>% 
+  full_join(lineages, by = join_cols) %>% 
+  full_join(uk_lineages, by = join_cols) %>% 
+  full_join(variants_uk,  by = join_cols) %>% 
+  full_join(variants_nations,  by = join_cols) %>% 
+  full_join(variants_uk_28,  by = join_cols) %>% 
+  full_join(variants_nations_28,  by = join_cols) 
+
+database %<>%
   rename(`# Global Lineages associated with` = n_lineages, 
                     `# UK Lineages associated with` = n_uk_lineages, 
                     `Global Lineages` = lineages, 
@@ -510,7 +514,7 @@ database %<>%
                     `numSeqs Wales 28 days` = `UK-WLS_28`, 
                     `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
-  mutate(across(c(mutation, support, domain), as_factor))
+  mutate(across(c(support, domain), as_factor))
 
 database %T>% write_rds("database.rds")
 ```
