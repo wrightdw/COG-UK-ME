@@ -12,7 +12,7 @@ dashboardPage(
     skin = "black",
     
     header = dashboardHeader(title = tags$a(href='.',
-                                   tags$img(src='COG_ME_LOGO-ORIZCOLORI.png', width = "200px")),
+                                   tags$img(src='COG_ME_LOGO2-ORIZCOLOR.png', width = "200px")),
                              
                              tags$li(class = "dropdown", 
                                      div(dashboardLabel("FOR RESEARCH PURPOSES ONLY", status = "primary", style = "square"), 
@@ -70,7 +70,9 @@ dashboardPage(
     
     body = dashboardBody(
         useShinyjs(), # set up the dashboard to use shinyjs  
-        tags$head(tags$link(rel = "shortcut icon", href = "favicon.ico")),
+        tags$head(
+            tags$link(rel = "shortcut icon", href = "favicon.png"),
+            tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")),
         tabItems(
             tabItem(tabName = "about",
                     fluidRow(
@@ -105,23 +107,49 @@ dashboardPage(
                     tabBox(
                         title = "Analysis", width = 12,
                         id = "tabs_report",
-                        tabPanel("Table 1", 
-                                 h3("1. Spike gene mutations"),
-                                 p("Individual amino acid replacements detected in UK genomes are shown in Table 1 (sequences ≥ 5).
-                                 Neither insertions nor deletions, nor synonymous mutations are included."),
-                                 p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
-                                 dataTableOutput("table_1"), 
+                        tabPanel("Table 1",
+                                 fluidRow(
+                                     column(
+                                         width = 12, 
+                                         h3("1. Spike gene mutations"),
+                                         p("Individual amino acid replacements detected in UK genomes are shown in Table 1 (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
+                                         p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
+                                         dataTableOutput("table_1"),
+                                         hr()
+                                    )
+                                 ),
                                  
-                                 h4("Download data"),
-                                 p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date."), 
-                                 selectInput("dataset", "Choose amino acid replacement:",
-                                             choices = 
-                                                 database %>% 
-                                                 filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) %>% 
-                                                 arrange(desc(`numSeqs UK`)) %$% 
-                                                 mutation, 
-                                             selectize = FALSE),
-                                 downloadButton("downloadData", "Download", class = "btn-info")
+                                 fluidRow(
+                                     width = 12,
+                                     box(title = "Download data", closable = FALSE, width = 12, height = 500,
+                                         status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                         fluidRow(
+                                             column(
+                                                 width = 6,
+                                                 p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
+                                              ),
+                                             
+                                             (function() { 
+                                                 database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
+                                                 
+                                                 column(
+                                                     width = 6, 
+                                                     selectizeInput(
+                                                         inputId = "dataset", 
+                                                         label = "Choose amino acid replacement:",
+                                                         choices = 
+                                                             database %>% 
+                                                             arrange(position) %$% 
+                                                             mutation, 
+                                                         options = list(
+                                                             maxOptions = database %>% nrow(), 
+                                                             dropdownParent = 'body'), # prevent dropdown opening behind footer
+                                                     ),
+                                                     downloadButton("downloadData", "Download", class = "btn-info"))
+                                                 })()
+                                              )
+                                          )
+                                  )
                         ),
                         
                         tabPanel("Table 2", 
@@ -135,7 +163,9 @@ dashboardPage(
                                  tableOutput("table_2")
                         ), 
                         
-                        tabPanel("Table 3", h3("3. Global variants of concern being monitored by UK PHAs"),
+                        tabPanel("Table 3", 
+                                 h3("3. Global variants of concern being monitored by UK PHAs"),
+                                 
                                  fluidRow(
                                      tableOutput("table_3"),
                                      hr()
@@ -249,7 +279,7 @@ dashboardPage(
                     tags$ul(
                         tags$li("SP, signal protein (residues 1-13)"),
                         tags$li("NTD, N-terminal domain (14-303)"),
-                        tags$li("RBD, receptor-binding domain (330-530) which includes the RBM, receptor-binding motif (437-508)"),
+                        tags$li("RBD, receptor-binding domain (331-527) which includes the RBM, receptor-binding motif (437-508)"),
                         tags$li("FP, fusion peptide (815-834)"),
                         tags$li("Residues outside of these specific domains are labelled by subunit, S1 (residues 1-685) or S2 (residues 686-1173)")
                     ),

@@ -26,8 +26,10 @@ shinyServer(function(input, output, session) {
                `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
                `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
                `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
-               `Date of first appearance in UK` = earliest)
-    }, options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20))
+               `Date of first appearance in UK` = earliest) %>% 
+        datatable(filter = "none", rownames = FALSE, 
+                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20))
+    })
     
     # Reactive value to generate downloadable table for selected mutation
     datasetInput <- reactive({
@@ -48,7 +50,6 @@ shinyServer(function(input, output, session) {
     
     # Reactive value to generate downloadable table for selected mutation
     concernInput <- reactive({
-      
       if(input$concern == "B.1.1.7 + E484K"){
         consortium_uk %<>% 
           filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7"))) %>% 
@@ -119,14 +120,14 @@ shinyServer(function(input, output, session) {
                        (variant == "E484K" & lineage == "B.1.351" ) |
                        (variant == "E484K" & lineage == "P.2" ) |
                        (variant == "E484K" & lineage == "P.1" ) |
-                       
-                       (variant == "E484K" & lineage == "A" ) |
+                       (variant == "E484K" & lineage == "A.23.1" ) |
                        (variant == "E484K" & lineage == "B.1.1.119" ) |
                        (variant == "E484K" & lineage == "B.1.177.4" ) |
                        (variant == "E484K" & lineage == "B.1.222" ) |
                        (variant == "E484K" & lineage == "B.1.177" ) |
                        (variant == "E484K" & lineage == "B.1" ) |
-                       
+                       (variant == "E484K" & lineage == "B.1.525" ) |
+                         
                        (variant == "N501Y + E484K" & lineage == "B.1.351") |
                        (variant == "N501Y + E484K" & lineage == "B.1.1.7"))
         
@@ -183,12 +184,9 @@ shinyServer(function(input, output, session) {
                  `Sequences over 28 days` = `numSeqs UK 28 days`,
                  `Escape mutations details` = escape,
                  `References` = anchor,
-                 # `Monoclonal Ab` = mab,
-                 # `Convalescent sera` = plasma,
-                 # `Vaccine sera` = vaccine_sera,
                  Confidence = support, 
                  Domain = domain) %>% 
-        datatable(filter = "top", escape = FALSE) %>% 
+        datatable(filter = "top", escape = FALSE, rownames = FALSE) %>% 
         formatStyle(
           'Confidence',
           target = 'row',
@@ -218,7 +216,7 @@ shinyServer(function(input, output, session) {
       
       mutation_reference_counts %>% 
         filter(gene == input$gene & position == input$position) %>%
-        mutate(variant = variant %>% as_factor %>% fct_infreq) %>% # fix variant colour by frequency
+        mutate(variant = variant %>% fct_infreq) %>% # fix variant colour by frequency
         filter(adm1 == input$nation) %>%
         filter(epi_week %in% c(input$epi_week[1]:input$epi_week[2])) %>% # match because epi_week is factor
         mutate(epi_week = fct_drop(epi_week, only = {.} %$% 
@@ -262,5 +260,9 @@ shinyServer(function(input, output, session) {
                           filter(gene == input$gene) %>%
                           distinct(position) %>%
                           arrange(position))
+    })
+    
+    observeEvent(input$dataset,{
+      toggleState("downloadData", input$dataset != "")
     })
 })
