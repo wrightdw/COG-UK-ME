@@ -75,7 +75,6 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
         mutate(lineage = x, .before = 1)
     }) %>% 
       bind_rows() %>% 
-      # select(-sequences) %>% 
       gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
   }
 }

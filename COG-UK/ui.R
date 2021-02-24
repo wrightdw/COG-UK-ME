@@ -221,25 +221,23 @@ dashboardPage(
                     the context of immunity and vaccine efficacy."),
                                  h3("Definitions"),
                                  tags$ul(
-                                     tags$li(em("Mutation"), " is used to describe a change of a nucleotide in the virus RNA genome, a subset of which
+                                     tags$li(em("Mutation"), "is used to describe a change of a nucleotide in the virus RNA genome, a subset of which
                         results in a change in amino acid (sometimes referred to as a substitution or replacement), or a
                         mutation can refer to a deletion or insertion event in the virus genome. By convention an amino acid
                         change is written N501Y to denote the wildtype (N, asparagine) and replacement amino acid (Y, 
                         tyrosine) at site 501 in the amino acid sequence."),
                                      
-                                     tags$li(em("Viral variant"), " refers to a genetically distinct virus with different mutations to other viruses. Variant can
+                                     tags$li(em("Viral variant"), "refers to a genetically distinct virus with different mutations to other viruses. Variant can
                         also refer to the founding virus of a cluster/lineage and used to refer collectively to the resulting
                         variants that form the lineage."),
                                      
-                                     tags$li(em("Lineages"), " are assigned combining genetic and, in the case of SARS-CoV-2 due to weak phylogenetic
+                                     tags$li(em("Lineages"), "are assigned combining genetic and, in the case of SARS-CoV-2 due to weak phylogenetic
                         signals, also with epidemiological data. COG-UK uses the nomenclature system introduced by
                         Rambaut et al. (2020), see https://cov-lineages.org."),
                                      
-                                     tags$li(em("VUI"), " is used by Public Health England to indicate Variant Under Investigation."),
+                                     tags$li(em("VUI"), "is used by Public Health England to indicate Variant Under Investigation."),
                                      
-                                     tags$li(em("VOC"), " is used by Public Health England to indicate Variant of Concern. Lineage B.1.1.7 was initially
-                        named by Public Health England as VUI 202012/01 (Variant Under Investigation, year 2020, month
-                        12, variant 01) and subsequently redesignated as VOC-202012/01 (Variant of Concern 202012/01).")
+                                     tags$li(em("VOC"), "is used by Public Health England to indicate Variant of Concern.")
                                  )
                         )
                         
