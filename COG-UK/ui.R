@@ -137,10 +137,7 @@ dashboardPage(
                                                      selectizeInput(
                                                          inputId = "dataset", 
                                                          label = "Choose amino acid replacement:",
-                                                         choices = 
-                                                             database %>% 
-                                                             arrange(position) %$% 
-                                                             mutation, 
+                                                         choices = database$mutation, 
                                                          options = list(
                                                              maxOptions = database %>% nrow(), 
                                                              dropdownParent = 'body'), # prevent dropdown opening behind footer

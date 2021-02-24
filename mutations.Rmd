@@ -512,7 +512,11 @@ database %<>%
                     `numSeqs Wales 28 days` = `UK-WLS_28`, 
                     `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
-  mutate(across(c(support, domain), as_factor))
+  mutate(across(c(support, domain), as_factor)) %>% 
+  mutate(across(c(position, mutation), as.character)) %>% 
+  mutate(across(position, as.integer)) %>% 
+  arrange(position, mutation) %>% 
+  mutate(across(mutation, as_factor))
 
 database %T>% write_rds("database.rds")
 ```
