@@ -281,7 +281,7 @@ dashboardPage(
                     
                     h4("Download data"),
                     p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week, global lineage, UK lineage and phylotype. Cumulative UK sequences are filtered by the selected amino acid replacement."), 
-                    selectInput("escape", "Choose amino acid replacement:",
+                    selectInput("selectEscape", "Choose amino acid replacement:",
                                 choices = database %>% 
                                     filter(!is.na(escape)) %>% 
                                     filter(`numSeqs UK` > 0) %>% 

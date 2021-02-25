@@ -44,7 +44,7 @@ shinyServer(function(input, output, session) {
     # Reactive value to generate downloadable table for selected mutation
     escapeInput <- reactive({
       mutations_s_uk %>% 
-        filter(variant == input$escape) %>% 
+        filter(variant == input$selectEscape) %>% 
         select(sequence_name, sample_date, epi_week, lineage, uk_lineage, phylotype) %>% 
         arrange(desc(sample_date), lineage)
     })
@@ -79,7 +79,7 @@ shinyServer(function(input, output, session) {
     # Downloadable CSV of selected mutation
     output$downloadEscape <- downloadHandler(
       filename = function() {
-        str_c(input$escape, "_UK_cumulative_", dataset_date, ".csv")
+        str_c(input$selectEscape, "_UK_cumulative_", dataset_date, ".csv")
       },
       content = function(file) {
         write_csv(escapeInput(), file)
