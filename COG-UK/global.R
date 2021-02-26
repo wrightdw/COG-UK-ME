@@ -3,17 +3,18 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-database <- read_rds("2021-02-16/database.rds")
-consortium_uk <- read_rds("2021-02-16/consortium_uk.rds")
-mutations_uk <- read_rds("2021-02-16/mutations_uk.rds")
-mutation_reference_counts <- read_rds("2021-02-16/mutation_reference_counts.rds") # precomputed mutation counts 
+dataset_date <- ymd("2021-02-24") #TODO derive from directory name
+
+database <- str_c(dataset_date, "/database.rds") %>% read_rds
+consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
+mutations_uk <- str_c(dataset_date, "/mutations_uk.rds") %>% read_rds # TODO drop unused columns
+mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds") %>% read_rds # precomputed mutation counts 
 
 mutations_s_uk <- 
   mutations_uk %>% 
   filter(gene == "S") %>% 
   mutate(across(c(variant, position), fct_drop))
 
-dataset_date <- ymd("2021-02-16") #TODO derive from filename
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 
 total_sequences <- n_distinct(consortium_uk$sequence_name)

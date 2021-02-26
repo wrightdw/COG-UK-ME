@@ -37,7 +37,7 @@ shinyServer(function(input, output, session) {
       mutations_s_uk %>% 
         filter(variant == input$dataset) %>% 
         filter(sample_date >= sample_date_28) %>% 
-        select(sequence_name, sample_date, epi_week, lineage, uk_lineage, phylotype) %>% 
+        select(sequence_name, sample_date, epi_week, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
     
@@ -45,7 +45,7 @@ shinyServer(function(input, output, session) {
     escapeInput <- reactive({
       mutations_s_uk %>% 
         filter(variant == input$selectEscape) %>% 
-        select(sequence_name, sample_date, epi_week, lineage, uk_lineage, phylotype) %>% 
+        select(sequence_name, sample_date, epi_week, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
     
@@ -61,7 +61,7 @@ shinyServer(function(input, output, session) {
       }
       
       consortium_uk %>% 
-        select(sequence_name, sample_date, epi_week, lineage, uk_lineage, phylotype) %>% 
+        select(sequence_name, sample_date, epi_week, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
     

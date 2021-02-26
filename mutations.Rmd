@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-02-16_mutations.csv"
-  global_csv:     "cog_global_2021-02-16_public.csv"
-  consortium_csv: "cog_global_2021-02-16_consortium.csv"
+  mutations_csv:  "cog_global_2021-02-24_mutations.csv"
+  global_csv:     "cog_global_2021-02-24_public.csv"
+  consortium_csv: "cog_global_2021-02-24_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
@@ -427,7 +427,7 @@ mutations_s_uk <-
 lineage_distinct <- 
   mutations_s_uk %>% 
   group_by(position, variant) %>% 
-  summarise(n_lineages = n_distinct(lineage), n_uk_lineages =  n_distinct(uk_lineage), .groups = "drop") 
+  summarise(n_lineages = n_distinct(lineage), .groups = "drop") 
 
 lineages <- 
   mutations_s_uk %>% 
@@ -435,13 +435,6 @@ lineages <-
   group_by(position, variant) %>% 
   arrange(position, variant, lineage, .by_group = TRUE) %>% 
   summarise(lineages = toString(lineage), .groups = "drop")
-
-uk_lineages <-
-  mutations_s_uk %>%
-  distinct(position, variant, uk_lineage) %>%
-  group_by(position, variant) %>%
-  arrange(position, variant, uk_lineage, .by_group = TRUE) %>%
-  summarise(uk_lineages = toString(uk_lineage), .groups = "drop")
 
 ## UK and nations
 # All sample dates
@@ -488,29 +481,27 @@ join_cols <- c("mutation" = "variant", "position" = "position")
 database %<>% 
   full_join(lineage_distinct, by = join_cols) %>% 
   full_join(lineages, by = join_cols) %>% 
-  full_join(uk_lineages, by = join_cols) %>% 
   full_join(variants_uk,  by = join_cols) %>% 
   full_join(variants_nations,  by = join_cols) %>% 
   full_join(variants_uk_28,  by = join_cols) %>% 
   full_join(variants_nations_28,  by = join_cols) 
 
 database %<>%
-  rename(`# Global Lineages associated with` = n_lineages, 
-                    `# UK Lineages associated with` = n_uk_lineages, 
-                    `Global Lineages` = lineages, 
-                    `Uk Lineages` = uk_lineages,
-                    
-                    `numSeqs UK` = UK,
-                    `numSeqs Eng` = `UK-ENG`,
-                    `numSeqs NI` = `UK-NIR`,
-                    `numSeqs Scotland` = `UK-SCT`,
-                    `numSeqs Wales` = `UK-WLS`,
+  rename(
+    `# Global Lineages associated with` = n_lineages, 
+    `Global Lineages` = lineages, 
+    
+    `numSeqs UK` = UK,
+    `numSeqs Eng` = `UK-ENG`,
+    `numSeqs NI` = `UK-NIR`,
+    `numSeqs Scotland` = `UK-SCT`,
+    `numSeqs Wales` = `UK-WLS`,
 
-                    `numSeqs UK 28 days` = UK_28,
-                    `numSeqs Eng 28 days` = `UK-ENG_28`,
-                    `numSeqs Scotland 28 days` = `UK-SCT_28`,
-                    `numSeqs Wales 28 days` = `UK-WLS_28`, 
-                    `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
+    `numSeqs UK 28 days` = UK_28,
+    `numSeqs Eng 28 days` = `UK-ENG_28`,
+    `numSeqs Scotland 28 days` = `UK-SCT_28`,
+    `numSeqs Wales 28 days` = `UK-WLS_28`, 
+    `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
   mutate(across(c(support, domain), as_factor)) %>% 
   mutate(across(c(position, mutation), as.character)) %>% 
