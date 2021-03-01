@@ -16,9 +16,9 @@ shinyServer(function(input, output, session) {
         mutate(mutation = mutation %>% fct_drop %>% fct_inorder) %>% 
         select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
         mutate(`Cumulative sequences in UK (%)` = `numSeqs UK` / total_sequences,
-               .after = `numSeqs UK`) %>% 
+               .after = `numSeqs UK`) %>%
         mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
-               .after = `numSeqs UK 28 days`) %>% 
+               .after = `numSeqs UK 28 days`) %>%
         rename(`Amino acid replacement` = mutation, 
                `Cumulative sequences in UK` = `numSeqs UK`, 
                `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
@@ -28,8 +28,8 @@ shinyServer(function(input, output, session) {
                `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
                `Date of first appearance in UK` = earliest) %>% 
         datatable(filter = "top", rownames = FALSE, 
-                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20)) %>%
-          formatPercentage(c("Cumulative sequences in UK (%)", "Sequences over the last 28 days in UK (%)"), digits = 1)
+                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20)) %>% 
+        formatPercentage(c("Cumulative sequences in UK (%)", "Sequences over the last 28 days in UK (%)"), digits = 1)
     })
     
     # Reactive value to generate downloadable table for selected mutation

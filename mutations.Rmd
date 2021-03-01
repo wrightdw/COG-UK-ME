@@ -19,9 +19,10 @@ library(lubridate)
 ```{r consortium_read}
 consortium_uk <- 
   read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
-  select(-starts_with("adm2")) %>% # remove adm2 columns
+  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support, -del_lineage, -del_introduction) %>% # remove unused columns
   type_convert %>% 
-  filter(country == "UK")  
+  filter(country == "UK")  %>% 
+  distinct # remove duplicates
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
 
@@ -40,15 +41,18 @@ consortium_uk
 mutations <-   
   read_csv(params$mutations_csv, col_types = cols(.default = col_character())) %>% 
   type_convert %>% 
+  distinct %>% # get rid of identical variant calls
   separate_rows(variants, sep = '\\|') %>% 
   separate(variants, into = c("gene", "variant"), sep = ':') %>% 
   drop_na() %>%
   filter(gene != "synSNP") %>%
-  mutate(position = parse_number(variant)) 
+  mutate(position = parse_number(variant))
 
 public <- 
   read_csv(params$global_csv, col_types = cols(.default = col_character())) %>% 
-  type_convert
+  type_convert %>% 
+  select(-cog_id, -gisaid_id, -(pillar_2:travel_history), -lineage_support, -del_lineage, -del_introduction) %>% 
+  distinct # remove duplicates
 
 mutations %<>% inner_join(public)
 
