@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-02-25_mutations.csv"
-  global_csv:     "cog_global_2021-02-25_public.csv"
-  consortium_csv: "cog_global_2021-02-25_consortium.csv"
+  mutations_csv:  "cog_global_2021-02-28_mutations.csv"
+  global_csv:     "cog_global_2021-02-28_public.csv"
+  consortium_csv: "cog_global_2021-02-28_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
 ---
 ```{r libs}
@@ -19,9 +19,14 @@ library(lubridate)
 ```{r consortium_read}
 consortium_uk <- 
   read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
-  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support, -del_lineage, -del_introduction) %>% # remove unused columns
+  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
+         # -del_lineage, 
+         # -del_introduction
+         -variants, -lineages_version
+         ) %>% # remove unused columns
   type_convert %>% 
   filter(country == "UK")  %>% 
+  select(-country) %>% 
   distinct # remove duplicates
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
@@ -41,6 +46,7 @@ consortium_uk
 mutations <-   
   read_csv(params$mutations_csv, col_types = cols(.default = col_character())) %>% 
   type_convert %>% 
+  select(-lineages_version, -(t1001i:del_21765_6)) %>%
   distinct %>% # get rid of identical variant calls
   separate_rows(variants, sep = '\\|') %>% 
   separate(variants, into = c("gene", "variant"), sep = ':') %>% 
@@ -51,7 +57,10 @@ mutations <-
 public <- 
   read_csv(params$global_csv, col_types = cols(.default = col_character())) %>% 
   type_convert %>% 
-  select(-cog_id, -gisaid_id, -(pillar_2:travel_history), -lineage_support, -del_lineage, -del_introduction) %>% 
+  select(-cog_id, -gisaid_id, -(pillar_2:travel_history), -lineage_support,
+         # -del_lineage, -del_introduction
+         -lineages_version
+         ) %>% 
   distinct # remove duplicates
 
 mutations %<>% inner_join(public)
@@ -59,6 +68,7 @@ mutations %<>% inner_join(public)
 mutations_uk <- 
   mutations %>%
   filter(country == "UK") %>% 
+  select(-country) %>% 
   mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
   write_rds(file = "mutations_uk.rds")
