@@ -95,7 +95,7 @@ dashboardPage(
                           Commercial use/resale is not permitted."),
                         
                         h3("Credits"),
-                        p("COG-UK/ME is developed within and funded by the COVID-19 Genomics UK Consortium by Derek W. Wright, Joseph Hughes, William Harvey, Ben Jackson, Andrew Rambaut, David L. Roberson, Alessandro M. Carabelli.",
+                        p("COG-UK/ME is developed within and funded by the COVID-19 Genomics UK Consortium by Derek W. Wright, Joseph Hughes, William Harvey, Rachel Colquhoun, Ben Jackson, Andrew Rambaut, David L. Roberson, Alessandro M. Carabelli.",
                           "COG-UK/ME is based on the CLIMB framework, and maintained by the ", a(href = "https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank", .noWS = "outside", "MRC-University of Glasgow Centre for Virus Research"), ".",
                           "Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.", .noWS = c("after-begin", "before-end"))
                     )),
