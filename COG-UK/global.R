@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-03-02") #TODO derive from directory name
+dataset_date <- ymd("2021-03-03") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -23,16 +23,27 @@ total_sequences_28 <-
   filter(sample_date >= sample_date_28) %$% 
   n_distinct(sequence_name)
 
-lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298", 
-                 "P.2", "P.1", "B.1.222", "A.23.1", "B.1.1.119", "B.1.177.4", "B.1.525")
+lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1", 
+                 "B.1.1.7", "B.1.1.70", "B.1.351", "B.1.1.298", "P.2", "P.1",
+                 "B.1.222", "A.23.1", "B.1.1.119", "B.1.177.4", "B.1.525")
 
 lineages_t3 <- 
   c("B.1.1.7" = "UK associated variant. Has 17 mutations (14 replacements and 3 deletions) including: T1001I, A1708D, I2230T, SGF 3675-3677 del In the ORF1ab; 69-70 del, Y144 del, N501Y, A570D, P681H, T716I, S982A and D1118H in the Spike; Q27stop, R52I and Y73C in ORF8; D3L and S235F in the N. Noteworthily, N501Y enhances ACE2 binding affinity, and P681H occurs at the furin cleavage site, known for biological significance in membrane fusion.", 
     "B.1.351" = "Variant associated with South Africa. Has eight mutations in the Spike: D80A, D215G, E484K, N501Y, A701V, L18F, R246I and K417N. Three of these in the RBM, K417N, E484K and N501Y. K417N and E484K have been shown to escape some mAbs.", 
     "P.1" = "Variant associated with Brazil. Has 10 mutations in the Spike including L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y,H655Y and T1027I. Noteworthy  E484K, N501Y and K417T have biological significance.",
     "A.23.1" = "International variant with mutations of biological significance F157L, V367F, Q613H and P681R. Q613H is predicted to be functionally equivalent to the D614G mutation that arose early in 2020.",
-    "B.1.525" = "International variant with mutations of biological significance E484K, Q677H, F888L and a similar suite of deletions to B.1.1.7.") %>% 
+    "B.1.525" = "International variant with mutations of biological significance E484K, Q677H, F888L and a similar suite of deletions to B.1.1.7.",
+    
+    "B.1.429" = "Variant associated with California, USA.",
+    "B.1.526" = "Variant associated with New York, USA.",
+    "A.27" = "Variant associated with France.",
+    "B.1.324.1" = "UK associated variant.",
+    "P.2" = "Variant associated with Brazil.",
+    "B.1.1.318" = "Variant associated with England."
+    ) %>% 
   enframe("lineage", "reason")
+
+lineages_t2 %<>% c(lineages_t3$lineage) %>% unique # combine table 2 and 3 lineages for counting
 
 # Construct a regular expression to match the sublineages of a lineage
 sublineage_regex <- function(lineage){
@@ -80,6 +91,23 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
       bind_rows() %>% 
       gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
   }
+}
+
+lineage_plus_variant <- function(lineage, variant){
+  mutations_s_uk_lv <- 
+    mutations_s_uk %>%
+      filter(variant == !!variant) %>%
+      filter(lineage == !!lineage | str_detect(lineage, sublineage_regex(!!lineage))) 
+  
+    bind_cols(
+      mutations_s_uk_lv %>%
+        summarise(n_sequences = n_distinct(sequence_name)),
+        
+        mutations_s_uk_lv %>%
+        filter(sample_date >= sample_date_28) %>%
+        summarise(n_sequences_28 = n_distinct(sequence_name))
+    ) %>% 
+    mutate(lineage = !!lineage, variant = !!variant, .before = 1)
 }
 
 n_uk_lineages_all <- inner_join(sum_key_mutations_by_lineage_uk(lineages_t2), 

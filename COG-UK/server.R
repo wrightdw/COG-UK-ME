@@ -142,6 +142,9 @@ shinyServer(function(input, output, session) {
         table_2
     })
     
+    
+    
+    
     output$table_3 <- renderTable({
           bind_rows(
             n_uk_lineages_all %>% 
@@ -153,7 +156,18 @@ shinyServer(function(input, output, session) {
             n_uk_lineages_all %>% 
               filter(variant == "E484K" & lineage == "B.1.1.7") %>% 
               mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
-              mutate(reason = "As above, with the addition of E484K, which is located in the RBM and has been shown to escape some mAbs.")
+              mutate(reason = "As B.1.1.7, with the addition of E484K, which is located in the RBM and has been shown to escape some mAbs."),
+            
+            #TODO add to downloads
+            lineage_plus_variant("B.1.1.7", "S494P") %>% # for non-key mutations
+              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>% 
+              mutate(reason = "As B.1.1.7, with the addition of S494P."),
+            
+            #TODO add to downloads
+            n_uk_lineages_all %>% 
+              filter(variant == "E484K" & lineage == "A.23.1") %>% 
+              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
+              mutate(reason = "As A.23.1, with the addition of E484K.")
           ) %>% 
                 arrange(lineage) %>% 
                 rename(`Variant/ lineage` = lineage,	
