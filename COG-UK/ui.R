@@ -160,7 +160,7 @@ dashboardPage(
                         ), 
                         
                         tabPanel("Table 3", 
-                                 h3("3. Global variants in UK being monitored by PHAs"),
+                                 h3("3. Variants of interest detected in the UK"),
                                  
                                  fluidRow(
                                      column(width = 12,
@@ -176,9 +176,10 @@ dashboardPage(
                                          selectizeInput("concern", "Choose lineage:",
                                                      choices = c(lineages_t3$lineage, 
                                                                  "B.1.1.7 + E484K", 
-                                                                 "A.23.1 + E484K", 
-                                                                 "B.1.1.7 + S494P",
-                                                                 "B.1.324.1 + E484K") %>% sort), # TODO exclude zero count lineages
+                                                                 "A.23.1 + E484K",
+                                                                 "B.1.1.7 + S494P"
+                                                                 # , "B.1.324.1 + E484K"
+                                                                 ) %>% sort), # TODO exclude zero count lineages
                                          downloadButton("downloadConcern", "Download", class = "btn-info")),
                                      
                                      box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 6, 

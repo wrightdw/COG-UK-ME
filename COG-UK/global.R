@@ -37,7 +37,7 @@ lineages_t3 <-
     "B.1.429" = "Variant associated with California, USA.",
     "B.1.526" = "Variant associated with New York, USA.",
     "A.27" = "Variant associated with France.",
-    "B.1.324.1" = "UK associated variant.",
+    # "B.1.324.1" = "UK associated variant.",
     "P.2" = "Variant associated with Brazil.",
     "B.1.1.318" = "Variant associated with England."
     ) %>% 
