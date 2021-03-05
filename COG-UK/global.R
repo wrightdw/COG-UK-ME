@@ -110,6 +110,7 @@ lineage_plus_variant <- function(lineage, variant){
     mutate(lineage = !!lineage, variant = !!variant, .before = 1)
 }
 
+# TODO precompute and include lineage/variant combinations
 n_uk_lineages_all <- inner_join(sum_key_mutations_by_lineage_uk(lineages_t2), 
                                 sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>% 
                                   rename(n_sequences_28 = n_sequences))

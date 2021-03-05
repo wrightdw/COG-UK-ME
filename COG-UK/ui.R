@@ -138,9 +138,7 @@ dashboardPage(
                                                          inputId = "dataset", 
                                                          label = "Choose amino acid replacement:",
                                                          choices = database$mutation, 
-                                                         options = list(
-                                                             maxOptions = database %>% nrow(), 
-                                                             dropdownParent = 'body'), # prevent dropdown opening behind footer
+                                                         options = list(dropdownParent = 'body') # prevent dropdown opening behind footer
                                                      ),
                                                      downloadButton("downloadData", "Download", class = "btn-info"))
                                                  })()
@@ -157,7 +155,7 @@ dashboardPage(
                                  becoming an over-simplification because mutations are increasingly arising in a
                                  range of combinations."),
                                  p(em("NB Numbers are lower than in Table 1 because Table 2 only considers specific lineages.")),
-                                 tableOutput("table_2")
+                                 dataTableOutput("table_2")
                         ), 
                         
                         tabPanel("Table 3", 
@@ -172,9 +170,12 @@ dashboardPage(
                                      box(title = "Download data", closable = FALSE, width = 6, 
                                          status = "info", collapsible = FALSE, icon = icon("file-download"),
                                          p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
-                                         selectInput("concern", "Choose lineage:",
-                                                     choices = c(lineages_t3$lineage, "B.1.1.7 + E484K") %>% sort, # TODO exclude zero count lineages
-                                                     selectize = FALSE),
+                                         selectizeInput("concern", "Choose lineage:",
+                                                     choices = c(lineages_t3$lineage, 
+                                                                 "B.1.1.7 + E484K", 
+                                                                 "A.23.1 + E484K", 
+                                                                 "B.1.1.7 + S494P",
+                                                                 "B.1.324.1 + E484K") %>% sort), # TODO exclude zero count lineages
                                          downloadButton("downloadConcern", "Download", class = "btn-info")),
                                      
                                      box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 6, 
@@ -279,17 +280,29 @@ dashboardPage(
                         tags$li("Residues outside of these specific domains are labelled by subunit, S1 (residues 1-685) or S2 (residues 686-1173)")
                     ),
                     
-                    h4("Download data"),
-                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected amino acid replacement."), 
-                    selectInput("selectEscape", "Choose amino acid replacement:",
-                                choices = database %>% 
-                                    filter(!is.na(escape)) %>% 
-                                    filter(`numSeqs UK` > 0) %>% 
-                                    arrange(desc(`numSeqs UK`), mutation) %$% 
-                                    mutation, 
-                                selectize = FALSE),
-                    downloadButton("downloadEscape", "Download", class = "btn-info")
-            )
+                    box(title = "Download data", closable = FALSE, width = 12, height = 500,
+                            status = "info", collapsible = FALSE, icon = icon("file-download"),
+                            fluidRow(
+                                column(
+                                    width = 6,
+                                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage.
+                      Cumulative UK sequences are filtered by the selected amino acid replacement.")
+                                ),
+                                column(
+                                    width = 6, 
+                                    selectizeInput("selectEscape", "Choose amino acid replacement:",
+                                                   choices = database %>% 
+                                                       filter(!is.na(escape)) %>% 
+                                                       filter(`numSeqs UK` > 0) %>% 
+                                                       arrange(desc(`numSeqs UK`), mutation) %$% 
+                                                       mutation, 
+                                                   options = list(dropdownParent = 'body')), # prevent dropdown opening behind footer
+                                    
+                                    downloadButton("downloadEscape", "Download", class = "btn-info")
+                                )
+                            ) # end fluidRow
+                        ) # end box
+            ) # end tabItem
         ) # end tabItems
     ), # end dashboardBody
     

@@ -52,15 +52,27 @@ shinyServer(function(input, output, session) {
     # Reactive value to generate downloadable table for selected mutation
     concernInput <- reactive({
       if(input$concern == "B.1.1.7 + E484K"){
-        consortium_uk %<>% 
-          filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7"))) %>% 
-          filter(e484k == "K") 
+        concern_download <- 
+          consortium_uk %>% 
+          filter(e484k == "K") %>% 
+          filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7"))) 
+      } else if(input$concern == "A.23.1 + E484K") {
+        concern_download <- 
+          consortium_uk %>% 
+          filter(e484k == "K") %>% 
+          filter(lineage == "A.23.1" | str_detect(lineage, sublineage_regex("B.1.1.7"))) 
+      } else if(input$concern == "B.1.1.7 + S494P") {
+        concern_download <- 
+          mutations_s_uk %>% 
+          filter(variant == "S494P") %>% 
+          filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7")))
       } else {
-        consortium_uk %<>% 
+        concern_download <- 
+          consortium_uk %>% 
           filter(lineage == input$concern | str_detect(lineage, sublineage_regex(input$concern)))
       }
       
-      consortium_uk %>% 
+      concern_download %>% 
         select(sequence_name, sample_date, epi_week, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
@@ -98,8 +110,7 @@ shinyServer(function(input, output, session) {
       contentType = "text/csv"
     )
     
-    output$table_2 <- renderTable({
-        table_2 <- 
+    output$table_2 <- renderDT({
           n_uk_lineages_all %>% 
             filter(    (variant == "D614G" & lineage == "B.1" ) | 
                            
@@ -130,20 +141,21 @@ shinyServer(function(input, output, session) {
                        (variant == "E484K" & lineage == "B.1.525" ) |
                          
                        (variant == "N501Y + E484K" & lineage == "B.1.351") |
-                       (variant == "N501Y + E484K" & lineage == "B.1.1.7"))
-        
-        table_2 %<>% 
+                       (variant == "N501Y + E484K" & lineage == "B.1.1.7")) %>% 
             relocate(variant) %>% 
+            mutate(`Cumulative UK sequences (%)` = n_sequences / total_sequences,
+                   .after = n_sequences) %>%
+            mutate(`UK Sequences over 28 days (%)` = n_sequences_28 / total_sequences_28,
+                   .after = n_sequences_28) %>%
             arrange(variant, lineage) %>% 
             rename(Mutation = variant, 
-                   `Lineage(s) in which detected` = lineage, 
-                   `Cumulative UK sequences` = n_sequences, 
-                   `UK Sequences over 28 days` = n_sequences_28)
-        table_2
+                     `Lineage(s) in which detected` = lineage, 
+                     `Cumulative UK sequences` = n_sequences, 
+                     `UK Sequences over 28 days` = n_sequences_28) %>%
+          datatable(filter = "none", rownames = FALSE, 
+                    options = list(dom = 't', paging = FALSE)) %>% 
+          formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 1)
     })
-    
-    
-    
     
     output$table_3 <- renderTable({
           bind_rows(
@@ -158,16 +170,20 @@ shinyServer(function(input, output, session) {
               mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
               mutate(reason = "As B.1.1.7, with the addition of E484K, which is located in the RBM and has been shown to escape some mAbs."),
             
-            #TODO add to downloads
             lineage_plus_variant("B.1.1.7", "S494P") %>% # for non-key mutations
               mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>% 
               mutate(reason = "As B.1.1.7, with the addition of S494P."),
             
-            #TODO add to downloads
             n_uk_lineages_all %>% 
               filter(variant == "E484K" & lineage == "A.23.1") %>% 
               mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
-              mutate(reason = "As A.23.1, with the addition of E484K.")
+              mutate(reason = "As A.23.1, with the addition of E484K."),
+            
+            n_uk_lineages_all %>% 
+              filter(variant == "E484K" & lineage == "B.1.324.1") %>% 
+              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
+              mutate(reason = "As B.1.324.1, with the addition of E484K.")
+            
           ) %>% 
                 arrange(lineage) %>% 
                 rename(`Variant/ lineage` = lineage,	
