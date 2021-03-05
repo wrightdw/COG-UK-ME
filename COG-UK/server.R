@@ -29,7 +29,7 @@ shinyServer(function(input, output, session) {
                `Date of first appearance in UK` = earliest) %>% 
         datatable(filter = "top", rownames = FALSE, 
                   options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20)) %>% 
-        formatPercentage(c("Cumulative sequences in UK (%)", "Sequences over the last 28 days in UK (%)"), digits = 1)
+        formatPercentage(c("Cumulative sequences in UK (%)", "Sequences over the last 28 days in UK (%)"), digits = 2)
     })
     
     # Reactive value to generate downloadable table for selected mutation
@@ -154,10 +154,10 @@ shinyServer(function(input, output, session) {
                      `UK Sequences over 28 days` = n_sequences_28) %>%
           datatable(filter = "none", rownames = FALSE, 
                     options = list(dom = 't', paging = FALSE)) %>% 
-          formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 1)
+          formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 2)
     })
     
-    output$table_3 <- renderTable({
+    output$table_3 <- renderDT({
           bind_rows(
             n_uk_lineages_all %>% 
               filter(lineage %in% lineages_t3$lineage & variant == "sequences") %>% 
@@ -185,11 +185,18 @@ shinyServer(function(input, output, session) {
               mutate(reason = "As B.1.324.1, with the addition of E484K.")
             
           ) %>% 
+                mutate(`Cumulative UK sequences (%)` = n_sequences / total_sequences,
+                       .after = n_sequences) %>%
+                mutate(`UK Sequences over 28 days (%)` = n_sequences_28 / total_sequences_28,
+                       .after = n_sequences_28) %>%
                 arrange(lineage) %>% 
                 rename(`Variant/ lineage` = lineage,	
-                         `Cumulative sequences in UK` = n_sequences,	 
-                         `Sequences over 28 days` = n_sequences_28,                    
-                         `Reason for tracking` = reason)
+                         `Cumulative UK sequences` = n_sequences,	 
+                         `UK Sequences over 28 days` = n_sequences_28,                    
+                         `Reason for tracking` = reason) %>% 
+        datatable(filter = "none", rownames = FALSE, 
+                  options = list(dom = 't', paging = FALSE)) %>% 
+        formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 2)
     })
     
     output$table_4 <- renderDT({

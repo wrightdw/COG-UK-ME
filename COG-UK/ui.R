@@ -120,16 +120,16 @@ dashboardPage(
                                  ),
                                  
                                  fluidRow(
-                                     width = 12,
-                                     box(title = "Download data", closable = FALSE, width = 12, height = 500,
-                                         status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                         fluidRow(
-                                             column(
+                                     column(width = 12,
+                                            box(title = "Download data", closable = FALSE, width = 12, height = 500,
+                                            status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                            fluidRow(
+                                                column(
                                                  width = 6,
                                                  p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
-                                              ),
+                                                ),
                                              
-                                             (function() { 
+                                                (function() { 
                                                  database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
                                                  
                                                  column(
@@ -144,6 +144,7 @@ dashboardPage(
                                                  })()
                                               )
                                           )
+                                     )
                                   )
                         ),
                         
@@ -162,8 +163,10 @@ dashboardPage(
                                  h3("3. Global variants in UK being monitored by PHAs"),
                                  
                                  fluidRow(
-                                     tableOutput("table_3"),
-                                     hr()
+                                     column(width = 12,
+                                         dataTableOutput("table_3"),
+                                         hr()
+                                     )
                                  ),
                                  
                                  fluidRow(
