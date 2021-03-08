@@ -6,6 +6,7 @@ params:
   global_csv:     "cog_global_2021-03-07_public.csv"
   consortium_csv: "cog_global_2021-03-07_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
+  tcell_csv:      "tcell_long.csv"
 ---
 ```{r libs}
 library(tidyverse)
@@ -13,6 +14,7 @@ library(magrittr)
 library(wesanderson)
 library(RColorBrewer)
 library(lubridate)
+library(fuzzyjoin)
 ```
 
 ## Consortium
@@ -524,6 +526,42 @@ database %<>%
   mutate(across(mutation, as_factor))
 
 database %T>% write_rds("database.rds")
+```
+# T cell epitopes
+```{r tcell}
+tcell <- read_csv(params$tcell_csv)
+
+database_tcell <- 
+  database %>% 
+  # select(position, mutation) %>% 
+  fuzzy_inner_join(
+    tcell,
+    by = c("position" = "Start position",
+           "position" = "End position"),
+    match_fun = list(`>=`, `<=`)) %>% 
+  # mutate(across(c(Epitope, CD4_CD8, HLA, Reference, assay), as_factor)) %>% 
+  group_by(position, mutation #, `Start position`, `End position`
+           ) %>% 
+  summarise(epitope = Epitope %>% unique %>% toString,
+            positions = str_c(`Start position`, `End position`, sep = "-", collapse = ", ") %>% unique,
+            CD4_CD8 = CD4_CD8 %>% unique %>% toString,
+            HLA = HLA %>% unique %>% toString,
+            `Support` = `Supporting references` %>% toString,
+            Reference = Reference %>% unique %>% toString,
+            Assay = assay %>% unique %>% toString,
+            
+    # escape = escape %>% unique %>% sort %>% toString, 
+    #         anchor = anchor %>% unique %>% str_c(collapse = "<br>"), # line breaks between hyperlinks
+    #         mab = mab %>% any,
+    #         plasma = plasma %>% any,
+    #         vaccine_sera = vaccine_sera %>% any,
+    #         support = support %>% unique %>% toString,
+    #         domain = domain %>% unique %>% toString, 
+    
+            .groups = "drop")
+
+
+database_tcell
 ```
 
 ```{r}
