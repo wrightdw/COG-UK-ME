@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-03-07_mutations.csv"
-  global_csv:     "cog_global_2021-03-07_public.csv"
-  consortium_csv: "cog_global_2021-03-07_consortium.csv"
+  mutations_csv:  "cog_global_2021-03-09_mutations.csv"
+  global_csv:     "cog_global_2021-03-09_public.csv"
+  consortium_csv: "cog_global_2021-03-09_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
   tcell_csv:      "tcell_long.csv"
 ---
@@ -525,46 +525,46 @@ database %<>%
   arrange(position, mutation) %>% 
   mutate(across(mutation, as_factor))
 
-database %T>% write_rds("database.rds")
+database
 ```
 # T cell epitopes
 ```{r tcell}
 tcell <- read_csv(params$tcell_csv)
 
-database_tcell <- 
-  database %>% 
-  # select(position, mutation) %>% 
+tcell_summary <- 
+  tcell %>% 
+  group_by(Epitope, `Start position`, `End position`, CD4_CD8) %>% 
+  summarise(HLA = HLA %>% unique %>% toString,
+            `Supporting references` = `Supporting references` %>% unique %>% as.integer,
+            References = Reference %>% unique %>% toString,
+            Assays = assay %>% unique %>% toString,
+            .groups = "drop")
+
+tcell_summary
+
+database_tcell <-
+  database %>%
   fuzzy_inner_join(
-    tcell,
+    tcell_summary,
     by = c("position" = "Start position",
            "position" = "End position"),
     match_fun = list(`>=`, `<=`)) %>% 
-  # mutate(across(c(Epitope, CD4_CD8, HLA, Reference, assay), as_factor)) %>% 
-  group_by(position, mutation #, `Start position`, `End position`
-           ) %>% 
-  summarise(epitope = Epitope %>% unique %>% toString,
-            positions = str_c(`Start position`, `End position`, sep = "-", collapse = ", ") %>% unique,
-            CD4_CD8 = CD4_CD8 %>% unique %>% toString,
-            HLA = HLA %>% unique %>% toString,
-            `Support` = `Supporting references` %>% toString,
-            Reference = Reference %>% unique %>% toString,
-            Assay = assay %>% unique %>% toString,
-            
-    # escape = escape %>% unique %>% sort %>% toString, 
-    #         anchor = anchor %>% unique %>% str_c(collapse = "<br>"), # line breaks between hyperlinks
-    #         mab = mab %>% any,
-    #         plasma = plasma %>% any,
-    #         vaccine_sera = vaccine_sera %>% any,
-    #         support = support %>% unique %>% toString,
-    #         domain = domain %>% unique %>% toString, 
-    
+  group_by(position, mutation) %>% 
+  summarise(Epitopes = Epitope %>% toString, 
+            `CD4 CD8` = CD4_CD8 %>% toString, 
+            Positions = str_c(`Start position`, `End position`, sep = "-", collapse = ", "),
+            HLA = HLA %>% toString,
+            `Supporting references` = `Supporting references` %>% toString,
+            References = References %>% toString, 
             .groups = "drop")
-
-
+  
 database_tcell
+
+database %<>% left_join(database_tcell) 
+database %T>% write_rds("database.rds")
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 consortium_v <- 
   consortium_uk %>% 
   filter(n501y == "Y" & 
@@ -578,12 +578,12 @@ consortium_v
 mutations_s_uk %>% 
   summarise(n_distinct(variant))
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   count(variant) %>% 
   filter(n == 1) 
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   count(variant) %>% 
   filter(n >= 100) 
@@ -594,7 +594,6 @@ mutations_s_uk %>%
   count(variant) %>% 
   filter(n >= 5) %>% 
   arrange(desc(n))
-
 ```
 
 ### Table 1
@@ -603,7 +602,7 @@ database %>%
   slice_max(`numSeqs UK`, n = 15) %>% 
   select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
-```{r appendix}
+```{r appendix, eval=FALSE, include=FALSE}
 database %>% 
   filter(`numSeqs UK` >= 5) %>% 
   arrange(desc(`numSeqs UK`)) %>% 
@@ -611,7 +610,7 @@ database %>%
 ```
 
 
-```{r}
+```{r setdiff}
 setdiff(
 consortium_uk %>% filter(d614g == "G") %>% select(sequence_name),
 mutations_s_uk %>% filter(variant == "D614G") %>% select(sequence_name)
@@ -638,87 +637,82 @@ n_uk_lineages <-
 n_uk_lineages
 ```
 #### B.1
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% 
   filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% 
   select(-lineage) %>% 
   summarise_all(funs(sum))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% 
   filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% 
   mutate(lineage_top = "B.1") 
-  
-  
-  
 ```
 #### B.1.177
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% 
   filter(lineage == "B.1.177" | str_detect(lineage, "^B\\.1\\.177\\.")) %>% 
   select(-lineage) %>% 
   summarise_all(funs(sum))
 ```
 #### B.1.141
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% filter(lineage == "B.1.141" | str_detect(lineage, "^B\\.1\\.141\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-
 ```
 #### B.1.258
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% filter(lineage == "B.1.258" | str_detect(lineage, "^B\\.1\\.258\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-
 ```
 #### B.1.1
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
 ```
 
 #### B.1.1.7
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
 ```
 
 
 #### B.1.1.70
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% filter(lineage == "B.1.1.70" | str_detect(lineage, "B\\.1\\.1\\.70\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
 
 ```
 
 #### B.1.351
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.351\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
 ```
 
 #### B.1.1.298
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_lineages %>% filter(lineage == "B.1.1.298" | str_detect(lineage, "B\\.1\\.1\\.298\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
 ```
 #### E484K
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   count(lineage)
 ```
 #### E484K 28 Days
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(sample_date >= sample_date_28) %>% 
   count(lineage)
 ```
 #### E484K / B.1.351 Summary
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
   summarise("n_E484K_B.1.351" = n_distinct(sequence_name))
 ```
 #### E484K / B.1.351 Summary 28 Days
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
@@ -726,14 +720,14 @@ mutations_s_uk %>%
   summarise("n_28_E484K_B.1.351 " = n_distinct(sequence_name))
 ```
 #### E484K / B.1.1.248
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>% summarise("n_E484K_B.1.1.248" = n_distinct(sequence_name))
 
 ```
 #### E484K / B.1.1.248 28 Days
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>% 
@@ -742,13 +736,13 @@ mutations_s_uk %>%
 ```
 
 #### E484K / B.1.1.7
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% summarise("n_E484K_B.1.1.7" = n_distinct(sequence_name))
 ```
 #### E484K / B.1.1.7 28 Days
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% 
@@ -757,20 +751,20 @@ mutations_s_uk %>%
 ```
 
 #### E484K / B.1.1
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K_B.1.1" = n_distinct(sequence_name))
 ```
 #### E484K / B.1.1 28 Days
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(sample_date >= sample_date_28) %>% 
   filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K__28_B.1.1" = n_distinct(sequence_name))
 ```
 #### N501Y + E484K / B.1.351 Summary
-```{r}
+```{r eval=FALSE, include=FALSE}
 intersect(
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
@@ -785,7 +779,7 @@ consortium_uk %>%
 ```
 
 #### E484K + N501Y / B.1.351
-```{r}
+```{r eval=FALSE, include=FALSE}
 intersect(
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
@@ -801,7 +795,7 @@ consortium_uk %>%
 )
 ```
 ### Escape Mutations
-```{r escape}
+```{r escape, eval=FALSE, include=FALSE}
 escape <- 
   read_csv("list_escape_2.csv", col_names = "mutation")
 
@@ -812,7 +806,7 @@ database %>%
 ```
 
 ### Escape mutations sample names
-```{r escape_ids}
+```{r escape_ids, eval=FALSE, include=FALSE}
 escape_t4 <- 
 c(
 "G446V",
