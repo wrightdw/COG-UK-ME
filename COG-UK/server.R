@@ -236,6 +236,7 @@ shinyServer(function(input, output, session) {
     output$table_5 <- renderDT({
       database %>% 
         filter(!is.na(Epitopes) & `numSeqs UK` > 0) %>% 
+        mutate(mutation = fct_drop(mutation)) %>%
         select(mutation, Epitopes:Assays, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
         arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
         rename(`Amino acid replacement` = mutation, 
