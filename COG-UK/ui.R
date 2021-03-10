@@ -12,60 +12,61 @@ dashboardPage(
     skin = "black",
     
     header = dashboardHeader(title = tags$a(href='.',
-                                   tags$img(src='COG_ME_LOGO2-ORIZCOLOR.png', width = "200px")),
+                                            tags$img(src='COG_ME_LOGO2-ORIZCOLOR.png', width = "200px")),
                              
                              tags$li(class = "dropdown", 
                                      div(dashboardLabel("FOR RESEARCH PURPOSES ONLY", status = "primary", style = "square"), 
                                          style = "padding:15px")
-                                     )
-                             ),
+                             )
+    ),
     
     sidebar = dashboardSidebar(
         sidebarMenu(id="sidebar_menu",
-            menuItem("Mutation Explorer", tabName = "report", icon = icon("viruses")), 
-            menuItem("Visualiser", tabName = "dashboard", icon = icon("eye")),
-            menuItem("Antigenic Information", tabName = "immunology", icon = icon("shield-virus")),
-            menuItem("T Cell Epitopes", tabName = "tcell", icon = icon("disease")),
-            menuItem("About", tabName = "about", icon = icon("info-circle"))
+                    menuItem("Mutation Explorer", tabName = "report", icon = icon("viruses")), 
+                    menuItem("Visualiser", tabName = "dashboard", icon = icon("eye")),
+                    menuItem("Antigenic Information", tabName = "immunology", icon = icon("shield-virus")),
+                    menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
-        conditionalPanel(condition =  "input.sidebar_menu == 'dashboard'",
-                         hr(),
-                         selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), 
-                                     selected = "S"),
-                         selectInput("position", "Position:", 
-                                     mutations_uk %>% distinct(position) %>% arrange(position), 
-                                     selected = "614", selectize = TRUE),
-                         prettySwitch("percentage", "Percentage", FALSE, status = "info"),
-                         prettySwitch("ref", "Wild type / other", TRUE,  status = "info"),
-                         
-                         prettyRadioButtons(
-                             inputId = "nation",
-                             label = "UK nation:", 
-                             choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"),
-                             inline = FALSE, 
-                             status = "info",
-                             fill = TRUE,
-                             selected = "UK"
-                         ),
-                         
-                         chooseSliderSkin("Modern"),
-                         setSliderColor("#5bc0de", 1), # Bootstrap info colour
-                         sliderTextInput(
-                             inputId = "epi_week",
-                             label = "Epidemic week range:", 
-                             choices = consortium_uk$epi_week %>% levels,
-                             selected = c(consortium_uk$epi_week %>% levels %>% first, 
-                                          consortium_uk$epi_week %>% levels %>% last),
-                             animate = TRUE
-                         )
+        conditionalPanel(
+            condition =  "input.sidebar_menu == 'dashboard'",
+            hr(),
+            selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), 
+                        selected = "S"),
+            selectInput("position", "Position:", 
+                        mutations_uk %>% distinct(position) %>% arrange(position), 
+                        selected = "614", selectize = TRUE),
+            prettySwitch("percentage", "Percentage", FALSE, status = "info"),
+            prettySwitch("ref", "Wild type / other", TRUE,  status = "info"),
+            
+            prettyRadioButtons(
+                inputId = "nation",
+                label = "UK nation:", 
+                choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"),
+                inline = FALSE, 
+                status = "info",
+                fill = TRUE,
+                selected = "UK"
+            ),
+            
+            chooseSliderSkin("Modern"),
+            setSliderColor("#5bc0de", 1), # Bootstrap info colour
+            sliderTextInput(
+                inputId = "epi_week",
+                label = "Epidemic week range:", 
+                choices = consortium_uk$epi_week %>% levels,
+                selected = c(consortium_uk$epi_week %>% levels %>% first, 
+                             consortium_uk$epi_week %>% levels %>% last),
+                animate = TRUE
+            )
         ),
-        conditionalPanel(condition =  "input.sidebar_menu == 'immunology'", 
-                         hr(),
-                         prettyCheckboxGroup("escape", "Escape:",
-                                              c("Monoclonal Ab" = "monoclonal",
-                                                "Convalescent sera" = "convalescent",
-                                                "Vaccine sera" = "vaccine"))
+        conditionalPanel(
+            condition = "input.sidebar_menu == 'immunology' && input.tabs_antigenic == 'antibody'", 
+            hr(),
+            prettyCheckboxGroup("escape", "Escape:",
+                                c("Monoclonal Ab" = "monoclonal",
+                                  "Convalescent sera" = "convalescent",
+                                  "Vaccine sera" = "vaccine"))
         )
     ),
     
@@ -101,154 +102,154 @@ dashboardPage(
                           "Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.", .noWS = c("after-begin", "before-end"))
                     )),
             tabItem(tabName = "report",
-                fluidRow(
-                    h1("COG-UK / Mutation Explorer"),
-                    h3("Latest UK sequence:", max(consortium_uk$sample_date) %>% format("%A %d %B %Y")),
-                    
-                    tabBox(
-                        title = "Analysis", width = 12,
-                        id = "tabs_report",
-                        tabPanel("Table 1",
-                                 fluidRow(
-                                     column(
-                                         width = 12, 
-                                         h3("1. Spike gene mutations"),
-                                         p("Individual amino acid replacements detected in UK genomes are shown in Table 1 (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
-                                         p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
-                                         dataTableOutput("table_1"),
-                                         hr()
-                                    )
-                                 ),
-                                 
-                                 fluidRow(
-                                     column(width = 12,
-                                            box(title = "Download data", closable = FALSE, width = 12, height = 500,
-                                            status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                            fluidRow(
-                                                column(
-                                                 width = 6,
-                                                 p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
-                                                ),
-                                             
-                                                (function() { 
-                                                 database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
-                                                 
-                                                 column(
-                                                     width = 6, 
-                                                     selectizeInput(
-                                                         inputId = "dataset", 
-                                                         label = "Choose amino acid replacement:",
-                                                         choices = database$mutation, 
-                                                         options = list(dropdownParent = 'body') # prevent dropdown opening behind footer
-                                                     ),
-                                                     downloadButton("downloadData", "Download", class = "btn-info"))
-                                                 })()
-                                              )
-                                          )
-                                     )
-                                  )
-                        ),
+                    fluidRow(
+                        h1("COG-UK / Mutation Explorer"),
+                        h3("Latest UK sequence:", max(consortium_uk$sample_date) %>% format("%A %d %B %Y")),
                         
-                        tabPanel("Table 2", 
-                                 h3("2. Spike gene mutations of potential importance"),
-                                 p("Single spike gene mutations of potential or clinical and public health importance, based on
+                        tabBox(
+                            title = "Analysis", width = 12,
+                            id = "tabs_report",
+                            tabPanel("Table 1",
+                                     fluidRow(
+                                         column(
+                                             width = 12, 
+                                             h2("1. Spike gene mutations"),
+                                             p("Individual amino acid replacements detected in UK genomes are shown in Table 1 (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
+                                             p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
+                                             dataTableOutput("table_1"),
+                                             br()
+                                         )
+                                     ),
+                                     
+                                     fluidRow(
+                                         column(width = 12,
+                                                box(title = "Download data", closable = FALSE, width = 12, height = 500,
+                                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                                    fluidRow(
+                                                        column(
+                                                            width = 6,
+                                                            p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
+                                                        ),
+                                                        
+                                                        (function() { 
+                                                            database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
+                                                            
+                                                            column(
+                                                                width = 6, 
+                                                                selectizeInput(
+                                                                    inputId = "dataset", 
+                                                                    label = "Choose amino acid replacement:",
+                                                                    choices = database$mutation, 
+                                                                    options = list(dropdownParent = 'body') # prevent dropdown opening behind footer
+                                                                ),
+                                                                downloadButton("downloadData", "Download", class = "btn-info"))
+                                                        })()
+                                                    )
+                                                )
+                                         )
+                                     )
+                            ),
+                            
+                            tabPanel("Table 2", 
+                                     h2("2. Spike gene mutations of potential importance"),
+                                     p("Single spike gene mutations of potential or clinical and public health importance, based on
                                  current evidence, are listed in Table 2."),
                                  p(strong("Caveat:"), "the table aims to provide information on individual mutations, but this is rapidly
                                  becoming an over-simplification because mutations are increasingly arising in a
                                  range of combinations."),
                                  p(em("NB Numbers are lower than in Table 1 because Table 2 only considers specific lineages.")),
                                  dataTableOutput("table_2")
-                        ), 
-                        
-                        tabPanel("Table 3", 
-                                 h3("3. Variants of interest detected in the UK"),
-                                 
-                                 fluidRow(
-                                     column(width = 12,
-                                         dataTableOutput("table_3"),
-                                         hr()
+                            ), 
+                            
+                            tabPanel("Table 3", 
+                                     h2("3. Variants of interest detected in the UK"),
+                                     
+                                     fluidRow(
+                                         column(width = 12,
+                                                dataTableOutput("table_3"),
+                                                br()
+                                         )
+                                     ),
+                                     
+                                     fluidRow(
+                                         box(title = "Download data", closable = FALSE, width = 6, 
+                                             status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                             p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
+                                             selectizeInput("concern", "Choose lineage:",
+                                                            choices = c(lineages_t3$lineage, 
+                                                                        "B.1.1.7 + E484K", 
+                                                                        "A.23.1 + E484K",
+                                                                        "B.1.1.7 + S494P"
+                                                                        # , "B.1.324.1 + E484K"
+                                                            ) %>% sort), # TODO exclude zero count lineages
+                                             downloadButton("downloadConcern", "Download", class = "btn-info")),
+                                         
+                                         box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 6, 
+                                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                                             img(src = "structure.png", class = "center-block img-responsive")),
+                                         
+                                         box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 4, 
+                                             status = "orange", collapsible = TRUE, icon = icon("microscope"), height = 480,
+                                             img(src = "mutants_lineage_B.1.351.png", class = "center-block img-responsive")),
+                                         
+                                         box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 4, 
+                                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                                             img(src = "mutants_lineage_P.1.png", class = "center-block img-responsive")),
+                                         
+                                         box(title = "Spike protein mutations (B.1.1.7)", closable = FALSE, width = 4, 
+                                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                                             img(src = "lineage_B.1.1.7.png", height = "480px", class = "center-block img-responsive"))
+                                         
                                      )
-                                 ),
-                                 
-                                 fluidRow(
-                                     box(title = "Download data", closable = FALSE, width = 6, 
-                                         status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                         p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
-                                         selectizeInput("concern", "Choose lineage:",
-                                                     choices = c(lineages_t3$lineage, 
-                                                                 "B.1.1.7 + E484K", 
-                                                                 "A.23.1 + E484K",
-                                                                 "B.1.1.7 + S494P"
-                                                                 # , "B.1.324.1 + E484K"
-                                                                 ) %>% sort), # TODO exclude zero count lineages
-                                         downloadButton("downloadConcern", "Download", class = "btn-info")),
+                            ),
+                            
+                            tabPanel("Notes",                         
+                                     h2("Data source and processing"),
+                                     p(str_c("The analysis described in this report is based on ", total_sequences %>% comma(format = "d")
+                                             ," UK-derived genomes sequenced by COG-UK: complete data in the MRC-CLIMB database to ", dataset_date %>% format("%d/%m/%Y"), ", with the latest sequence from ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"),  ".")),
+                                     p("A report of the geographic distribution and prevalence of SARS-CoV-2 lineages in general, and global variants of interest, can be found ", a(href = "https://cov-lineages.org/global_report.html", target = "_blank", "here", .noWS = "outside"), ". Amino acid replacement, insertion and deletion counts for all SARS-CoV-2 genes in the global GISAID database can be found ", a(href = "http://cov-glue.cvr.gla.ac.uk/", target = "_blank", "here", .noWS = "outside"), ".", .noWS = c("after-begin", "before-end")),
+                                     h2("Limitations"),
+                                     tags$ol(
+                                         tags$li("This report is for information only. The clinical and public health importance of any single mutation, or combination of mutations cannot be determined from sequence data alone."),
+                                         tags$li("Putative evidence for the importance of any single mutation, or combination of mutations can be derived from computational biology and further evaluated by laboratory experiments. Genomic and laboratory evidence then need to be combined with clinical datasets that are designed to allow detection of increased transmissibility, change in disease severity, drug resistance or altered vaccine efficacy. For this reason, surveillance and risk assessment of mutations and variants is a multi-agency process involving UK Public Health Agencies who have access to detailed information on patients and populations, and other groups including NERVTAG (New and Emerging Respiratory Virus Threats Advisory Group)."),
+                                         tags$li("COG-UK generates around 10,000 genomes a week, which will rise to 20,000 per week by March 2021. When COVID-19 infection rates are high, not all viruses from infected people will be sequenced and some mutations at low frequency will not be detected, but COG-UK aims to take representative samples from across the UK.")
+                                     ),
                                      
-                                     box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 6, 
-                                         status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                         img(src = "structure.png", class = "center-block img-responsive")),
-                                     
-                                     box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 4, 
-                                         status = "orange", collapsible = TRUE, icon = icon("microscope"), height = 480,
-                                         img(src = "mutants_lineage_B.1.351.png", class = "center-block img-responsive")),
-                                     
-                                     box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 4, 
-                                         status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                         img(src = "mutants_lineage_P.1.png", class = "center-block img-responsive")),
-                                     
-                                     box(title = "Spike protein mutations (B.1.1.7)", closable = FALSE, width = 4, 
-                                         status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                         img(src = "lineage_B.1.1.7.png", height = "480px", class = "center-block img-responsive"))
-                                     
-                                 )
-                        ), 
-                        tabPanel("Notes",                         
-                                 h2("Data source and processing"),
-                                 p(str_c("The analysis described in this report is based on ", total_sequences %>% comma(format = "d")
-                                   ," UK-derived genomes sequenced by COG-UK: complete data in the MRC-CLIMB database to ", dataset_date %>% format("%d/%m/%Y"), ", with the latest sequence from ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"),  ".")),
-                                 p("A report of the geographic distribution and prevalence of SARS-CoV-2 lineages in general, and global variants of interest, can be found ", a(href = "https://cov-lineages.org/global_report.html", target = "_blank", "here", .noWS = "outside"), ". Amino acid replacement, insertion and deletion counts for all SARS-CoV-2 genes in the global GISAID database can be found ", a(href = "http://cov-glue.cvr.gla.ac.uk/", target = "_blank", "here", .noWS = "outside"), ".", .noWS = c("after-begin", "before-end")),
-                                 h2("Limitations"),
-                                 tags$ol(
-                                     tags$li("This report is for information only. The clinical and public health importance of any single mutation, or combination of mutations cannot be determined from sequence data alone."),
-                                     tags$li("Putative evidence for the importance of any single mutation, or combination of mutations can be derived from computational biology and further evaluated by laboratory experiments. Genomic and laboratory evidence then need to be combined with clinical datasets that are designed to allow detection of increased transmissibility, change in disease severity, drug resistance or altered vaccine efficacy. For this reason, surveillance and risk assessment of mutations and variants is a multi-agency process involving UK Public Health Agencies who have access to detailed information on patients and populations, and other groups including NERVTAG (New and Emerging Respiratory Virus Threats Advisory Group)."),
-                                     tags$li("COG-UK generates around 10,000 genomes a week, which will rise to 20,000 per week by March 2021. When COVID-19 infection rates are high, not all viruses from infected people will be sequenced and some mutations at low frequency will not be detected, but COG-UK aims to take representative samples from across the UK.")
-                                 ),
-                                 
-                                 h2("Appendix 1"),
-                                 h3("Background"),
-                                 p("Mutations arise naturally in the SARS-CoV-2 genome as the virus replicates and circulates in the
-                    human population. As a result of this on-going process, many thousands of mutations have already
-                    arisen in the SARS-CoV-2 genome since the virus emerged in late 2019. As mutations continue to
-                    arise, novel combinations of mutations are increasingly observed. The vast majority of mutations have
-                    no apparent effect on the virus. Only a very small minority are likely to be important and change the
-                    virus in any appreciable way. This could include a change in the ability to infect/transmit between
-                    people; a change in disease severity; or a change in the way the virus interacts with the immune
-                    system (including the response generated by a vaccine). We pay most attention to mutations in the
-                    gene that encodes the Spike protein, which is associated with viral entry into cells and it is relevant in
-                    the context of immunity and vaccine efficacy."),
-                                 h3("Definitions"),
-                                 tags$ul(
-                                     tags$li(em("Mutation"), "is used to describe a change of a nucleotide in the virus RNA genome, a subset of which
-                        results in a change in amino acid (sometimes referred to as a substitution or replacement), or a
-                        mutation can refer to a deletion or insertion event in the virus genome. By convention an amino acid
-                        change is written N501Y to denote the wildtype (N, asparagine) and replacement amino acid (Y, 
-                        tyrosine) at site 501 in the amino acid sequence."),
-                                     
-                                     tags$li(em("Viral variant"), "refers to a genetically distinct virus with different mutations to other viruses. Variant can
-                        also refer to the founding virus of a cluster/lineage and used to refer collectively to the resulting
-                        variants that form the lineage."),
-                                     
-                                     tags$li(em("Lineages"), "are assigned combining genetic and, in the case of SARS-CoV-2 due to weak phylogenetic
-                        signals, also with epidemiological data. COG-UK uses the nomenclature system introduced by
-                        Rambaut et al. (2020), see https://cov-lineages.org."),
-                                     
-                                     tags$li(em("VUI"), "is used by Public Health England to indicate Variant Under Investigation."),
-                                     
-                                     tags$li(em("VOC"), "is used by Public Health England to indicate Variant of Concern.")
-                                 )
-                        )
-                        
-                    ) # end tabBox
-                ) # end fluidRow
+                                     h2("Appendix 1"),
+                                     h3("Background"),
+                                     p("Mutations arise naturally in the SARS-CoV-2 genome as the virus replicates and circulates in the
+                                        human population. As a result of this on-going process, many thousands of mutations have already
+                                        arisen in the SARS-CoV-2 genome since the virus emerged in late 2019. As mutations continue to
+                                        arise, novel combinations of mutations are increasingly observed. The vast majority of mutations have
+                                        no apparent effect on the virus. Only a very small minority are likely to be important and change the
+                                        virus in any appreciable way. This could include a change in the ability to infect/transmit between
+                                        people; a change in disease severity; or a change in the way the virus interacts with the immune
+                                        system (including the response generated by a vaccine). We pay most attention to mutations in the
+                                        gene that encodes the Spike protein, which is associated with viral entry into cells and it is relevant in
+                                        the context of immunity and vaccine efficacy."),
+                                    h3("Definitions"),
+                                    tags$ul(
+                                        tags$li(em("Mutation"), "is used to describe a change of a nucleotide in the virus RNA genome, a subset of which
+                                        results in a change in amino acid (sometimes referred to as a substitution or replacement), or a
+                                        mutation can refer to a deletion or insertion event in the virus genome. By convention an amino acid
+                                        change is written N501Y to denote the wildtype (N, asparagine) and replacement amino acid (Y, 
+                                        tyrosine) at site 501 in the amino acid sequence."),
+                                        
+                                        tags$li(em("Viral variant"), "refers to a genetically distinct virus with different mutations to other viruses. Variant can
+                                        also refer to the founding virus of a cluster/lineage and used to refer collectively to the resulting
+                                        variants that form the lineage."),
+                                        
+                                        tags$li(em("Lineages"), "are assigned combining genetic and, in the case of SARS-CoV-2 due to weak phylogenetic
+                                        signals, also with epidemiological data. COG-UK uses the nomenclature system introduced by
+                                        Rambaut et al. (2020), see https://cov-lineages.org."),
+                                        
+                                        tags$li(em("VUI"), "is used by Public Health England to indicate Variant Under Investigation."),
+                                        
+                                        tags$li(em("VOC"), "is used by Public Health England to indicate Variant of Concern.")
+                                    )
+                            )
+                        ) # end tabBox
+                    ) # end fluidRow
             ), # end tabItem
             
             tabItem(tabName = "dashboard",
@@ -258,60 +259,96 @@ dashboardPage(
             ),
             
             tabItem(tabName = "immunology",
-                    h2("Antigenic Information"),
-                    h3("Spike protein gene mutations of potential immunogenic significance detected in the UK"),
-                    p('The table lists those mutations in the spike gene identified in the UK dataset that have been
-                                 associated with weaker neutralisation of the virus by convalescent plasma from people who
-                                 have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
-                                 COVID-19 (referred to below as "escape").'),
-                    p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
-                                 vaccines or the immune response to natural SARS-CoV-2 infection.")),
-                    DTOutput("table_4"),
-                    
-                    h4("Notes"),
-                    h5("Confidence"),
-                    tags$ul(
-                        tags$li(span(style ="background-color:firebrick; color:snow", "High", .noWS = "after"), ": Antigenic role of mutation is supported by multiple studies including at least one that reports an effect observed with (post-infection serum) convalescent plasma.", .noWS = c("after-begin", "before-end")),
-                        tags$li(span(style ="background-color:darkorange; color:white", "Medium", .noWS = "after"), ": Antigenic role of mutation is supported by multiple studies.", .noWS = c("after-begin", "before-end")),
-                        tags$li(span(style ="background-color:lemonchiffon; color:darkslategrey", "Lower", .noWS = "after"), ": Mutation is supported by a single study.", .noWS = c("after-begin", "before-end"))
-                    ),
-                    
-                    h5("Spike protein domain definitions"),
-                    tags$ul(
-                        tags$li("SP, signal protein (residues 1-13)"),
-                        tags$li("NTD, N-terminal domain (14-303)"),
-                        tags$li("RBD, receptor-binding domain (331-527) which includes the RBM, receptor-binding motif (437-508)"),
-                        tags$li("FP, fusion peptide (815-834)"),
-                        tags$li("Residues outside of these specific domains are labelled by subunit, S1 (residues 1-685) or S2 (residues 686-1173)")
-                    ),
-                    
-                    box(title = "Download data", closable = FALSE, width = 12, height = 500,
-                            status = "info", collapsible = FALSE, icon = icon("file-download"),
-                            fluidRow(
-                                column(
-                                    width = 6,
-                                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage.
-                      Cumulative UK sequences are filtered by the selected amino acid replacement.")
-                                ),
-                                column(
-                                    width = 6, 
-                                    selectizeInput("selectEscape", "Choose amino acid replacement:",
-                                                   choices = database %>% 
-                                                       filter(!is.na(escape)) %>% 
-                                                       filter(`numSeqs UK` > 0) %>% 
-                                                       arrange(desc(`numSeqs UK`), mutation) %$% 
-                                                       mutation, 
-                                                   options = list(dropdownParent = 'body')), # prevent dropdown opening behind footer
-                                    
-                                    downloadButton("downloadEscape", "Download", class = "btn-info")
-                                )
-                            ) # end fluidRow
-                        ) # end box
-            ), # end tabItem
-            
-            tabItem(tabName = "tcell",
-                    h2("T Cell Epitopes"),
-                    DTOutput("table_5")
+                    tabBox(
+                        title = "Antigenic Information", width = 12,
+                        id = "tabs_antigenic",
+                        tabPanel("Antibody Sites", 
+                                 value = "antibody",
+                                 
+                                 fluidRow(
+                                     column(
+                                         width = 12,
+                                         h2("Spike protein gene mutations of potential immunogenic significance detected in the UK"),
+                                         p('The table lists those mutations in the spike gene identified in the UK dataset that have been
+                                         associated with weaker neutralisation of the virus by convalescent plasma from people who
+                                         have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
+                                         COVID-19 (referred to below as "escape").'),
+                                         p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
+                                         vaccines or the immune response to natural SARS-CoV-2 infection.")),
+                                         
+                                         DTOutput("table_4"),
+                                         br(),
+                                         
+                                         box(title = "Download data", closable = FALSE, width = 12, height = 500,
+                                             status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                             fluidRow(
+                                                 column(
+                                                     width = 6,
+                                                     p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage.
+                                                Cumulative UK sequences are filtered by the selected amino acid replacement.")
+                                                 ),
+                                                
+                                                column(
+                                                    width = 6, 
+                                                    selectizeInput("selectEscape", "Choose amino acid replacement:",
+                                                                   choices = database %>% 
+                                                                       filter(!is.na(escape)) %>% 
+                                                                       filter(`numSeqs UK` > 0) %>% 
+                                                                       arrange(desc(`numSeqs UK`), mutation) %$% 
+                                                                       mutation, 
+                                                                   options = list(dropdownParent = 'body')), # prevent dropdown opening behind footer
+                                                    
+                                                    downloadButton("downloadEscape", "Download", class = "btn-info")
+                                                )
+                                             ) # end fluidRow
+                                         ) # end box
+                                     ) # end column
+                                 ), # end fluidRow
+                        ), # end tabPanel
+                        
+                        tabPanel(
+                            title = "T Cell Epitopes", 
+                            value = "tcell",
+                            h2("Spike protein gene mutations in T cell epitopes detected in the UK"),
+                            DTOutput("table_5")
+                        ), # end tabPanel
+                        
+                        tabPanel("Notes",
+                                 h3("Antibody Sites"),
+                                 h4("Table Key"),
+                                 h5("Confidence"),
+                                 tags$ul(
+                                     tags$li(
+                                         span(style = "background-color:firebrick; color:snow", "High", .noWS = "after"),
+                                         ": Antigenic role of mutation is supported by multiple studies including at least one that reports an effect observed with (post-infection serum) convalescent plasma.",
+                                         .noWS = c("after-begin", "before-end")
+                                     ),
+                                     tags$li(
+                                         span(style = "background-color:darkorange; color:white", "Medium", .noWS = "after"),
+                                         ": Antigenic role of mutation is supported by multiple studies.",
+                                         .noWS = c("after-begin", "before-end")
+                                     ),
+                                     tags$li(
+                                         span(style = "background-color:lemonchiffon; color:darkslategrey", "Lower", .noWS = "after"),
+                                         ": Mutation is supported by a single study.",
+                                         .noWS = c("after-begin", "before-end")
+                                     )
+                                 ),
+                                 
+                                 h5("Spike protein domain definitions"),
+                                 tags$ul(
+                                     tags$li("SP, signal protein (residues 1-13)"),
+                                     tags$li("NTD, N-terminal domain (14-303)"),
+                                     tags$li(
+                                         "RBD, receptor-binding domain (331-527) which includes the RBM, receptor-binding motif (437-508)"
+                                     ),
+                                     tags$li("FP, fusion peptide (815-834)"),
+                                     tags$li(
+                                         "Residues outside of these specific domains are labelled by subunit, S1 (residues 1-685) or S2 (residues 686-1173)"
+                                     )
+                                 )
+                             ) # end tabPanel
+                    ), # end tabBox
             ) # end tabItem
         ) # end tabItems
     ), # end dashboardBody
@@ -325,5 +362,5 @@ dashboardPage(
             column(2, tags$a(img(src = "UOC.png", width = "264px", height = "71px", class = "img-responsive center-block"), href="https://www.cam.ac.uk", target = "_blank")),
             column(2, tags$a(img(src = "cog-uk.png", width = "195px", height = "71px", class = "img-responsive center-block"), href="https://www.cogconsortium.uk", target = "_blank"))
         )
-     )
+    )
 )
