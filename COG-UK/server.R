@@ -233,6 +233,18 @@ shinyServer(function(input, output, session) {
           color = styleEqual(c("lower", "medium", "high"), c('DarkSlateGray', 'White', 'Snow'))) # TODO anchor colour
         })
     
+    output$table_5 <- renderDT({
+      database %>% 
+        filter(!is.na(Epitopes) & `numSeqs UK` > 0) %>% 
+        select(mutation, Epitopes:Assays, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+        arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
+        rename(`Amino acid replacement` = mutation, 
+               `Cumulative sequences in UK` = `numSeqs UK`,
+               `Sequences over 28 days` = `numSeqs UK 28 days`) %>% 
+        datatable(filter = "top", escape = FALSE, rownames = FALSE,
+                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20)) 
+    })
+    
     # always display wild type on percentage chart
     observeEvent(input$percentage, {
       if(input$percentage){

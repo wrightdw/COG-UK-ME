@@ -22,9 +22,10 @@ dashboardPage(
     
     sidebar = dashboardSidebar(
         sidebarMenu(id="sidebar_menu",
-            menuItem("Mutation Explorer", tabName = "report", icon = icon("table")), 
-            menuItem("Visualiser", tabName = "dashboard", icon = icon("virus")),
+            menuItem("Mutation Explorer", tabName = "report", icon = icon("viruses")), 
+            menuItem("Visualiser", tabName = "dashboard", icon = icon("eye")),
             menuItem("Antigenic Information", tabName = "immunology", icon = icon("shield-virus")),
+            menuItem("T Cell Epitopes", tabName = "tcell", icon = icon("disease")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -306,6 +307,11 @@ dashboardPage(
                                 )
                             ) # end fluidRow
                         ) # end box
+            ), # end tabItem
+            
+            tabItem(tabName = "tcell",
+                    h2("T Cell Epitopes"),
+                    DTOutput("table_5")
             ) # end tabItem
         ) # end tabItems
     ), # end dashboardBody

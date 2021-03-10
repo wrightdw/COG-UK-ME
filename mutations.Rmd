@@ -534,10 +534,10 @@ tcell <- read_csv(params$tcell_csv)
 tcell_summary <- 
   tcell %>% 
   group_by(Epitope, `Start position`, `End position`, CD4_CD8) %>% 
-  summarise(HLA = HLA %>% unique %>% toString,
-            `Supporting references` = `Supporting references` %>% unique %>% as.integer,
-            References = Reference %>% unique %>% toString,
-            Assays = assay %>% unique %>% toString,
+  summarise(HLA = HLA %>% unique %>% str_c(collapse = "<br>"),
+            `Supporting references` = `Supporting references` %>% unique %>% toString,
+            References = Reference %>% unique %>% str_c(collapse = "<br>"),
+            Assays = assay %>% unique %>% str_c(collapse = "<br>"),
             .groups = "drop")
 
 tcell_summary
@@ -550,12 +550,13 @@ database_tcell <-
            "position" = "End position"),
     match_fun = list(`>=`, `<=`)) %>% 
   group_by(position, mutation) %>% 
-  summarise(Epitopes = Epitope %>% toString, 
-            `CD4 CD8` = CD4_CD8 %>% toString, 
-            Positions = str_c(`Start position`, `End position`, sep = "-", collapse = ", "),
-            HLA = HLA %>% toString,
-            `Supporting references` = `Supporting references` %>% toString,
-            References = References %>% toString, 
+  summarise(Epitopes = Epitope %>% str_c(collapse = "<hr>"), 
+            `CD4 CD8` = CD4_CD8 %>% str_c(collapse = "<hr>"), 
+            Positions = str_c(`Start position`, `End position`, sep = "-", collapse = "<hr>"),
+            HLA = HLA %>% str_c(collapse = "<hr>"),
+            `Supporting references` = `Supporting references` %>% str_c(collapse = "<hr>"),
+            References = References %>% str_c(collapse = "<hr>"), 
+            Assays = Assays %>% str_c(collapse = "<hr>"), 
             .groups = "drop")
   
 database_tcell
