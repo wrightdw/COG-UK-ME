@@ -86,7 +86,8 @@ dashboardPage(
                             tags$li("mutations of potential or known clinical and public health importance based on current evidence (Table 2)"),
                             tags$li("the designated global variants of concern and their structural context (Table 3)"),
                             tags$li("frequency plots for mutations at specific residue in SARS-CoV-2 ORFs (Visualiser)"),
-                            tags$li("mutations of potential antigenic significance as indicated by experimental studies: shown to lead to weaker neutralisation of the virus by convalescent plasma from people who have been infected with SARS-CoV-2 and/or demonstrated escape from some monoclonal antibodies (mAbs) that may be given to patients with COVID-19 (Antigenic Information).")
+                            tags$li("mutations of potential antigenic significance as indicated by experimental studies: shown to lead to weaker neutralisation of the virus by convalescent plasma from people who have been infected with SARS-CoV-2 and/or demonstrated escape from some monoclonal antibodies (mAbs) that may be given to patients with COVID-19 (Antigenic Information: Antibody Sites)"),
+                            tags$li("mutations in T cell epitopes as indicated by experimental studies (Antigenic Information: T Cell Epitopes).")
                         ),
                         p(em("Notes"), " provides an explanation of scientific terms and a few limitations."),
                         
