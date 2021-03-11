@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-03-10") #TODO derive from directory name
+dataset_date <- ymd("2021-03-11") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -51,7 +51,7 @@ sublineage_regex <- function(lineage){
     paste0("^", ., "\\.")
 }
 
-sum_key_mutations_uk <- function(date_from = NULL){
+sum_key_mutations_uk <- function(..., date_from = NULL){
   if(!is_null(date_from)){
     date_from %<>% ymd()
   }
@@ -61,8 +61,8 @@ sum_key_mutations_uk <- function(date_from = NULL){
   }
   
   consortium_uk %>%
-  group_by(lineage) %>%
-  summarise(sequences = n(),
+    group_by(...) %>%
+    summarise(sequences = n(),
             D614G = sum(d614g == "G"),
             A222V = sum(a222v == "V"),
             N439K = sum(n439k == "K"),
@@ -79,7 +79,7 @@ sum_key_mutations_uk <- function(date_from = NULL){
 
 sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
   if(is_character(lineages)){
-    n_uk_lineages <- sum_key_mutations_uk(date_from)
+    n_uk_lineages <- sum_key_mutations_uk(lineage, date_from = date_from)
   
     lapply(lineages, function(x){
       n_uk_lineages %>% 

@@ -185,7 +185,7 @@ shinyServer(function(input, output, session) {
               mutate(reason = "As B.1.324.1, with the addition of E484K.")
             
           ) %>% 
-                filter(n_sequences > 0) %>% 
+                # filter(n_sequences > 0) %>% 
                 mutate(`Cumulative UK sequences (%)` = n_sequences / total_sequences,
                        .after = n_sequences) %>%
                 mutate(`UK Sequences over 28 days (%)` = n_sequences_28 / total_sequences_28,
