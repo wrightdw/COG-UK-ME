@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-03-11_mutations.csv"
-  global_csv:     "cog_global_2021-03-11_public.csv"
-  consortium_csv: "cog_global_2021-03-11_consortium.csv"
+  mutations_csv:  "cog_global_2021-03-12_mutations.csv"
+  global_csv:     "cog_global_2021-03-12_public.csv"
+  consortium_csv: "cog_global_2021-03-12_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
   tcell_csv:      "tcell_long.csv"
 ---
