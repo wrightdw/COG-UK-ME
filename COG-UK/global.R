@@ -39,7 +39,8 @@ lineages_t3 <-
     "A.27" = "Variant associated with France.",
     # "B.1.324.1" = "UK associated variant.",
     "P.2" = "Variant associated with Brazil.",
-    "B.1.1.318" = "Variant associated with England."
+    "B.1.1.318" = "Variant associated with England.", 
+    "B.1.1.28" = "Variant associated with the Philippines."
     ) %>% 
   enframe("lineage", "reason")
 
