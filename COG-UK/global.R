@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-03-11") #TODO derive from directory name
+dataset_date <- ymd("2021-03-12") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -74,17 +74,27 @@ sum_key_mutations_uk <- function(..., date_from = NULL){
             `N439K + ∆69-70` = sum(n439k == "K" & del_21765_6 == "del"),
             `N501Y + ∆69-70` = sum(n501y == "Y" & del_21765_6 == "del"),
             `Y453F + ∆69-70` = sum(y453f == "F" & del_21765_6 == "del"),
-            `N501Y + E484K` = sum(n501y == "Y" & e484k == "K")
+            `N501Y + E484K` = sum(n501y == "Y" & e484k == "K"),
+            .groups = "keep"
   )
 }
 
 sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
   if(is_character(lineages)){
-    n_uk_lineages <- sum_key_mutations_uk(lineage, date_from = date_from)
+    n_nations_lineages <- sum_key_mutations_uk(lineage, adm1, date_from = date_from) # grouped by lineage, adm1
+    
+    n_uk_lineages <- 
+      n_nations_lineages %>% 
+      group_by(lineage) %>% 
+      summarise(across(sequences:`N501Y + E484K`, sum)) %>% 
+      mutate(adm1 = "UK", .after = lineage)
+    
+    n_uk_lineages_uk_nations <- bind_rows(n_nations_lineages, n_uk_lineages) # grouped by lineage, adm1
   
     lapply(lineages, function(x){
-      n_uk_lineages %>% 
+      n_uk_lineages_uk_nations %>% 
         filter(lineage == x | str_detect(lineage, sublineage_regex(x))) %>% 
+        group_by(adm1) %>% 
         select(-lineage) %>% 
         summarise_all(funs(sum)) %>% #TODO replace deprecated funs
         mutate(lineage = x, .before = 1)
@@ -102,16 +112,20 @@ lineage_plus_variant <- function(lineage, variant){
   
     bind_cols(
       mutations_s_uk_lv %>%
-        summarise(n_sequences = n_distinct(sequence_name)),
+        summarise(n_sequences_UK = n_distinct(sequence_name)),
         
         mutations_s_uk_lv %>%
         filter(sample_date >= sample_date_28) %>%
-        summarise(n_sequences_28 = n_distinct(sequence_name))
+        summarise(n_sequences_28_UK = n_distinct(sequence_name))
     ) %>% 
     mutate(lineage = !!lineage, variant = !!variant, .before = 1)
 }
 
 # TODO precompute and include lineage/variant combinations
-n_uk_lineages_all <- inner_join(sum_key_mutations_by_lineage_uk(lineages_t2), 
-                                sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>% 
-                                  rename(n_sequences_28 = n_sequences))
+n_uk_lineages_all <-
+  inner_join(
+    sum_key_mutations_by_lineage_uk(lineages_t2),
+    sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>%
+      rename(n_sequences_28 = n_sequences)
+  ) %>% 
+  pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28))

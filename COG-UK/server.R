@@ -112,6 +112,7 @@ shinyServer(function(input, output, session) {
     
     output$table_2 <- renderDT({
           n_uk_lineages_all %>% 
+            select(-ends_with("_Scotland"), -ends_with("_Wales"), -ends_with("_England"), -ends_with("_Northern_Ireland")) %>% 
             filter(    (variant == "D614G" & lineage == "B.1" ) | 
                            
                        (variant == "A222V" & lineage == "B.1.177" ) | 
@@ -143,21 +144,23 @@ shinyServer(function(input, output, session) {
                        (variant == "N501Y + E484K" & lineage == "B.1.351") |
                        (variant == "N501Y + E484K" & lineage == "B.1.1.7")) %>% 
             relocate(variant) %>% 
-            mutate(`Cumulative UK sequences (%)` = n_sequences / total_sequences,
-                   .after = n_sequences) %>%
-            mutate(`UK Sequences over 28 days (%)` = n_sequences_28 / total_sequences_28,
-                   .after = n_sequences_28) %>%
+            mutate(`Cumulative UK sequences (%)` = n_sequences_UK / total_sequences,
+                   .after = n_sequences_UK) %>%
+            mutate(`UK Sequences over 28 days (%)` = n_sequences_28_UK / total_sequences_28,
+                   .after = n_sequences_28_UK) %>%
             arrange(variant, lineage) %>% 
             rename(Mutation = variant, 
                      `Lineage(s) in which detected` = lineage, 
-                     `Cumulative UK sequences` = n_sequences, 
-                     `UK Sequences over 28 days` = n_sequences_28) %>%
+                     `Cumulative UK sequences` = n_sequences_UK, 
+                     `UK Sequences over 28 days` = n_sequences_28_UK) %>%
           datatable(filter = "none", rownames = FALSE, 
                     options = list(dom = 't', paging = FALSE)) %>% 
           formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 2)
     })
     
     output$table_3 <- renderDT({
+          n_uk_lineages_all %<>% select(-ends_with("_Scotland"), -ends_with("_Wales"), -ends_with("_England"), -ends_with("_Northern_Ireland"))
+      
           bind_rows(
             n_uk_lineages_all %>% 
               filter(lineage %in% lineages_t3$lineage & variant == "sequences") %>% 
@@ -185,15 +188,16 @@ shinyServer(function(input, output, session) {
               mutate(reason = "As B.1.324.1, with the addition of E484K.")
             
           ) %>% 
-                # filter(n_sequences > 0) %>% 
-                mutate(`Cumulative UK sequences (%)` = n_sequences / total_sequences,
-                       .after = n_sequences) %>%
-                mutate(`UK Sequences over 28 days (%)` = n_sequences_28 / total_sequences_28,
-                       .after = n_sequences_28) %>%
+                filter(n_sequences_UK > 0) %>%
+                mutate(`Cumulative UK sequences (%)` = n_sequences_UK / total_sequences,
+                       .after = n_sequences_UK) %>%
+                mutate(`UK Sequences over 28 days (%)` = n_sequences_28_UK / total_sequences_28,
+                       .after = n_sequences_28_UK) %>%
                 arrange(lineage) %>% 
+                # select(lineage, n_sequences_UK, n_sequences_28_UK, reason) %>% 
                 rename(`Variant/ lineage` = lineage,	
-                         `Cumulative UK sequences` = n_sequences,	 
-                         `UK Sequences over 28 days` = n_sequences_28,                    
+                         `Cumulative UK sequences` = n_sequences_UK,	 
+                         `UK Sequences over 28 days` = n_sequences_28_UK,                    
                          `Reason for tracking` = reason) %>% 
         datatable(filter = "none", rownames = FALSE, 
                   options = list(dom = 't', paging = FALSE)) %>% 
