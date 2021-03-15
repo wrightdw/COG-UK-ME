@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-03-12") #TODO derive from directory name
+dataset_date <- ymd("2021-03-15") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -123,9 +123,10 @@ lineage_plus_variant <- function(lineage, variant){
 
 # TODO precompute and include lineage/variant combinations
 n_uk_lineages_all <-
-  inner_join(
+  left_join(
     sum_key_mutations_by_lineage_uk(lineages_t2),
     sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>%
       rename(n_sequences_28 = n_sequences)
   ) %>% 
-  pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28))
+  pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
+  replace(is.na(.), 0)
