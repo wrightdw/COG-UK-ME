@@ -28,7 +28,7 @@ shinyServer(function(input, output, session) {
                `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
                `Date of first appearance in UK` = earliest) %>% 
         datatable(filter = "top", rownames = FALSE, 
-                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20)) %>% 
+                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20, scrollX = TRUE)) %>% 
         formatPercentage(c("Cumulative sequences in UK (%)", "Sequences over the last 28 days in UK (%)"), digits = 2)
     })
     
@@ -112,7 +112,6 @@ shinyServer(function(input, output, session) {
     
     output$table_2 <- renderDT({
           n_uk_lineages_all %>% 
-            select(-ends_with("_Scotland"), -ends_with("_Wales"), -ends_with("_England"), -ends_with("_Northern_Ireland")) %>% 
             filter(    (variant == "D614G" & lineage == "B.1" ) | 
                            
                        (variant == "A222V" & lineage == "B.1.177" ) | 
@@ -144,18 +143,35 @@ shinyServer(function(input, output, session) {
                        (variant == "N501Y + E484K" & lineage == "B.1.351") |
                        (variant == "N501Y + E484K" & lineage == "B.1.1.7")) %>% 
             relocate(variant) %>% 
-            mutate(`Cumulative UK sequences (%)` = n_sequences_UK / total_sequences,
+            relocate(n_sequences_UK, .after = lineage) %>% 
+            mutate(`UK (%)` = n_sequences_UK / total_sequences,
                    .after = n_sequences_UK) %>%
-            mutate(`UK Sequences over 28 days (%)` = n_sequences_28_UK / total_sequences_28,
+            relocate(n_sequences_28_UK, .after = `UK (%)`) %>% 
+            mutate(`UK 28 days (%)` = n_sequences_28_UK / total_sequences_28,
                    .after = n_sequences_28_UK) %>%
+            relocate(n_sequences_28_England, .after = n_sequences_England) %>% 
+            relocate(n_sequences_28_Northern_Ireland, .after = n_sequences_Northern_Ireland) %>% 
+            relocate(n_sequences_28_Scotland, .after = n_sequences_Scotland) %>% 
+            relocate(n_sequences_28_Wales, .after = n_sequences_Wales) %>% 
             arrange(variant, lineage) %>% 
             rename(Mutation = variant, 
-                     `Lineage(s) in which detected` = lineage, 
-                     `Cumulative UK sequences` = n_sequences_UK, 
-                     `UK Sequences over 28 days` = n_sequences_28_UK) %>%
+                   `Lineage` = lineage, 
+                   `UK` = n_sequences_UK, 
+                   `UK 28 days` = n_sequences_28_UK,
+                   
+                   England = n_sequences_England,
+                   `Northern Ireland` = n_sequences_Northern_Ireland,
+                   Scotland = n_sequences_Scotland,
+                   Wales = n_sequences_Wales,
+                   
+                   `England 28 Days` = n_sequences_28_England,
+                   `Northern Ireland 28 Days` = n_sequences_28_Northern_Ireland,
+                   `Scotland 28 Days` = n_sequences_28_Scotland,
+                   `Wales 28 Days` = n_sequences_28_Wales
+                   ) %>%
           datatable(filter = "none", rownames = FALSE, 
-                    options = list(dom = 't', paging = FALSE)) %>% 
-          formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 2)
+                    options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
+          formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
     })
     
     output$table_3 <- renderDT({
@@ -194,13 +210,12 @@ shinyServer(function(input, output, session) {
                 mutate(`UK Sequences over 28 days (%)` = n_sequences_28_UK / total_sequences_28,
                        .after = n_sequences_28_UK) %>%
                 arrange(lineage) %>% 
-                # select(lineage, n_sequences_UK, n_sequences_28_UK, reason) %>% 
                 rename(`Variant/ lineage` = lineage,	
                          `Cumulative UK sequences` = n_sequences_UK,	 
                          `UK Sequences over 28 days` = n_sequences_28_UK,                    
                          `Reason for tracking` = reason) %>% 
         datatable(filter = "none", rownames = FALSE, 
-                  options = list(dom = 't', paging = FALSE)) %>% 
+                  options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
         formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 2)
     })
     
@@ -229,7 +244,8 @@ shinyServer(function(input, output, session) {
                  `References` = anchor,
                  Confidence = support, 
                  Domain = domain) %>% 
-        datatable(filter = "top", escape = FALSE, rownames = FALSE) %>% 
+        datatable(filter = "top", escape = FALSE, rownames = FALSE,
+                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20, scrollX = TRUE)) %>% 
         formatStyle(
           'Confidence',
           target = 'row',
@@ -247,7 +263,7 @@ shinyServer(function(input, output, session) {
                `Cumulative sequences in UK` = `numSeqs UK`,
                `Sequences over 28 days` = `numSeqs UK 28 days`) %>% 
         datatable(filter = "top", escape = FALSE, rownames = FALSE,
-                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20)) 
+                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20, scrollX = TRUE)) 
     })
     
     # always display wild type on percentage chart
