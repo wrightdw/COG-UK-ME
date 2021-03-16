@@ -175,48 +175,63 @@ shinyServer(function(input, output, session) {
     })
     
     output$table_3 <- renderDT({
-          n_uk_lineages_all %<>% select(-ends_with("_Scotland"), -ends_with("_Wales"), -ends_with("_England"), -ends_with("_Northern_Ireland"))
-      
-          bind_rows(
+        bind_rows(
             n_uk_lineages_all %>% 
               filter(lineage %in% lineages_t3$lineage & variant == "sequences") %>% 
               inner_join(lineages_t3) %>% 
               select(-variant) %>% 
               relocate(reason, .after = lineage),
             
-            n_uk_lineages_all %>% 
-              filter(variant == "E484K" & lineage == "B.1.1.7") %>% 
-              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
+            n_uk_lineages_all %>%
+              filter(variant == "E484K" & lineage == "B.1.1.7") %>%
+              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
               mutate(reason = "As B.1.1.7, with the addition of E484K, which is located in the RBM and has been shown to escape some mAbs."),
-            
+
             lineage_plus_variant("B.1.1.7", "S494P") %>% # for non-key mutations
-              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>% 
+              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>%
               mutate(reason = "As B.1.1.7, with the addition of S494P."),
-            
-            n_uk_lineages_all %>% 
-              filter(variant == "E484K" & lineage == "A.23.1") %>% 
-              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
+
+            n_uk_lineages_all %>%
+              filter(variant == "E484K" & lineage == "A.23.1") %>%
+              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
               mutate(reason = "As A.23.1, with the addition of E484K."),
-            
-            n_uk_lineages_all %>% 
-              filter(variant == "E484K" & lineage == "B.1.324.1") %>% 
-              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>% 
+
+            n_uk_lineages_all %>%
+              filter(variant == "E484K" & lineage == "B.1.324.1") %>%
+              mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
               mutate(reason = "As B.1.324.1, with the addition of E484K.")
-            
           ) %>% 
+                mutate(across(everything(), ~replace_na(.x, 0L))) %>% 
                 filter(n_sequences_UK > 0) %>%
-                mutate(`Cumulative UK sequences (%)` = n_sequences_UK / total_sequences,
+                relocate(n_sequences_UK, .after = reason) %>% 
+                mutate(`UK (%)` = n_sequences_UK / total_sequences,
                        .after = n_sequences_UK) %>%
-                mutate(`UK Sequences over 28 days (%)` = n_sequences_28_UK / total_sequences_28,
+                relocate(n_sequences_28_UK, .after = `UK (%)`) %>% 
+                mutate(`UK 28 days (%)` = n_sequences_28_UK / total_sequences_28,
                        .after = n_sequences_28_UK) %>%
                 arrange(lineage) %>% 
-                rename(`Variant/ lineage` = lineage,	
-                         `Cumulative UK sequences` = n_sequences_UK,	 
-                         `UK Sequences over 28 days` = n_sequences_28_UK,                    
-                         `Reason for tracking` = reason) %>% 
+                relocate(n_sequences_28_England, .after = n_sequences_England) %>% 
+                relocate(n_sequences_28_Northern_Ireland, .after = n_sequences_Northern_Ireland) %>% 
+                relocate(n_sequences_28_Scotland, .after = n_sequences_Scotland) %>% 
+                relocate(n_sequences_28_Wales, .after = n_sequences_Wales) %>% 
+                rename(`Variant` = lineage,	
+                         UK = n_sequences_UK,	 
+                         `UK 28 days` = n_sequences_28_UK,                    
+                         `Reason for tracking` = reason, 
+                       
+                         England = n_sequences_England,
+                         `Northern Ireland` = n_sequences_Northern_Ireland,
+                         Scotland = n_sequences_Scotland,
+                         Wales = n_sequences_Wales,
+                         
+                         `England 28 Days` = n_sequences_28_England,
+                         `Northern Ireland 28 Days` = n_sequences_28_Northern_Ireland,
+                         `Scotland 28 Days` = n_sequences_28_Scotland,
+                         `Wales 28 Days` = n_sequences_28_Wales
+                ) %>% 
         datatable(filter = "none", rownames = FALSE, 
                   options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
-        formatPercentage(c("Cumulative UK sequences (%)", "UK Sequences over 28 days (%)"), digits = 2)
+        formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
     })
     
     output$table_4 <- renderDT({

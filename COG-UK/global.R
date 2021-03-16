@@ -103,22 +103,37 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
       gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
   }
 }
-
+# lineage_plus_variant("B.1.1.7", "S494P")
 lineage_plus_variant <- function(lineage, variant){
   mutations_s_uk_lv <- 
     mutations_s_uk %>%
       filter(variant == !!variant) %>%
       filter(lineage == !!lineage | str_detect(lineage, sublineage_regex(!!lineage))) 
   
-    bind_cols(
+  mutations_s_uk_lv_28 <- 
+    mutations_s_uk_lv %>%
+    filter(sample_date >= sample_date_28)
+  
+    left_join(
       mutations_s_uk_lv %>%
-        summarise(n_sequences_UK = n_distinct(sequence_name)),
-        
-        mutations_s_uk_lv %>%
-        filter(sample_date >= sample_date_28) %>%
-        summarise(n_sequences_28_UK = n_distinct(sequence_name))
-    ) %>% 
-    mutate(lineage = !!lineage, variant = !!variant, .before = 1)
+        group_by(adm1) %>% 
+        summarise(n_sequences = n_distinct(sequence_name)) %>% 
+        bind_rows(summarise(., n_sequences = sum(n_sequences)) %>% 
+                    mutate(adm1 = "UK")),
+      
+        mutations_s_uk_lv_28 %>%
+          group_by(adm1) %>% 
+          summarise(n_sequences_28 = n_distinct(sequence_name)) %>% 
+          bind_rows(summarise(., n_sequences_28 = sum(n_sequences_28)) %>% 
+                  mutate(adm1 = "UK"))
+    ) %>%
+      mutate(adm1 = recode(adm1, 
+                        `UK-ENG` = "England",
+                        `UK-NIR` = "Northern_Ireland",
+                        `UK-SCT` = "Scotland",
+                        `UK-WLS` = "Wales")) %>% 
+      pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>%
+      mutate(lineage = !!lineage, variant = !!variant, .before = 1)
 }
 
 # TODO precompute and include lineage/variant combinations
@@ -129,4 +144,4 @@ n_uk_lineages_all <-
       rename(n_sequences_28 = n_sequences)
   ) %>% 
   pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
-  replace(is.na(.), 0)
+  mutate(across(everything(), ~replace_na(.x, 0L)))
