@@ -103,7 +103,7 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL){
       gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
   }
 }
-# lineage_plus_variant("B.1.1.7", "S494P")
+
 lineage_plus_variant <- function(lineage, variant){
   mutations_s_uk_lv <- 
     mutations_s_uk %>%

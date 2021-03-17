@@ -853,4 +853,32 @@ mutations_uk %>%
   ungroup %>% 
   slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
 ```
+## Antigenic B.1.1.7
+Would you be able to prepare a file with all the antigenic mutations (filtered from Will’s antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
+```{r antigenic_b_1_1_7}
+escape_mutations <-
+  database %>%
+  filter(!is.na(escape)) %$% 
+  mutation 
+
+sequences_by_week_lineages <- 
+  consortium_uk %>% 
+  count(epi_week, lineage, name = "n_sequences_lineage")
+
+sequences_by_week_b_1_1_7 <- 
+  sequences_by_week_lineages %>% 
+  filter(lineage == "B.1.1.7") %>% 
+  select(-lineage)
+
+antigenic_b_1_1_7 <- 
+  mutations_s_uk %>% 
+  filter(lineage == "B.1.1.7" & variant %in% escape_mutations) %>% 
+  count(variant, epi_week) %>% 
+  inner_join(sequences_by_week) %>% 
+  inner_join(sequences_by_week_b_1_1_7) %>% 
+  mutate(percent = n / n_sequences * 100 ) %>% 
+  mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
+
+antigenic_b_1_1_7 %T>% write_csv("antigenic_b_1_1_7.csv")
+```
 
