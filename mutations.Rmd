@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-03-17_mutations.csv"
-  global_csv:     "cog_global_2021-03-17_public.csv"
-  consortium_csv: "cog_global_2021-03-17_consortium.csv"
+  mutations_csv:  "cog_global_2021-03-18_mutations.csv"
+  global_csv:     "cog_global_2021-03-18_public.csv"
+  consortium_csv: "cog_global_2021-03-18_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
   tcell_csv:      "tcell_long.csv"
   deletions_tsv:  "cog.deletions.tsv"
@@ -853,9 +853,39 @@ mutations_uk %>%
   ungroup %>% 
   slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
 ```
-## Antigenic B.1.1.7
+## Antigenic
+### Antigenic deletions by lineage
+22289-22294 (6nt)
+22287-22295 (9nt) 
+and possibly 22289-22291 (3nt) but this last one has a lot of Ns so may be an artefact
+```{r antigenic_deletions}
+del_22289_6_samples <- 
+  deletions %>% 
+  filter(
+    (ref_start == 22289 & length == 6) 
+  ) %$% samples 
+
+# del_22287_9 <- 
+#   deletions %>% 
+#   filter(
+#     (ref_start == 22287 & length == 9) 
+#   ) %$% samples 
+# 
+# del_22289_3 <- 
+#   deletions %>% 
+#   filter(
+#     (ref_start == 22289 & length == 3) 
+#   ) %$% samples 
+
+del_22289_6 <- 
+  consortium_uk %>% 
+  filter(sequence_name %in% del_22289_6_samples) %>% 
+  count(lineage, epi_week) %>% 
+  mutate(variant = "del_22289_6", .before = 1)
+```
+### Antigenic mutations by lineage
 Would you be able to prepare a file with all the antigenic mutations (filtered from Will’s antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
-```{r antigenic_b_1_1_7}
+```{r antigenic_mutations}
 escape_mutations <-
   database %>%
   filter(!is.na(escape)) %$% 
@@ -868,7 +898,8 @@ sequences_by_week_lineages <-
 antigenic_mutations <- 
   mutations_s_uk %>% 
   filter(variant %in% escape_mutations) %>% 
-  count(variant, lineage, epi_week) #%>% 
+  count(variant, lineage, epi_week) %>% 
+  bind_rows(del_22289_6)
 
 antigenic_mutations_lineages <- 
   inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
@@ -876,4 +907,5 @@ antigenic_mutations_lineages <-
 
 antigenic_mutations_lineages %T>% write_csv("antigenic_mutations_lineages.csv")
 ```
+
 
