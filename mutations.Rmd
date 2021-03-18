@@ -2,11 +2,12 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-03-15_mutations.csv"
-  global_csv:     "cog_global_2021-03-15_public.csv"
-  consortium_csv: "cog_global_2021-03-15_consortium.csv"
+  mutations_csv:  "cog_global_2021-03-17_mutations.csv"
+  global_csv:     "cog_global_2021-03-17_public.csv"
+  consortium_csv: "cog_global_2021-03-17_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
   tcell_csv:      "tcell_long.csv"
+  deletions_tsv:  "cog.deletions.tsv"
 ---
 ```{r libs}
 library(tidyverse)
@@ -25,7 +26,7 @@ consortium_uk <-
          -variants, -lineages_version
          ) %>% # remove unused columns
   type_convert %>% 
-  filter(country == "UK")  %>% 
+  filter(country == "UK" & !is.na(adm1))  %>% 
   select(-country) %>% 
   distinct # remove duplicates
 
@@ -66,7 +67,7 @@ mutations %<>% inner_join(public)
 
 mutations_uk <- 
   mutations %>%
-  filter(country == "UK") %>% 
+  filter(country == "UK" & !is.na(adm1)) %>% 
   select(-country) %>% 
   mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
@@ -414,21 +415,20 @@ mutations %>% filter(country == "UK"
 
 ```
 
-
-```{r deletions_v}
-# 21991-21993, 11288-11296, 21765 (del69-70)
+# Deletions
+```{r deletions}
 deletions <- 
-  read_tsv("uk_deletions.txt") %>% 
+  read_tsv(params$deletions_tsv) %>% 
   separate_rows(samples, sep = '\\|')
 
-deletions_v <- 
-  deletions %>% 
-  filter(ref_start %in% c(21991, 11288, 21765)) %>% 
-  count(samples) %>% 
-  filter(n == 3) %>%
-  select(-n)
+# 21991-21993, 11288-11296, 21765 (del69-70)
+# deletions_v <- 
+#   deletions %>% 
+#   filter(ref_start %in% c(21991, 11288, 21765))  
+# 
+# deletions_v
 
-deletions_v
+deletions
 ```
 ## Database
 ```{r database}
@@ -865,20 +865,15 @@ sequences_by_week_lineages <-
   consortium_uk %>% 
   count(epi_week, lineage, name = "n_sequences_lineage")
 
-sequences_by_week_b_1_1_7 <- 
-  sequences_by_week_lineages %>% 
-  filter(lineage == "B.1.1.7") %>% 
-  select(-lineage)
-
-antigenic_b_1_1_7 <- 
+antigenic_mutations <- 
   mutations_s_uk %>% 
-  filter(lineage == "B.1.1.7" & variant %in% escape_mutations) %>% 
-  count(variant, epi_week) %>% 
-  inner_join(sequences_by_week) %>% 
-  inner_join(sequences_by_week_b_1_1_7) %>% 
-  mutate(percent = n / n_sequences * 100 ) %>% 
+  filter(variant %in% escape_mutations) %>% 
+  count(variant, lineage, epi_week) #%>% 
+
+antigenic_mutations_lineages <- 
+  inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
   mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
 
-antigenic_b_1_1_7 %T>% write_csv("antigenic_b_1_1_7.csv")
+antigenic_mutations_lineages %T>% write_csv("antigenic_mutations_lineages.csv")
 ```
 
