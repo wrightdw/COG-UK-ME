@@ -187,22 +187,31 @@ dashboardPage(
                                      ),
                                      
                                      fluidRow(
-                                         box(title = "Download data", closable = FALSE, width = 6, 
-                                             status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                             p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
-                                             selectizeInput("concern", "Choose lineage:",
-                                                            choices = c(lineages_t3$lineage, 
-                                                                        "B.1.1.7 + E484K", 
-                                                                        "A.23.1 + E484K",
-                                                                        "B.1.1.7 + S494P"
-                                                                        # , "B.1.324.1 + E484K"
-                                                            ) %>% sort), # TODO exclude zero count lineages
-                                             downloadButton("downloadConcern", "Download", class = "btn-info")),
-                                         
-                                         box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 6, 
-                                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                             img(src = "structure.png", class = "center-block img-responsive")),
-                                         
+                                         column(width = 6, 
+                                                box(title = "Download metadata", closable = FALSE, width = 12, 
+                                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
+                                                    selectizeInput("concern", "Choose lineage:",
+                                                                   choices = c(lineages_t3$lineage, 
+                                                                               "B.1.1.7 + E484K", 
+                                                                               "A.23.1 + E484K",
+                                                                               "B.1.1.7 + S494P"
+                                                                               # , "B.1.324.1 + E484K"
+                                                                   ) %>% sort),
+                                                    downloadButton("downloadConcern", "Download", class = "btn-info")),
+                                                
+                                                    box(title = "Download table 3", closable = FALSE, width = 12, 
+                                                        status = "info", collapsible = FALSE, icon = icon("file-download"), 
+                                                                p("Download a CSV file comprising complete table 3 data."),
+                                                                downloadButton("downloadTable3", "Download", class = "btn-info"))
+                                                ),
+                                         column(width = 6,
+                                                box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 12, 
+                                                    status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                                                    img(src = "structure.png", class = "center-block img-responsive")))
+                                     ),
+                                     
+                                     fluidRow(
                                          box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 4, 
                                              status = "orange", collapsible = TRUE, icon = icon("microscope"), height = 480,
                                              img(src = "mutants_lineage_B.1.351.png", class = "center-block img-responsive")),
@@ -214,7 +223,6 @@ dashboardPage(
                                          box(title = "Spike protein mutations (B.1.1.7)", closable = FALSE, width = 4, 
                                              status = "orange", collapsible = TRUE, icon = icon("microscope"),
                                              img(src = "lineage_B.1.1.7.png", height = "480px", class = "center-block img-responsive"))
-                                         
                                      )
                             ),
                             
