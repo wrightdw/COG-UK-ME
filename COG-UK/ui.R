@@ -190,7 +190,7 @@ dashboardPage(
                                          column(width = 6, 
                                                 box(title = "Download metadata", closable = FALSE, width = 12, 
                                                     status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                                    p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
+                                                    p("Download a CSV file, for each variant in table 3, containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
                                                     selectizeInput("concern", "Choose lineage:",
                                                                    choices = c(lineages_t3$lineage, 
                                                                                "B.1.1.7 + E484K", 
