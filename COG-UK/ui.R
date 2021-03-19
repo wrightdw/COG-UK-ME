@@ -124,19 +124,19 @@ dashboardPage(
                                      
                                      fluidRow(
                                          column(width = 12,
-                                                box(title = "Download data", closable = FALSE, width = 12, height = 500,
+                                                box(title = "Download metadata", closable = FALSE, width = 6, height = 500,
                                                     status = "info", collapsible = FALSE, icon = icon("file-download"),
                                                     fluidRow(
                                                         column(
-                                                            width = 6,
-                                                            p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
+                                                            width = 8,
+                                                            p("Download a CSV file, for each amino acid replacement in table 1, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
                                                         ),
                                                         
                                                         (function() { 
                                                             database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
                                                             
                                                             column(
-                                                                width = 6, 
+                                                                width = 4, 
                                                                 selectizeInput(
                                                                     inputId = "dataset", 
                                                                     label = "Choose amino acid replacement:",
@@ -145,6 +145,20 @@ dashboardPage(
                                                                 ),
                                                                 downloadButton("downloadData", "Download", class = "btn-info"))
                                                         })()
+                                                    ) 
+                                                ), 
+                                                
+                                                box(title = "Download table 1", closable = FALSE, width = 6, height = 500,
+                                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                                    fluidRow(
+                                                        column(
+                                                            width = 8,
+                                                            p("Download a CSV file comprising complete table 1 data.")
+                                                        ),
+                                                        
+                                                        column(
+                                                            width = 4, 
+                                                            downloadButton("downloadTable1", "Download", class = "btn-info"))
                                                     )
                                                 )
                                          )

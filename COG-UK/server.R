@@ -7,32 +7,39 @@ library(shinyWidgets)
 library(shinyjs)
 library(DT)
 
+table_1 <- function(){
+  database %>% 
+    arrange(desc(`numSeqs UK`)) %>% 
+    filter(`numSeqs UK` >= 5) %>% 
+    mutate(mutation = mutation %>% fct_drop %>% fct_inorder) %>% 
+    select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
+    mutate(`Cumulative sequences in UK (%)` = `numSeqs UK` / total_sequences,
+           .after = `numSeqs UK`) %>%
+    mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
+           .after = `numSeqs UK 28 days`) %>%
+    rename(`Amino acid replacement` = mutation, 
+           `Cumulative sequences in UK` = `numSeqs UK`, 
+           `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
+           `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
+           `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
+           `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
+           `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
+           `Date of first appearance in UK` = earliest) 
+}
+
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderDataTable({
-      database %>% 
-        arrange(desc(`numSeqs UK`)) %>% 
-        filter(`numSeqs UK` >= 5) %>% 
-        mutate(mutation = mutation %>% fct_drop %>% fct_inorder) %>% 
-        select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
-        mutate(`Cumulative sequences in UK (%)` = `numSeqs UK` / total_sequences,
-               .after = `numSeqs UK`) %>%
-        mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
-               .after = `numSeqs UK 28 days`) %>%
-        rename(`Amino acid replacement` = mutation, 
-               `Cumulative sequences in UK` = `numSeqs UK`, 
-               `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
-               `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
-               `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
-               `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
-               `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
-               `Date of first appearance in UK` = earliest) %>% 
+      table_1() %>% 
         datatable(filter = "top", rownames = FALSE, 
                   options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20, scrollX = TRUE)) %>% 
         formatPercentage(c("Cumulative sequences in UK (%)", "Sequences over the last 28 days in UK (%)"), digits = 2)
     })
     
-    # Reactive value to generate downloadable table for selected mutation
+    ######## Data download inputs ########
+    ## Table 1
+    
+    # Reactive value to generate downloadable table for selected table 1 mutation metadata
     datasetInput <- reactive({
       mutations_s_uk %>% 
         filter(variant == input$dataset) %>% 
@@ -41,15 +48,13 @@ shinyServer(function(input, output, session) {
         arrange(desc(sample_date), lineage)
     })
     
-    # Reactive value to generate downloadable table for selected mutation
-    escapeInput <- reactive({
-      mutations_s_uk %>% 
-        filter(variant == input$selectEscape) %>% 
-        select(sequence_name, sample_date, epi_week, lineage) %>% 
-        arrange(desc(sample_date), lineage)
+    # Reactive value to generate downloadable table for complete table 1 data
+    table1Input <- reactive({
+      table_1() %>% 
+        mutate(across(ends_with("(%)"), ~`*`(.x, 100))) # convert decimal fraction to percentage
     })
     
-    # Reactive value to generate downloadable table for selected mutation
+    # Reactive value to generate downloadable table for selected lineage + mutation
     concernInput <- reactive({
       if(input$concern == "B.1.1.7 + E484K"){
         concern_download <- 
@@ -77,7 +82,18 @@ shinyServer(function(input, output, session) {
         arrange(desc(sample_date), lineage)
     })
     
-    # Downloadable CSV of selected mutation
+    # Reactive value to generate downloadable table for selected mutation
+    escapeInput <- reactive({
+      mutations_s_uk %>% 
+        filter(variant == input$selectEscape) %>% 
+        select(sequence_name, sample_date, epi_week, lineage) %>% 
+        arrange(desc(sample_date), lineage)
+    })
+    
+    ######## Download handlers ########
+    
+    ## Table 1
+    # Downloadable CSV of selected mutation metadata
     output$downloadData <- downloadHandler(
       filename = function() {
         str_c(input$dataset, "_UK_28_days_", dataset_date, ".csv")
@@ -88,17 +104,18 @@ shinyServer(function(input, output, session) {
       contentType = "text/csv"
     )
     
-    # Downloadable CSV of selected mutation
-    output$downloadEscape <- downloadHandler(
+    # Downloadable CSV of complete table 1 data
+    output$downloadTable1 <- downloadHandler(
       filename = function() {
-        str_c(input$selectEscape, "_UK_cumulative_", dataset_date, ".csv")
+        str_c("table_1_", dataset_date, ".csv")
       },
       content = function(file) {
-        write_csv(escapeInput(), file)
+        write_csv(table1Input(), file)
       },
       contentType = "text/csv"
     )
     
+    ## Table 3
     # Downloadable CSV of selected mutation
     output$downloadConcern <- downloadHandler(
       filename = function() {
@@ -106,6 +123,18 @@ shinyServer(function(input, output, session) {
       },
       content = function(file) {
         write_csv(concernInput(), file)
+      },
+      contentType = "text/csv"
+    )
+    
+    ## Antibody sites
+    # Downloadable CSV of selected mutation metadata
+    output$downloadEscape <- downloadHandler(
+      filename = function() {
+        str_c(input$selectEscape, "_UK_cumulative_", dataset_date, ".csv")
+      },
+      content = function(file) {
+        write_csv(escapeInput(), file)
       },
       contentType = "text/csv"
     )
