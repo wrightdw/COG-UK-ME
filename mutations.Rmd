@@ -898,14 +898,15 @@ sequences_by_week_lineages <-
 antigenic_mutations <- 
   mutations_s_uk %>% 
   filter(variant %in% escape_mutations) %>% 
-  count(variant, lineage, epi_week) %>% 
+  count(variant, lineage, epi_week, sort = TRUE) %>% 
   bind_rows(del_22289_6)
 
 antigenic_mutations_lineages <- 
   inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
   mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
 
+antigenic_mutations_lineages %<>% 
+  pivot_wider(names_from = epi_week, values_from = percent_lineage, names_sort = TRUE, values_fill = 0, id_cols = c(variant, lineage))
+
 antigenic_mutations_lineages %T>% write_csv("antigenic_mutations_lineages.csv")
 ```
-
-
