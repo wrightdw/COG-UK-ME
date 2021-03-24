@@ -1,0 +1,19 @@
+.cell-container {
+  display: grid; 
+  height: 50vh; 
+  grid-auto-rows: 1fr;
+  gap: 3px;
+}
+
+.cell-row, .nested-row{
+  padding: 1em;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nested-container {
+  display: grid; 
+  grid-auto-rows: 1fr;
+}

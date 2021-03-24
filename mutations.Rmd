@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-03-18_mutations.csv"
-  global_csv:     "cog_global_2021-03-18_public.csv"
-  consortium_csv: "cog_global_2021-03-18_consortium.csv"
+  mutations_csv:  "cog_global_2021-03-22_mutations.csv"
+  global_csv:     "cog_global_2021-03-22_public.csv"
+  consortium_csv: "cog_global_2021-03-22_consortium.csv"
   spike_csv:      "spike_escape_info.csv"
   tcell_csv:      "tcell_long.csv"
   deletions_tsv:  "cog.deletions.tsv"
@@ -16,6 +16,7 @@ library(wesanderson)
 library(RColorBrewer)
 library(lubridate)
 library(fuzzyjoin)
+library(htmltools)
 ```
 
 ## Consortium
@@ -528,6 +529,31 @@ database
 ```{r tcell}
 tcell <- read_csv(params$tcell_csv)
 
+nested_html <- function(summary_var){
+  summary_var %>% 
+    unique %>% 
+    map(function(i) div(i, class = "nested-row")) %>% 
+    div(class = "nested-container") %>% 
+    as.character()
+}
+
+container_html <- function(summary_var){
+  summary_var %>% 
+    map(function(i) div(HTML(i), class = "cell-row")) %>% 
+    div(class = "cell-container") %>% 
+    as.character()
+}
+
+# tcell_summary <- 
+#   tcell %>% 
+#   group_by(Epitope, `Start position`, `End position`, CD4_CD8) %>% 
+#   summarise(HLA = HLA %>% unique %>% str_c(collapse = "<br>"),
+#             `Supporting references` = `Supporting references` %>% nested_html,
+#             References = Reference %>% nested_html,
+#             Assays = assay %>% nested_html,
+#             .groups = "drop")
+
+
 tcell_summary <- 
   tcell %>% 
   group_by(Epitope, `Start position`, `End position`, CD4_CD8) %>% 
@@ -547,13 +573,13 @@ database_tcell <-
            "position" = "End position"),
     match_fun = list(`>=`, `<=`)) %>% 
   group_by(position, mutation) %>% 
-  summarise(Epitopes = Epitope %>% str_c(collapse = "<hr>"), 
-            `CD4 CD8` = CD4_CD8 %>% str_c(collapse = "<hr>"), 
-            Positions = str_c(`Start position`, `End position`, sep = "-", collapse = "<hr>"),
-            HLA = HLA %>% str_c(collapse = "<hr>"),
-            `Supporting references` = `Supporting references` %>% str_c(collapse = "<hr>"),
-            References = References %>% str_c(collapse = "<hr>"), 
-            Assays = Assays %>% str_c(collapse = "<hr>"), 
+  summarise(Epitopes = Epitope %>% container_html, 
+            `CD4 CD8` = CD4_CD8 %>% container_html, 
+            Positions = str_c(`Start position`, `End position`, sep = "-") %>% container_html,
+            HLA = HLA %>% container_html,
+            `Supporting references` = `Supporting references` %>% container_html,
+            References = References %>% container_html, 
+            Assays = Assays %>% container_html,
             .groups = "drop")
   
 database_tcell

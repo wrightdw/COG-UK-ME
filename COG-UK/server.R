@@ -335,7 +335,7 @@ shinyServer(function(input, output, session) {
                `Cumulative sequences in UK` = `numSeqs UK`,
                `Sequences over 28 days` = `numSeqs UK 28 days`) %>% 
         datatable(filter = "top", escape = FALSE, rownames = FALSE,
-                  options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20, scrollX = TRUE)) 
+                  options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE)) 
     })
     
     # always display wild type on percentage chart
