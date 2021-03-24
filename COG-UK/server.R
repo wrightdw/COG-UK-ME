@@ -99,6 +99,11 @@ table_3 <- function(){
       relocate(reason, .after = lineage),
     
     n_uk_lineages_all %>%
+      filter(variant == "E484K" & lineage == "A.23.1") %>%
+      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
+      mutate(reason = "As A.23.1, with the addition of E484K."),
+    
+    n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.1.7") %>%
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
       mutate(reason = "As B.1.1.7, with the addition of E484K, which is located in the RBM and has been shown to escape some mAbs."),
@@ -106,11 +111,6 @@ table_3 <- function(){
     lineage_plus_variant("B.1.1.7", "S494P") %>% # for non-key mutations
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>%
       mutate(reason = "As B.1.1.7, with the addition of S494P."),
-    
-    n_uk_lineages_all %>%
-      filter(variant == "E484K" & lineage == "A.23.1") %>%
-      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
-      mutate(reason = "As A.23.1, with the addition of E484K."),
     
     n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.324.1") %>%
