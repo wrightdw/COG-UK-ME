@@ -2,12 +2,13 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:  "cog_global_2021-03-22_mutations.csv"
-  global_csv:     "cog_global_2021-03-22_public.csv"
-  consortium_csv: "cog_global_2021-03-22_consortium.csv"
-  spike_csv:      "spike_escape_info.csv"
-  tcell_csv:      "tcell_long.csv"
-  deletions_tsv:  "cog.deletions.tsv"
+  mutations_csv:    "cog_global_2021-03-23_mutations.csv"
+  global_csv:       "cog_global_2021-03-23_public.csv"
+  consortium_csv:   "cog_global_2021-03-23_consortium.csv"
+  spike_csv:        "spike_escape_info.csv"
+  spike_extra_csv:  "spike_escape_extra.csv"
+  tcell_csv:        "tcell_long.csv"
+  deletions_tsv:    "cog.deletions.tsv"
 ---
 ```{r libs}
 library(tidyverse)
@@ -17,6 +18,8 @@ library(RColorBrewer)
 library(lubridate)
 library(fuzzyjoin)
 library(htmltools)
+library(ComplexHeatmap)
+library(circlize)
 ```
 
 ## Consortium
@@ -517,11 +520,11 @@ database %<>%
     `numSeqs Wales 28 days` = `UK-WLS_28`, 
     `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
-  mutate(across(c(support, domain), as_factor)) %>% 
   mutate(across(c(position, mutation), as.character)) %>% 
   mutate(across(position, as.integer)) %>% 
   arrange(position, mutation) %>% 
-  mutate(across(mutation, as_factor))
+  mutate(across(c(support, domain, mutation), as_factor)) %>% 
+  mutate(support = fct_relevel(support, "lower", "medium", "high"))
 
 database
 ```
@@ -907,7 +910,7 @@ del_22289_6 <-
   consortium_uk %>% 
   filter(sequence_name %in% del_22289_6_samples) %>% 
   count(lineage, epi_week) %>% 
-  mutate(variant = "del_22289_6", .before = 1)
+  mutate(variant = "del243", .before = 1)
 ```
 ### Antigenic mutations by lineage
 Would you be able to prepare a file with all the antigenic mutations (filtered from Will’s antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
@@ -927,12 +930,103 @@ antigenic_mutations <-
   count(variant, lineage, epi_week, sort = TRUE) %>% 
   bind_rows(del_22289_6)
 
-antigenic_mutations_lineages <- 
+antigenic_mutations_lineages_all <- 
   inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
   mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
 
-antigenic_mutations_lineages %<>% 
+antigenic_mutations_lineages <- 
+  antigenic_mutations_lineages_all %>% 
+  mutate(epi_week = epi_week %>% as.character %>% as.integer) %>% 
+  filter(epi_week >= 46) %>% 
   pivot_wider(names_from = epi_week, values_from = percent_lineage, names_sort = TRUE, values_fill = 0, id_cols = c(variant, lineage))
 
 antigenic_mutations_lineages %T>% write_csv("antigenic_mutations_lineages.csv")
+```
+### Antigenic heatmap
+```{r antigenic_heatmap}
+
+# horz_heat_original <- read.table("horz_heat.csv", row.names = 1, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+
+horz_heat <-
+  antigenic_mutations_lineages %>% 
+  filter(lineage == "B.1.1.7" & variant != "N501Y") %>% 
+  select(-lineage) %>% 
+  inner_join(database %>% 
+               select(position, mutation, mab, plasma, vaccine_sera, support, domain) %>% 
+               add_row(position = 243, mutation = "del243", mab = TRUE, plasma = NA, vaccine_sera = NA, support = "lower", domain = "NTD"), 
+             by = c("variant" = "mutation")) %>%   
+  mutate(across(where(is.logical), ~na_if(.x, FALSE))) %>%
+  arrange(position, variant) %>% 
+  mutate(across(domain, as_factor)) %>% 
+  select(-position) %>% 
+  rename(confidence = support) %>% 
+  column_to_rownames("variant")
+
+input <- data.matrix(horz_heat)
+
+# define colour heatmap for frequency
+col_fun = colorRamp2(c( 0, 0.015, 0.5, 2), c("white", "darkolivegreen1","darkolivegreen3","forestgreen"))
+
+# annotation row
+row_ha = rowAnnotation(
+  Effect_mab = horz_heat$mab,
+  Effect_plasma = horz_heat$plasma,
+  Effect_vaccine = horz_heat$vaccine_sera,
+  confidence = horz_heat$confidence,
+  na_col = 'white',
+  col = list(
+    confidence = c(
+      "lower" = "lightgoldenrod",
+      "medium" = "lightgoldenrod3",
+      "high" = "lightgoldenrod4"
+    ),
+    Effect_mab = c("TRUE" = "black"),
+    Effect_plasma = c("TRUE" = "black"),
+    Effect_vaccine = c("TRUE" = "black")
+  ),
+  annotation_legend_param = list(confidence = list (at = c(
+    "high", "medium", "lower"
+  )))
+)
+
+# domain
+row_ha2 = rowAnnotation(domain = (horz_heat$domain),
+                        col = list(
+                          domain = c(
+                            "FP" = "seashell2",
+                            "NTD" = "navajowhite",
+                            "RBD" = "pink",
+                            "RBM" = "plum1",
+                            "SP" = "lightblue1"
+                          )
+                        ))
+
+# remove x from name of columns (epiweek)
+# colnames(horz_heat) <- gsub("X","",colnames(horz_heat))
+
+pdf("heatmap.pdf", height = 10)
+hm <- Heatmap(
+  subset(input, select = -c(mab:domain)),
+  name = "Percentage %",
+  column_title = "Antigenic mutations in lineage B.1.1.7",
+  use_raster = TRUE,
+  cluster_columns = FALSE,
+  cluster_rows = FALSE,
+  row_order = order((horz_heat$domain)),
+  row_split = (horz_heat$domain),
+  column_names_rot = 0,
+  row_gap = unit(2, "mm"),
+  border = TRUE,
+  width = ncol(input) * unit(1.8, "mm"),
+  height = nrow(input) * unit(1.8, "mm"),
+  col = col_fun,
+  na_col = 'white',
+  column_names_gp = grid::gpar(fontsize = 4),
+  row_names_gp = grid::gpar(fontsize = 4),
+  right_annotation = row_ha,
+  left_annotation = row_ha2
+)
+hm
+dev.off()
+hm
 ```
