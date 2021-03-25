@@ -329,6 +329,12 @@ dashboardPage(
                                  ), # end fluidRow
                         ), # end tabPanel
                         
+                        # tabPanel(
+                        #     "Antibody Sites Plot", 
+                        #     value = "antibody_plot",
+                        #     plotOutput("antibody_heatmap", height = 1280)
+                        # ),
+                        
                         tabPanel(
                             title = "T Cell Epitopes", 
                             value = "tcell",

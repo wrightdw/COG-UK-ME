@@ -3,12 +3,13 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-03-23") #TODO derive from directory name
+dataset_date <- ymd("2021-03-25") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 mutations_uk <- str_c(dataset_date, "/mutations_uk.rds") %>% read_rds # TODO drop unused columns
 mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds") %>% read_rds # precomputed mutation counts 
+antigenic_mutations_lineages <- str_c(dataset_date, "/antigenic_mutations_lineages.rds") %>% read_rds # antigenic mutation counts by lineage
 
 mutations_s_uk <- 
   mutations_uk %>% 
