@@ -6,8 +6,76 @@ library(scales)
 library(shinyWidgets)
 library(shinyjs)
 library(DT)
-library(ComplexHeatmap)
-library(circlize)
+
+# library(ComplexHeatmap)
+# library(circlize)
+# 
+# library(Cairo)
+# library(dendextend)
+# library(seriation)
+
+sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
+  if(is_character(lineages)){
+    n_nations_lineages <- sum_key_mutations_uk(lineage, adm1, date_from = date_from) # grouped by lineage, adm1
+    
+    n_uk_lineages <- 
+      n_nations_lineages %>% 
+      group_by(lineage) %>% 
+      summarise(across(sequences:`N501Y + E484K`, sum)) %>% 
+      mutate(adm1 = "UK", .after = lineage)
+    
+    n_uk_lineages_uk_nations <- bind_rows(n_nations_lineages, n_uk_lineages) # grouped by lineage, adm1
+    
+    lapply(lineages, function(x){
+      n_uk_lineages_uk_nations %>% 
+        when(
+          use_regex ~filter(., lineage == x | str_detect(lineage, sublineage_regex(x))),
+          ~filter(., lineage == x)
+        ) %>%
+        group_by(adm1) %>% 
+        select(-lineage) %>% 
+        summarise_all(funs(sum)) %>% #TODO replace deprecated funs
+        mutate(lineage = x, .before = 1)
+    }) %>% 
+      bind_rows() %>% 
+      gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
+  }
+}
+
+lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
+  mutations_s_uk_lv <- 
+    mutations_s_uk %>%
+    filter(variant == !!variant) %>%
+    when(
+      use_regex ~filter(., lineage == !!lineage | str_detect(lineage, sublineage_regex(!!lineage))),
+      ~filter(., lineage == !!lineage)
+    ) 
+  
+  mutations_s_uk_lv_28 <- 
+    mutations_s_uk_lv %>%
+    filter(sample_date >= sample_date_28)
+  
+  left_join(
+    mutations_s_uk_lv %>%
+      group_by(adm1) %>% 
+      summarise(n_sequences = n_distinct(sequence_name)) %>% 
+      bind_rows(summarise(., n_sequences = sum(n_sequences)) %>% 
+                  mutate(adm1 = "UK")),
+    
+    mutations_s_uk_lv_28 %>%
+      group_by(adm1) %>% 
+      summarise(n_sequences_28 = n_distinct(sequence_name)) %>% 
+      bind_rows(summarise(., n_sequences_28 = sum(n_sequences_28)) %>% 
+                  mutate(adm1 = "UK"))
+  ) %>%
+    mutate(adm1 = recode(adm1, 
+                         `UK-ENG` = "England",
+                         `UK-NIR` = "Northern_Ireland",
+                         `UK-SCT` = "Scotland",
+                         `UK-WLS` = "Wales")) %>% 
+    pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>%
+    mutate(lineage = !!lineage, variant = !!variant, .before = 1)
+}
 
 # TODO caching
 table_1 <- function(){
@@ -149,6 +217,16 @@ table_3 <- function(){
     ) 
 }
 
+# TODO precompute and include lineage/variant combinations
+n_uk_lineages_all <-
+  left_join(
+    sum_key_mutations_by_lineage_uk(lineages_t2),
+    sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>%
+      rename(n_sequences_28 = n_sequences)
+  ) %>% 
+  pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
+  mutate(across(everything(), ~replace_na(.x, 0L)))
+
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderDataTable({
@@ -178,26 +256,31 @@ shinyServer(function(input, output, session) {
     
     ## Table 3
     # Reactive value to generate downloadable table for selected lineage + mutation
+    # TODO regex switch
     concernInput <- reactive({
       if(input$concern == "B.1.1.7 + E484K"){
         concern_download <- 
           consortium_uk %>% 
           filter(e484k == "K") %>% 
-          filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7"))) 
+          filter(lineage == "B.1.1.7") 
+        # filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7")))
       } else if(input$concern == "A.23.1 + E484K") {
         concern_download <- 
           consortium_uk %>% 
           filter(e484k == "K") %>% 
-          filter(lineage == "A.23.1" | str_detect(lineage, sublineage_regex("B.1.1.7"))) 
+          filter(lineage == "A.23.1") 
+          # filter(lineage == "A.23.1" | str_detect(lineage, sublineage_regex("B.1.1.7"))) 
       } else if(input$concern == "B.1.1.7 + S494P") {
         concern_download <- 
           mutations_s_uk %>% 
           filter(variant == "S494P") %>% 
-          filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7")))
+          filter(lineage == "B.1.1.7")
+          # filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7")))
       } else {
         concern_download <- 
           consortium_uk %>% 
-          filter(lineage == input$concern | str_detect(lineage, sublineage_regex(input$concern)))
+          filter(lineage == input$concern)
+          # filter(lineage == input$concern | str_detect(lineage, sublineage_regex(input$concern)))
       }
       
       concern_download %>% 
@@ -462,7 +545,7 @@ shinyServer(function(input, output, session) {
         name = "Percentage %",
         column_title = "Antigenic mutations in lineage B.1.1.7",
         column_title_gp = gpar(fontsize = 18),
-                use_raster = TRUE,
+        use_raster = TRUE,
         cluster_columns = FALSE,
         cluster_rows = FALSE,
         row_order = order((horz_heat$domain)),
