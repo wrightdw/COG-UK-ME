@@ -330,11 +330,11 @@ dashboardPage(
                         ), # end tabPanel
                         
                         # tabPanel(
-                        #     "Antibody Sites Plot", 
+                        #     "Antibody Sites Plot",
                         #     value = "antibody_plot",
                         #     plotOutput("antibody_heatmap", height = 1280)
                         # ),
-                        
+
                         tabPanel(
                             title = "T Cell Epitopes", 
                             value = "tcell",
@@ -381,16 +381,16 @@ dashboardPage(
                     ), # end tabBox
             ) # end tabItem
         ) # end tabItems
-    ), # end dashboardBody
+    ), # end dashboardBody ##8a7967
     
     footer = dashboardFooter(
         left = fluidRow(
-            column(2, tags$a(img(src = "CVR.png", width = "205px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
-            column(2, tags$a(img(src = "UoG_colour.png", width = "229px", height = "71px", class = "img-responsive center-block"), href="https://www.gla.ac.uk/", target = "_blank")),
-            column(2, tags$a(img(src = "CLIMB.png", width = "234px", height = "71px", class = "img-responsive center-block"), href="https://www.climb.ac.uk/", target = "_blank")),
-            column(2, tags$a(img(src = "UOE.png", width = "294px", height = "71px", class = "img-responsive center-block"), href="https://www.ed.ac.uk", target = "_blank")), # TODO remove left and right padding
-            column(2, tags$a(img(src = "UOC.png", width = "264px", height = "71px", class = "img-responsive center-block"), href="https://www.cam.ac.uk", target = "_blank")),
-            column(2, tags$a(img(src = "cog-uk.png", width = "195px", height = "71px", class = "img-responsive center-block"), href="https://www.cogconsortium.uk", target = "_blank"))
+            column(2, tags$a(img(src = "MRC.png", alt = "Medical Research Council logo", class = "img-responsive center-block footer-logo"), href="https://mrc.ukri.org/", target = "_blank")), # TODO remove left and right padding
+            column(2, tags$a(img(src = "UOG.png", alt = "University of Glasgow logo", class = "img-responsive center-block footer-logo"), href="https://www.gla.ac.uk/", target = "_blank")),
+            column(2, tags$a(img(src = "CVR.png", alt = "Centre for Virus Research logo", class = "img-responsive center-block footer-logo"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
+            column(2, tags$a(img(src = "cog-uk.svg", alt = "COG-UK Consortium logo", class = "img-responsive center-block footer-logo"), href="https://www.cogconsortium.uk", target = "_blank")),
+            column(2, tags$a(img(src = "climb_big_data.png", alt = "CLIMB logo", class = "img-responsive center-block footer-logo"), href="https://www.climb.ac.uk/", target = "_blank")),
+            column(2, tags$a(img(src = "UOC.png", alt = "University of Cambridge logo", class = "img-responsive center-block footer-logo"), href="https://www.cam.ac.uk"))
         )
     )
 )

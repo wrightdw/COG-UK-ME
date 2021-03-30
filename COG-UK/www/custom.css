@@ -17,3 +17,7 @@
   display: grid; 
   grid-auto-rows: 1fr;
 }
+
+.footer-logo {
+  max-height: 71px;
+}
