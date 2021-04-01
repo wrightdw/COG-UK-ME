@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:    "cog_global_2021-03-30_mutations.csv"
-  global_csv:       "cog_global_2021-03-30_public.csv"
-  consortium_csv:   "cog_global_2021-03-30_consortium.csv"
+  mutations_csv:    "cog_global_2021-03-31_mutations.csv"
+  global_csv:       "cog_global_2021-03-31_public.csv"
+  consortium_csv:   "cog_global_2021-03-31_consortium.csv"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -1004,7 +1004,8 @@ row_ha2 = rowAnnotation(domain = (horz_heat$domain),
 # remove x from name of columns (epiweek)
 # colnames(horz_heat) <- gsub("X","",colnames(horz_heat))
 
-pdf("heatmap.pdf", height = 10)
+# pdf("heatmap.pdf", height = 10)
+png("heatmap.png", height = 800, type = "cairo-png")
 hm <- Heatmap(
   subset(input, select = -c(mab:domain)),
   name = "Percentage %",
