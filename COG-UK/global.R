@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-03-30") #TODO derive from directory name
+dataset_date <- ymd("2021-03-31") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -45,8 +45,6 @@ lineages_t3 <-
     "P.2" = "Variant associated with Brazil. It has D614G, E484K and V1176F in the Spike."
     ) %>% 
   enframe("lineage", "reason")
-
-
 
 lineages_t2 %<>% c(lineages_t3$lineage) %>% unique # combine table 2 and 3 lineages for counting
 
