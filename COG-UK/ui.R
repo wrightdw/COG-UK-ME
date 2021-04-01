@@ -23,8 +23,11 @@ dashboardPage(
     sidebar = dashboardSidebar(
         sidebarMenu(id="sidebar_menu",
                     menuItem("Mutation Explorer", tabName = "report", icon = icon("viruses")), 
-                    menuItem("Visualiser", tabName = "dashboard", icon = icon("eye")),
                     menuItem("Antigenic Information", tabName = "immunology", icon = icon("shield-virus")),
+                    menuItem("Visualiser", icon = icon("eye"), 
+                             menuSubItem("Mutations", tabName = "dashboard", icon = icon("viruses")),
+                             menuSubItem("Antibody Sites", tabName = "antibody_plot", icon = icon("shield-virus"))
+                    ),
                     menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -124,7 +127,7 @@ dashboardPage(
                                      
                                      fluidRow(
                                          column(width = 12,
-                                                box(title = "Download metadata", closable = FALSE, width = 6, height = 500,
+                                                box(title = "Download Metadata", closable = FALSE, width = 6, height = 500,
                                                     status = "info", collapsible = FALSE, icon = icon("file-download"),
                                                     fluidRow(
                                                         column(
@@ -148,7 +151,7 @@ dashboardPage(
                                                     ) 
                                                 ), 
                                                 
-                                                box(title = "Download table 1", closable = FALSE, width = 6, height = 500,
+                                                box(title = "Download Table 1", closable = FALSE, width = 6, height = 500,
                                                     status = "info", collapsible = FALSE, icon = icon("file-download"),
                                                     fluidRow(
                                                         column(
@@ -188,7 +191,7 @@ dashboardPage(
                                      
                                      fluidRow(
                                          column(width = 6, 
-                                                box(title = "Download metadata", closable = FALSE, width = 12, 
+                                                box(title = "Download Metadata", closable = FALSE, width = 12, 
                                                     status = "info", collapsible = FALSE, icon = icon("file-download"),
                                                     p("Download a CSV file, for each variant in table 3, containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
                                                     selectizeInput("concern", "Choose lineage:",
@@ -200,27 +203,27 @@ dashboardPage(
                                                                    ) %>% sort),
                                                     downloadButton("downloadConcern", "Download", class = "btn-info")),
                                                 
-                                                    box(title = "Download table 3", closable = FALSE, width = 12, 
+                                                    box(title = "Download Table 3", closable = FALSE, width = 12, 
                                                         status = "info", collapsible = FALSE, icon = icon("file-download"), 
                                                                 p("Download a CSV file comprising complete table 3 data."),
                                                                 downloadButton("downloadTable3", "Download", class = "btn-info"))
                                                 ),
                                          column(width = 6,
-                                                box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = 12, 
+                                                box(title = "Spike Protein Structure (B.1.1.7)", closable = FALSE, width = 12, 
                                                     status = "orange", collapsible = TRUE, icon = icon("microscope"),
                                                     img(src = "structure.png", class = "center-block img-responsive")))
                                      ),
                                      
                                      fluidRow(
-                                         box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 4, 
+                                         box(title = "Spike Protein Mutations (B.1.351)", closable = FALSE, width = 4, 
                                              status = "orange", collapsible = TRUE, icon = icon("microscope"), height = 480,
                                              img(src = "mutants_lineage_B.1.351.png", class = "center-block img-responsive")),
                                          
-                                         box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 4, 
+                                         box(title = "Spike Protein Mutations (P.1)", closable = FALSE, width = 4, 
                                              status = "orange", collapsible = TRUE, icon = icon("microscope"),
                                              img(src = "mutants_lineage_P.1.png", class = "center-block img-responsive")),
                                          
-                                         box(title = "Spike protein mutations (B.1.1.7)", closable = FALSE, width = 4, 
+                                         box(title = "Spike Protein Mutations (B.1.1.7)", closable = FALSE, width = 4, 
                                              status = "orange", collapsible = TRUE, icon = icon("microscope"),
                                              img(src = "lineage_B.1.1.7.png", height = "480px", class = "center-block img-responsive"))
                                      )
@@ -276,10 +279,28 @@ dashboardPage(
             ), # end tabItem
             
             tabItem(tabName = "dashboard",
-                    fluidRow(
-                        box(plotlyOutput("mutation_time", height = 748), width = 12)
-                    )
-            ),
+                    fluidRow(box(
+                        plotlyOutput("mutation_time", height = "80vh"), 
+                        width = 12,
+                        status = "info",
+                        collapsible = FALSE,
+                        closable = FALSE, 
+                        title = "Mutational Frequencies"
+                    ))),
+            
+            tabItem(tabName = "antibody_plot",
+                    fluidRow(column(
+                        width = 8,
+                        offset = 2,
+                        box(
+                            plotOutput("antibody_heatmap", height = "1260px"),
+                            width = 12,
+                            status = "info",
+                            collapsible = FALSE,
+                            closable = FALSE,
+                            title = "Antibody Sites Mutational Frequencies"
+                        )
+                    ))),
             
             tabItem(tabName = "immunology",
                     tabBox(
@@ -302,7 +323,7 @@ dashboardPage(
                                          DTOutput("table_4"),
                                          br(),
                                          
-                                         box(title = "Download data", closable = FALSE, width = 12, height = 500,
+                                         box(title = "Download Data", closable = FALSE, width = 12, height = 500,
                                              status = "info", collapsible = FALSE, icon = icon("file-download"),
                                              fluidRow(
                                                  column(
@@ -329,12 +350,6 @@ dashboardPage(
                                  ), # end fluidRow
                         ), # end tabPanel
                         
-                        # tabPanel(
-                        #     "Antibody Sites Plot",
-                        #     value = "antibody_plot",
-                        #     plotOutput("antibody_heatmap", height = 1280)
-                        # ),
-
                         tabPanel(
                             title = "T Cell Epitopes", 
                             value = "tcell",
