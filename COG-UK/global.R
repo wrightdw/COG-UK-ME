@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-03-31") #TODO derive from directory name
+dataset_date <- ymd("2021-04-01") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -43,6 +43,7 @@ lineages_t3 <-
     # "B.1.324.1" = "UK associated variant. Has E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
     # "P.3" = It has 141-143del, E484K, N501Y, D614G, P681H, E1092K, H1101Y, V1176F and in some cases 243-244del
     "P.2" = "Variant associated with Brazil. It has D614G, E484K and V1176F in the Spike."
+    # "B.1.617" = "Originally identified in India it has six amino acid substitution in the Spike protein: G142D, E154K, L452R, E484K, P681R and Q1071H."
     ) %>% 
   enframe("lineage", "reason")
 

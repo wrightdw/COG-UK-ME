@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:    "cog_global_2021-03-31_mutations.csv"
-  global_csv:       "cog_global_2021-03-31_public.csv"
-  consortium_csv:   "cog_global_2021-03-31_consortium.csv"
+  mutations_csv:    "cog_global_2021-04-01_mutations.csv"
+  global_csv:       "cog_global_2021-04-01_public.csv"
+  consortium_csv:   "cog_global_2021-04-01_consortium.csv"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -1031,20 +1031,20 @@ hm
 dev.off()
 hm
 
-# 
-# 
-# 
 # RBD1_class<-c(403, 405, 406, 408, 409, 414, 415, 416, 417, 420, 421, 449, 453, 455, 456, 457, 458, 459, 460, 473, 474, 475, 476, 477, 484, 486, 487, 489, 490, 492, 493, 494, 495, 496, 498, 500, 501, 502, 503, 504, 505)
 # RBD2_class<-c(338, 339, 342, 343, 346, 351, 368, 371, 372, 373, 374, 403, 405, 406, 417, 436, 444, 445, 446, 447, 448, 449, 450, 452, 453, 455, 456, 470, 472, 473, 475, 478, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505)
 # RBD3_class<-c(333, 334, 335, 337, 339, 340, 341, 342, 343, 344, 345, 346, 354, 356, 357, 358, 359, 360, 361, 438, 439, 440, 441, 442, 443, 446, 499, 500)
 # RBD4_class<-c(369, 370, 371, 372, 374, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 390, 430, 431)
 # NTD_class<-c(15, 18, 19, 22, 28, 74, 77, 80, 123, 136, 139, 140, 141, 142, 144, 145, 146, 147, 148, 149, 150, 151, 152, 157, 158, 164, 244, 246, 247, 248, 249, 250, 251, 252, 253, 255, 257, 258)
+
 # horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
 # horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
 # horz_heat$RBD3 <- ifelse(horz_heat$position %in% RBD3_class, TRUE, NA)
 # horz_heat$RBD4 <- ifelse(horz_heat$position %in% RBD4_class, TRUE, NA)
 # horz_heat$NTD.1 <- ifelse(horz_heat$position %in% NTD_class, TRUE, NA)
+
 # col_fun = colorRamp2(c( 0, 0.015, 0.5, 2), c("white", "darkolivegreen1","darkolivegreen3","forestgreen"))
+# 
 # row_ha= rowAnnotation(Effect_mab = horz_heat[,20], Effect_plasma = horz_heat [,21], Effect_vaccine= horz_heat [,22], confidence = horz_heat[,23],
 #                         na_col = 'white', col= list(
 #                         confidence = c("lower" = "lightgoldenrod", "medium" = "lightgoldenrod3", "high" = "lightgoldenrod4"),
@@ -1053,6 +1053,7 @@ hm
 #                         Effect_vaccine = c("TRUE" = "black")),
 #                       annotation_legend_param = list(confidence = list (at = c("high", "medium", "lower")))
 #                       )
+#                       
 # row_ha2=rowAnnotation(domain = (horz_heat[,24]), Ab_class1 = (horz_heat[,30]),Ab_class2 = (horz_heat[,31]),Ab_class3 = (horz_heat[,32]),Ab_class4 = (horz_heat[,33]),Ab_classe5 = (horz_heat[,34]),
 #                       na_col = 'white',
 #                       width = ncol(horz_heat)*unit(0.8, "mm"),
@@ -1065,7 +1066,9 @@ hm
 #                       Ab_class5 =c("TRUE" = "magenta")),
 #                       show_legend = c(domain = FALSE, Ab_class1 = FALSE,Ab_class2 = FALSE,Ab_class3 = FALSE,Ab_class4 = FALSE,Ab_class5 = FALSE)
 #                       )
+#                       
 # colnames(input)<-gsub("X","",colnames(input))
+# 
 # Heatmap(input[,2:18], name = "Percentage %", column_title = "Antigenic mutations on the top of B.1.1.7", use_raster = TRUE,cluster_columns = FALSE,
 #         row_order = order((horz_heat[,24])),
 #         row_split = (horz_heat[,24]),
@@ -1080,7 +1083,5 @@ hm
 #         right_annotation = row_ha,
 #         left_annotation = row_ha2
 #         )
-# 
-# 
 
 ```
