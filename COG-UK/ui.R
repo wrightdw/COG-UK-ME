@@ -23,11 +23,8 @@ dashboardPage(
     sidebar = dashboardSidebar(
         sidebarMenu(id="sidebar_menu",
                     menuItem("Mutation Explorer", tabName = "report", icon = icon("viruses")), 
+                    menuItem("Visualiser", icon = icon("eye"), tabName = "dashboard"),
                     menuItem("Antigenic Information", tabName = "immunology", icon = icon("shield-virus")),
-                    menuItem("Visualiser", icon = icon("eye"), 
-                             menuSubItem("Mutations", tabName = "dashboard", icon = icon("viruses")),
-                             menuSubItem("Antibody Sites", tabName = "antibody_plot", icon = icon("shield-virus"))
-                    ),
                     menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -229,6 +226,9 @@ dashboardPage(
                                      )
                             ),
                             
+                            tabPanel("Figure 1",
+                                     fluidRow(plotOutput("antibody_heatmap", height = "1520px"))),
+                            
                             tabPanel("Notes",                         
                                      h2("Data source and processing"),
                                      p(str_c("The analysis described in this report is based on ", total_sequences %>% comma(format = "d")
@@ -286,20 +286,6 @@ dashboardPage(
                         collapsible = FALSE,
                         closable = FALSE, 
                         title = "Mutational Frequencies"
-                    ))),
-            
-            tabItem(tabName = "antibody_plot",
-                    fluidRow(column(
-                        width = 8,
-                        offset = 2,
-                        box(
-                            plotOutput("antibody_heatmap", height = "1260px"),
-                            width = 12,
-                            status = "info",
-                            collapsible = FALSE,
-                            closable = FALSE,
-                            title = "Antibody Sites Mutational Frequencies"
-                        )
                     ))),
             
             tabItem(tabName = "immunology",
