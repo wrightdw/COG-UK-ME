@@ -99,7 +99,8 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, spike_databas
   heatmap <- Heatmap(
     input,
     name = "Percentage %",
-    column_title = "Antigenic mutations on the top of B.1.1.7 defining mutations",
+    column_title = "Epiweeks",
+    column_title_side = "bottom",
     column_title_gp = gpar(fontsize = 20),
     
     use_raster = TRUE,
@@ -122,5 +123,8 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, spike_databas
     right_annotation = row_ha,
     left_annotation = row_ha2
   )
+ decorate_heatmap_body("Percentage %", {
+ grid.text("Antigenic mutations on the top of B.1.1.7", y =unit (5, "mm") + unit(5, "mm"), just = "bottom" )
+})
   heatmap
 }
