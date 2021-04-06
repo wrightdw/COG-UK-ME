@@ -483,9 +483,9 @@ shinyServer(function(input, output, session) {
     # Display antibody heatmap
     output$antibody_heatmap <- renderPlot({
       draw(heatmap)
-      decorate_heatmap_body("Percentage %", {
-        grid.text("Antigenic mutations on the top of B.1.1.7", y =unit (5, "mm") + unit(5, "mm"), just = "bottom" )
-      })
+      # decorate_heatmap_body("Percentage %", {
+      #   grid.text("Antigenic mutations on the top of B.1.1.7", y = unit (10, "mm") + unit(10, "mm"), just = "bottom" )
+      # })
     })
     
     observeEvent(input$gene, {
