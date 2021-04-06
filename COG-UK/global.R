@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-04-05") #TODO derive from directory name
+dataset_date <- ymd("2021-04-06") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -30,20 +30,21 @@ lineages_t2 <- c("B.1", "B.1.177", "B.1.141", "B.1.258", "B.1.1",
 
 lineages_t3 <- 
   c(
-    "A.23.1" = "International variant with mutations of biological significance: F157L, V367F, Q613H and P681R. Q613H is predicted to be functionally equivalent to the D614G mutation that arose early in 2020.",
-    "A.27" = "Variant associated with France. Comprises several mutations and in particular, in the Spike, L452R N501Y and Q677H.",
-    "B.1.1.28" = "Variant associated with the Philippines.",
-    "B.1.1.318" = "Variant associated with England. Has D614G, D796H, E484K, P681H, T95I and Y144del in the Spike.", 
-    "B.1.1.7" = "UK associated variant. Has 17 mutations (14 replacements and 3 deletions) including: T1001I, A1708D, I2230T, SGF 3675-3677del in the ORF1ab; 69-70del, Y144del, N501Y, A570D, P681H, T716I, S982A and D1118H in the Spike; Q27stop, R52I and Y73C in ORF8; D3L and S235F in the N. Noteworthily, N501Y enhances ACE2 binding affinity, and P681H occurs at the furin cleavage site, known for biological significance in membrane fusion.", 
-    "B.1.351" = "Variant associated with South Africa. Has eight mutations in the Spike: D80A, D215G, E484K, N501Y, A701V, L18F, R246I and K417N. Three of these in the RBM: K417N, E484K and N501Y. K417N and E484K have been shown to escape some mAbs.", 
-    "P.1" = "Variant associated with Brazil. Has 10 mutations in the Spike, including L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I. Noteworthy  E484K, N501Y and K417T have biological significance.",
-    "B.1.525" = "International variant with mutations of biological significance E484K, Q677H, F888L and a similar suite of deletions to B.1.1.7.",
-    "B.1.429" = "Variant associated with California, USA. Comprises D614G, G1251V, L452R, P26S, S13I, S1252C and W152C in the Spike.",
-    "B.1.526" = "Variant associated with New York, USA. Has A701V, D253G, D614G, E484K, G1251V, L5F, S982A, S1252C and T95I in the Spike.",
-    # "B.1.324.1" = "UK associated variant. Has E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
-    # "P.3" = It has 141-143del, E484K, N501Y, D614G, P681H, E1092K, H1101Y, V1176F and in some cases 243-244del
-    "P.2" = "Variant associated with Brazil. It has D614G, E484K and V1176F in the Spike."
-    # "B.1.617" = "Originally identified in India it has six amino acid substitution in the Spike protein: G142D, E154K, L452R, E484K, P681R and Q1071H."
+    "B.1.1.7" = "UK. L18F, Δ69-70, Δ144, N501Y, A570D, P681H, T716I, S982A and D1118H.", 
+    "B.1.351" = "South Africa. L18F, D80A, D215G, Δ242-244, R246I, K417N, E484K, N501Y and A701V.", 
+    "P.1" = " Japan ex Brazil. L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I",
+    "A.23.1" = "UK. R102I, F157L, V367F, E484K, Q613H and P681R.",
+    "B.1.525" = "UK ex West Africa. Q52R, A67V, Δ69-70, Δ144, E484K, Q677H and F888L.",
+    "B.1.1.318" = "UK ex West Africa. T95I, Δ144, E484K, P681H and D796H.", 
+    "B.1.526" = "New York, USA. L5F, T95I, D253G, E484K or S477N and A701V",
+    "A.27" = "Mayotte. L18F, L452R, N501Y, A653V, H655Y, Q677H, D796Y and G1219V.",
+    "B.1.1.28" = "The Philippines. Δ141-143, Δ243-244, E484K, N501Y, P681H, E1092K, H1101Y and V1176F.",
+    
+    "B.1.429" = "California, USA. D614G, G1251V, L452R, P26S, S13I, S1252C and W152C.",
+    # "B.1.324.1" = "UK associated variant. E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
+    "P.2" = "Brazil. E484K and V1176F.",
+    "P.3" = "The Philippines. 141-143del, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases 243-244del.",
+    "B.1.617" = "India. G142D, E154K, L452R, E484K, P681R and Q1071H."
     ) %>% 
   enframe("lineage", "reason")
 
