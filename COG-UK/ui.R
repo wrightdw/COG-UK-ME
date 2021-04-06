@@ -293,7 +293,7 @@ dashboardPage(
                     tabBox(
                         title = "Antigenic Information", width = 12,
                         id = "tabs_antigenic",
-                        tabPanel("Antibody Sites", 
+                        tabPanel("Table 1", 
                                  value = "antibody",
                                  
                                  fluidRow(
@@ -338,7 +338,7 @@ dashboardPage(
                         ), # end tabPanel
                         
                         tabPanel(
-                            title = "T Cell Epitopes", 
+                            title = "Table 2", 
                             value = "tcell",
                             h2("Spike protein gene mutations in T cell epitopes detected in the UK"),
                             p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
