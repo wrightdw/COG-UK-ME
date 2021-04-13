@@ -2,13 +2,14 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:    "cog_global_2021-04-08_mutations.csv"
-  global_csv:       "cog_global_2021-04-08_public.csv"
-  consortium_csv:   "cog_global_2021-04-08_consortium.csv"
+  mutations_csv:    "cog_global_2021-04-13_mutations.csv"
+  global_csv:       "cog_global_2021-04-13_public.csv"
+  consortium_csv:   "cog_global_2021-04-13_consortium.csv"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
   deletions_tsv:    "cog.deletions.tsv"
+  predictions_tsv:  "Prediction_from_Morten.txt"
 ---
 ```{r libs}
 library(tidyverse)
@@ -531,6 +532,18 @@ database
 # T cell epitopes
 ```{r tcell}
 tcell <- read_csv(params$tcell_csv)
+# read_tsv(params$predictions_tsv) -> predictions
+# 
+# predictions %<>%
+#   rename(position = X1, mutation = X2, HLA_prediction = X8) %>%
+#   select(position, mutation, HLA_prediction, `IC50 WT`, IC50_mutation, Fold)
+# # 
+# # database %<>% left_join(predictions)
+# 
+# 
+# tcell %<>% 
+#   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>% 
+#   mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))
 
 nested_html <- function(summary_var){
   summary_var %>% 
@@ -589,8 +602,8 @@ database_tcell
 
 database %<>% left_join(database_tcell) 
 database %T>% write_rds("database.rds")
-```
 
+```
 ```{r eval=FALSE, include=FALSE}
 consortium_v <- 
   consortium_uk %>% 
