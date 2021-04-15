@@ -342,12 +342,13 @@ dashboardPage(
                             value = "tcell",
                             h2("Spike protein gene mutations in T cell epitopes detected in the UK"),
                             p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
+                            p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
                             DTOutput("table_5")
                         ), # end tabPanel
                         
                         tabPanel("Notes",
-                                 h3("Antibody Sites"),
-                                 h4("Table Key"),
+                                 h3("Table 1"),
+                                 h4("Table key"),
                                  h5("Confidence"),
                                  tags$ul(
                                      tags$li(
@@ -378,6 +379,14 @@ dashboardPage(
                                      tags$li(
                                          "Residues outside of these specific domains are labelled by subunit, S1 (residues 1-685) or S2 (residues 686-1173)"
                                      )
+                                 ),
+                                 
+                                 h3("Table 2"),
+                                 h4("Table Key"),
+                                 tags$ul(
+                                     tags$li("IC50 nM WT and mutation: predicted IC50 nM for the corresponding reported restricting allele. 
+                                    Predictions were performed using the NetMHCpan BA 4.1 algorithm, hosted by the IEDB."),
+                                    tags$li("Fold difference indicates Increase/decrease in affinity defined by a two-fold difference in predicted IC50 nM.")
                                  )
                              ) # end tabPanel
                     ), # end tabBox

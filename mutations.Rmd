@@ -591,7 +591,9 @@ database_tcell_predictions <-
   database_tcell %>% 
   left_join(predictions) %>% 
   select(-HLA_prediction) %>% 
-  mutate(across(c(mutation, Epitope, CD4_CD8, HLA), as_factor))
+  mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) %>% 
+  mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", Reference,"</a>"), .keep = "unused", .after = `Supporting references`) # hyperlink to citation DOI
+
 
 # tcell_summary <- 
 #   database_tcell_predictions %>% 

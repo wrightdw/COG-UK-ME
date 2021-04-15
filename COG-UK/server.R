@@ -421,10 +421,20 @@ shinyServer(function(input, output, session) {
       #             options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
       
       database_tcell_predictions %>% 
-        arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>%
+        select(mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
+        arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), desc(Fold)) %>%
+        mutate(across(c(Epitope, HLA, assay, CD4_CD8), ~fct_relevel(.x, sort))) %>% 
         rename(`Amino acid replacement` = mutation,
                `Cumulative sequences in UK` = `numSeqs UK`,
-               `Sequences over 28 days` = `numSeqs UK 28 days`) %>%
+               `Sequences over 28 days` = `numSeqs UK 28 days`,
+               `Assay` = assay,
+               `CD4 CD8` = CD4_CD8,
+               Start = `Start position`,
+               # End = `End position`,
+               Reference = anchor,
+               `IC50 nM mutant` = IC50_mutation,
+               `IC50 nM WT` = `IC50 WT`,
+               `Fold difference` = Fold) %>%
         datatable(filter = "top", escape = FALSE, rownames = FALSE,
                     options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
         

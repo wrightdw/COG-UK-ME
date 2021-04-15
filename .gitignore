@@ -5,7 +5,6 @@
 *.dcf
 *.rds
 *.Rproj
-*.txt
 *.xlsx
 *.md
 /*.png
@@ -16,3 +15,4 @@ COG-UK/www/d.png
 cog.deletions.tsv
 *.pdf
 COG-UK/heatmap.png
+.Rproj.user
