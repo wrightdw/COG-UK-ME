@@ -408,16 +408,26 @@ shinyServer(function(input, output, session) {
         })
     
     output$table_5 <- renderDT({
-      database %>% 
-        filter(!is.na(Epitopes)) %>% 
-        mutate(mutation = fct_drop(mutation)) %>%
-        select(mutation, Epitopes:Assays, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
-        arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
-        rename(`Amino acid replacement` = mutation, 
+      # database %>% 
+      #   filter(!is.na(Epitopes)) %>% 
+      #   mutate(mutation = fct_drop(mutation)) %>%
+      #   # select(mutation, Epitopes:Assays, `IC50 WT`, IC50_mutation, Fold, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+      #   select(mutation, Epitopes:Assays, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+      #   arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
+      #   rename(`Amino acid replacement` = mutation, 
+      #          `Cumulative sequences in UK` = `numSeqs UK`,
+      #          `Sequences over 28 days` = `numSeqs UK 28 days`) %>% 
+      #   datatable(filter = "top", escape = FALSE, rownames = FALSE,
+      #             options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
+      
+      database_tcell_predictions %>% 
+        arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>%
+        rename(`Amino acid replacement` = mutation,
                `Cumulative sequences in UK` = `numSeqs UK`,
-               `Sequences over 28 days` = `numSeqs UK 28 days`) %>% 
+               `Sequences over 28 days` = `numSeqs UK 28 days`) %>%
         datatable(filter = "top", escape = FALSE, rownames = FALSE,
-                  options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE)) 
+                    options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
+        
     })
     
     # always display wild type on percentage chart
