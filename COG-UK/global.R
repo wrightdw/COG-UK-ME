@@ -45,7 +45,7 @@ lineages_t3 <-
     # "B.1.324.1" = "UK associated variant. E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
     "P.2" = "Brazil. E484K and V1176F.",
     "P.3" = "The Philippines. 141-143del, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases 243-244del.",
-    "B.1.617" = "India. G142D, E154K, L452R, E484K, P681R and Q1071H."
+    "B.1.617" = "India. G142D, E154K, L452R, E484Q, P681R and Q1071H."
     ) %>% 
   enframe("lineage", "reason")
 
