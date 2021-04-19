@@ -214,6 +214,23 @@ table_3 <- function(){
     ) 
 }
 
+table_5 = function(){
+  database_tcell_predictions %>% 
+    select(mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
+    arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), desc(Fold)) %>%
+    mutate(across(c(Epitope, HLA, assay, CD4_CD8), ~fct_relevel(.x, sort))) %>% 
+    rename(`Amino acid replacement` = mutation,
+           `Cumulative sequences in UK` = `numSeqs UK`,
+           `Sequences over 28 days` = `numSeqs UK 28 days`,
+           `Assay` = assay,
+           `CD4 CD8` = CD4_CD8,
+           Start = `Start position`,
+           `Mut Percentile Rank Value` = IC50_mutation,
+           `WT Percentile Rank Value` = `IC50 WT`,
+           `Fold difference` = Fold,
+           DOI = doi)
+}
+
 # TODO precompute and include lineage/variant combinations
 n_uk_lineages_all <-
   left_join(
@@ -285,7 +302,7 @@ shinyServer(function(input, output, session) {
         arrange(desc(sample_date), lineage)
     })
     
-    # Reactive value to generate downloadable table for complete table 1 data
+    # Reactive value to generate downloadable table for complete table 3 data
     table3Input <- reactive({
       table_3() %>% 
         mutate(across(ends_with("(%)"), ~.x * 100)) # convert decimal fraction to percentage
@@ -297,6 +314,11 @@ shinyServer(function(input, output, session) {
         filter(variant == input$selectEscape) %>% 
         select(sequence_name, sample_date, epi_week, lineage) %>% 
         arrange(desc(sample_date), lineage)
+    })
+    
+    # Reactive value to generate downloadable table for complete T cell table data
+    table5Input <- reactive({
+      table_5() 
     })
     
     ######## Download handlers ########
@@ -347,7 +369,7 @@ shinyServer(function(input, output, session) {
       contentType = "text/csv"
     )
     
-    ## Antibody sites
+    ## Antigenic
     # Downloadable CSV of selected mutation metadata
     output$downloadEscape <- downloadHandler(
       filename = function() {
@@ -358,6 +380,18 @@ shinyServer(function(input, output, session) {
       },
       contentType = "text/csv"
     )
+    
+    # Downloadable CSV of complete T cell data
+    output$downloadTable5 <- downloadHandler(
+      filename = function() {
+        str_c("tcell_", dataset_date, ".csv")
+      },
+      content = function(file) {
+        write_csv(table5Input(), file)
+      },
+      contentType = "text/csv"
+    )
+    
     
     output$table_2 <- renderDT({
       table_2() %>% 
@@ -408,33 +442,8 @@ shinyServer(function(input, output, session) {
         })
     
     output$table_5 <- renderDT({
-      # database %>% 
-      #   filter(!is.na(Epitopes)) %>% 
-      #   mutate(mutation = fct_drop(mutation)) %>%
-      #   # select(mutation, Epitopes:Assays, `IC50 WT`, IC50_mutation, Fold, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
-      #   select(mutation, Epitopes:Assays, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
-      #   arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), mutation) %>% 
-      #   rename(`Amino acid replacement` = mutation, 
-      #          `Cumulative sequences in UK` = `numSeqs UK`,
-      #          `Sequences over 28 days` = `numSeqs UK 28 days`) %>% 
-      #   datatable(filter = "top", escape = FALSE, rownames = FALSE,
-      #             options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
-      
-      database_tcell_predictions %>% 
-        select(mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
-        arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), desc(Fold)) %>%
-        mutate(across(c(Epitope, HLA, assay, CD4_CD8), ~fct_relevel(.x, sort))) %>% 
-        rename(`Amino acid replacement` = mutation,
-               `Cumulative sequences in UK` = `numSeqs UK`,
-               `Sequences over 28 days` = `numSeqs UK 28 days`,
-               `Assay` = assay,
-               `CD4 CD8` = CD4_CD8,
-               Start = `Start position`,
-               # End = `End position`,
-               Reference = anchor,
-               `IC50 nM mutant` = IC50_mutation,
-               `IC50 nM WT` = `IC50 WT`,
-               `Fold difference` = Fold) %>%
+      table_5() %>% 
+        mutate(Reference = str_c("<a href='", DOI, "'target='_blank'>", Reference,"</a>"), .keep = "unused", .after = `Supporting references`) %>% # hyperlink to citation DOI
         datatable(filter = "top", escape = FALSE, rownames = FALSE,
                     options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
         
@@ -503,9 +512,6 @@ shinyServer(function(input, output, session) {
     # Display antibody heatmap
     output$antibody_heatmap <- renderPlot({
       draw(heatmap)
-      # decorate_heatmap_body("Percentage %", {
-      #   grid.text("Antigenic mutations on the top of B.1.1.7", y = unit (10, "mm") + unit(10, "mm"), just = "bottom" )
-      # })
     })
     
     observeEvent(input$gene, {

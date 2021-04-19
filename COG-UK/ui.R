@@ -343,8 +343,28 @@ dashboardPage(
                             h2("Spike protein gene mutations in T cell epitopes detected in the UK"),
                             p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
                             p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
-                            DTOutput("table_5")
+                            DTOutput("table_5"),
+                            br(),
+                            fluidRow(
+                                column(width = 10, offset = 1,
+                                       box(title = "Download Table 2", closable = FALSE, width = 12,
+                                           status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                           fluidRow(
+                                               column(
+                                                   width = 8,
+                                                   p("Download a CSV file comprising complete table 2 data.")
+                                               ),
+                                               
+                                               column(
+                                                   width = 4,
+                                                   downloadButton("downloadTable5", "Download", class = "btn-info"))
+                                           )
+                                       )
+                                )
+                            )
                         ), # end tabPanel
+                        
+
                         
                         tabPanel("Notes",
                                  h3("Table 1"),
@@ -384,15 +404,14 @@ dashboardPage(
                                  h3("Table 2"),
                                  h4("Table Key"),
                                  tags$ul(
-                                     tags$li("IC50 nM WT and mutation: predicted IC50 nM for the corresponding reported restricting allele. 
+                                     tags$li("WT Percentile Rank Value and Mut Percentile Rank Value: predicted IC50 nM for the corresponding reported restricting allele. 
                                     Predictions were performed using the NetMHCpan BA 4.1 algorithm, hosted by the IEDB."),
-                                    tags$li("Fold difference indicates Increase/decrease in affinity defined by a two-fold difference in predicted IC50 nM.")
+                                    tags$li("Fold difference indicates Increase/decrease in affinity defined by a two-fold difference in predicted IC50 nM."),
+                                    tags$li("Binding is reported as a percentile rank value (as described ",a("here", href = "http://www.cbs.dtu.dk/services/NetMHCpan/", target = "_blank", .noWS = "outside"),"), the lower the value the stronger the binding.", 
+                                            tags$ul(tags$li("For HLA-I, values less then 2 are binders and values less than 0.5 strong binders."), 
+                                            tags$li("For HLA-II, values less then 5 are binders and values less than 1 strong binders.")),
+                                            .noWS = c("after-begin"))
                                  )
-                                 
-                                 
-                                 # p("The binding is reported as percentile rank values (as described ",here,"http://www.cbs.dtu.dk/services/NetMHCpan/), and the lower the value the stronger the binding. For HLA-I, values less then 2 are binders and values less than 0.5 strong binders. 
-                                 # For HLA-II, values less then 5 are binders and values less than 1 strong binders.") 
-                                 # 
                              ) # end tabPanel
                     ), # end tabBox
             ) # end tabItem

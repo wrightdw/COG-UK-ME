@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:    "cog_global_2021-04-16_mutations.csv"
-  global_csv:       "cog_global_2021-04-16_public.csv"
-  consortium_csv:   "cog_global_2021-04-16_consortium.csv"
+  mutations_csv:    "cog_global_2021-04-19_mutations.csv"
+  global_csv:       "cog_global_2021-04-19_public.csv"
+  consortium_csv:   "cog_global_2021-04-19_consortium.csv"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -27,9 +27,9 @@ library(circlize)
 ```{r consortium_read}
 consortium_uk <- 
   read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
-  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
-         -variants, -lineages_version
-         ) %>% # remove unused columns
+  # select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
+  #        -variants, -lineages_version
+  #        ) %>% # remove unused columns
   type_convert %>% 
   filter(country == "UK" & !is.na(adm1))  %>% 
   select(-country) %>% 
@@ -527,7 +527,7 @@ database %<>%
   mutate(across(c(support, domain, mutation), as_factor)) %>% 
   mutate(support = fct_relevel(support, "lower", "medium", "high"))
 
-database
+database %T>% write_rds("database.rds")
 ```
 # T cell epitopes
 ```{r tcell}
@@ -544,12 +544,7 @@ predictions %<>%
     CD4_CD8 = X7,
     HLA_prediction = X8) %>% 
   select(-(starts_with("X")))
-# %>%
-#   select(position, mutation, HLA_prediction, `IC50 WT`, IC50_mutation, Fold)
-# # 
-# # database %<>% left_join(predictions)
-# 
-# 
+
 tcell %<>%
   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
   mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))
@@ -591,41 +586,7 @@ database_tcell_predictions <-
   database_tcell %>% 
   left_join(predictions) %>% 
   select(-HLA_prediction) %>% 
-  mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) %>% 
-  mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", Reference,"</a>"), .keep = "unused", .after = `Supporting references`) # hyperlink to citation DOI
-
-
-# tcell_summary <- 
-#   database_tcell_predictions %>% 
-#   group_by(position, mutation, Epitope, `Start position`, `End position`, CD4_CD8) %>% 
-#   summarise(HLA = HLA %>% str_c(collapse = "<br>"),
-#             `Supporting references` = `Supporting references` %>% unique %>% toString,
-#             References = Reference %>% unique %>% str_c(collapse = "<br>"),
-#             Assays = assay %>% unique %>% str_c(collapse = "<br>"),
-#             `IC50 WT` = `IC50 WT` %>% str_c(collapse = "<br>"),
-#             IC50_mutation = IC50_mutation %>% str_c(collapse = "<br>"),
-#             Fold = Fold %>% str_c(collapse = "<br>"),
-#             .groups = "drop")
-# 
-# tcell_summary_nested <- 
-#   tcell_summary %>% 
-#   group_by(position, mutation) %>% 
-#   summarise(Epitopes = Epitope %>% container_html, 
-#             `CD4 CD8` = CD4_CD8 %>% container_html, 
-#             Positions = str_c(`Start position`, `End position`, sep = "-") %>% container_html,
-#             HLA = HLA %>% container_html,
-#             `Supporting references` = `Supporting references` %>% container_html,
-#             References = References %>% container_html, 
-#             Assays = Assays %>% container_html,
-#             `IC50 WT` = `IC50 WT` %>% container_html, 
-#             IC50_mutation = IC50_mutation %>% container_html, 
-#             Fold = Fold %>% container_html, 
-#             .groups = "drop")
-  
-# tcell_summary_nested
-
-# database %<>% left_join(tcell_summary_nested) 
-database %T>% write_rds("database.rds")
+  mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) 
 
 database_tcell_predictions %T>% write_rds("database_tcell_predictions.rds")
 
