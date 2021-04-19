@@ -388,6 +388,11 @@ dashboardPage(
                                     Predictions were performed using the NetMHCpan BA 4.1 algorithm, hosted by the IEDB."),
                                     tags$li("Fold difference indicates Increase/decrease in affinity defined by a two-fold difference in predicted IC50 nM.")
                                  )
+                                 
+                                 
+                                 # p("The binding is reported as percentile rank values (as described ",here,"http://www.cbs.dtu.dk/services/NetMHCpan/), and the lower the value the stronger the binding. For HLA-I, values less then 2 are binders and values less than 0.5 strong binders. 
+                                 # For HLA-II, values less then 5 are binders and values less than 1 strong binders.") 
+                                 # 
                              ) # end tabPanel
                     ), # end tabBox
             ) # end tabItem
