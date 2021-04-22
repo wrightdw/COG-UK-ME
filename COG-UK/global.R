@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-04-19") #TODO derive from directory name
+dataset_date <- ymd("2021-04-21") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
