@@ -22,6 +22,7 @@ library(fuzzyjoin)
 library(htmltools)
 library(ComplexHeatmap)
 library(circlize)
+library(seqinr)
 ```
 
 ## Consortium
@@ -577,6 +578,7 @@ container_html <- function(summary_var){
 database_tcell <-
   database %>%
   select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+  filter(`numSeqs UK` > 0) %>% # filter zero counts from predicted antibodies not observed in mutations
   fuzzy_inner_join(
     tcell,
     by = c("position" = "Start position",
@@ -1088,8 +1090,6 @@ hm
 ```
 ### ggseqlogo
 ```{r ggseqlogo}
-library(seqinr)
-
 database_logo <- 
   database %>% 
   mutate(WT = str_sub(mutation, 1, 1), AA = str_sub(mutation, -1), .after = mutation) %>% 
@@ -1126,6 +1126,11 @@ database_logo %<>%
 database_logo %T>% write_rds("database_logo.rds")
 
 ```
+
+```{r}
+
+```
+
 ### mydata
 ```{r eval=FALSE, include=FALSE}
 # library(tidyverse)
