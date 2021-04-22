@@ -2,14 +2,15 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:    "cog_global_2021-04-19_mutations.csv"
-  global_csv:       "cog_global_2021-04-19_public.csv"
-  consortium_csv:   "cog_global_2021-04-19_consortium.csv"
+  mutations_csv:    "cog_global_2021-04-21_mutations.csv"
+  global_csv:       "cog_global_2021-04-21_public.csv"
+  consortium_csv:   "cog_global_2021-04-21_consortium.csv"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
   deletions_tsv:    "cog.deletions.tsv"
   predictions_tsv:  "Prediction_from_Morten.txt"
+  spike_fasta:      "sequence.fasta"
 ---
 ```{r libs}
 library(tidyverse)
@@ -1085,3 +1086,65 @@ hm
 #         )
 
 ```
+### ggseqlogo
+```{r ggseqlogo}
+library(seqinr)
+
+database_logo <- 
+  database %>% 
+  mutate(WT = str_sub(mutation, 1, 1), AA = str_sub(mutation, -1), .after = mutation) %>% 
+  filter(`numSeqs UK` > 0) 
+
+wt <-
+  mutation_reference_counts %>% 
+  filter(gene == "S" & variant == "WT" & adm1 == "UK") %>%
+  group_by(position) %>% 
+  summarise(`numSeqs UK` = sum(n)) %>% 
+  mutate(position = fct_drop(position) %>% fct_expand(1:1274 %>% as.character) %>% fct_inseq) %>% 
+  complete(position) %>% 
+  mutate(across(`numSeqs UK`, ~replace_na(.x, n_distinct(consortium_uk$sequence_name))))
+
+spike_sequence <- 
+  read.fasta(params$spike_fasta, seqonly = TRUE) %>% 
+  str_extract_all(boundary("character")) %>% 
+  flatten_chr() %>% 
+  c("*") # append stop codon
+
+wt %<>% 
+  add_column(AA = spike_sequence) %>% 
+  mutate(across(position, as.character)) %>% 
+  mutate(across(position, as.integer))
+
+database_logo %<>%
+  select(position, AA, `numSeqs UK`) %>%
+  bind_rows(wt) %>% 
+  pivot_wider(names_from = position, values_from = `numSeqs UK`, values_fill = 0, names_sort = TRUE) %>%
+  arrange(AA) %>% 
+  column_to_rownames(var = "AA") %>% 
+  as.matrix
+
+database_logo %T>% write_rds("database_logo.rds")
+
+```
+### mydata
+```{r eval=FALSE, include=FALSE}
+# library(tidyverse)
+# library(magrittr)
+
+mydata <- read_csv("mydata.csv") 
+
+names <- 
+  c("MA0018.2",
+    "MA0031.1",
+    "MA0139.1",
+    "MA0158.1")
+
+df <- names %>% 
+    purrr::set_names() %>%
+    map(function(i) 
+      gather(mydata, "key", "value", starts_with(i)) %$% as.integer(value) %>% array(dim = c(4, length(.)/4))
+    ) %>% as.list 
+
+df
+```
+
