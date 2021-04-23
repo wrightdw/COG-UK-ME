@@ -33,7 +33,7 @@ consortium_uk <-
          -mutations, -lineages_version
          ) %>% # remove unused columns
   type_convert %>% 
-  filter(country == "UK" & !is.na(adm1))  %>% 
+  filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
   select(-country) %>% 
   distinct # remove duplicates
 
@@ -77,7 +77,8 @@ mutations_uk <-
   filter(country == "UK" & !is.na(adm1)) %>% 
   select(-country) %>% 
   mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
-  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
+  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %>% 
+  semi_join(consortium_uk, by = c("sequence_name", "sample_date", "lineage", "epi_week")) %>%  # exclude Crown dependencies and British Overseas Territories %T>%
   write_rds(file = "mutations_uk.rds")
 
 mutations_uk
@@ -886,64 +887,54 @@ mutations_uk %>%
   slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
 ```
 ## Antigenic
-### Antigenic deletions by lineage
-22289-22294 (6nt)
-22287-22295 (9nt) 
-and possibly 22289-22291 (3nt) but this last one has a lot of Ns so may be an artefact
-```{r antigenic_deletions}
-del_22289_6_samples <- 
-  deletions %>% 
-  filter(
-    (ref_start == 22289 & length == 6) 
-  ) %$% samples 
-
-# del_22287_9 <- 
-#   deletions %>% 
-#   filter(
-#     (ref_start == 22287 & length == 9) 
-#   ) %$% samples 
-# 
-# del_22289_3 <- 
-#   deletions %>% 
-#   filter(
-#     (ref_start == 22289 & length == 3) 
-#   ) %$% samples 
-
-del_22289_6 <- 
-  consortium_uk %>% 
-  filter(sequence_name %in% del_22289_6_samples) %>% 
-  dplyr::count(lineage, epi_week) %>% 
-  mutate(variant = "del243-244", .before = 1)
-```
 ### Antigenic mutations by lineage
 Would you be able to prepare a file with all the antigenic mutations (filtered from Will’s antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
+
 ```{r antigenic_mutations}
-escape_mutations <-
-  database %>%
-  filter(!is.na(escape)) %$% 
-  mutation 
+antigenic_mutations_lineages <- function(){
+  del_22289_6_samples <- 
+    deletions %>% 
+    filter(
+      (ref_start == 22289 & length == 6) 
+    ) %$% samples 
+  
+  ### Antigenic deletions by lineage 22289-22294 (6nt)
+  del_22289_6 <- 
+    consortium_uk %>% 
+    filter(sequence_name %in% del_22289_6_samples) %>% 
+    dplyr::count(lineage, epi_week) %>% 
+    mutate(variant = "del243-244", .before = 1)
+    
+  sequences_by_week_lineages <- 
+    consortium_uk %>% 
+    dplyr::count(epi_week, lineage, name = "n_sequences_lineage")
+  
+  escape_mutations <-
+    database %>%
+    filter(!is.na(escape)) %$% 
+    mutation 
+  
+  antigenic_mutations <- 
+    mutations_s_uk %>% 
+    filter(variant %in% escape_mutations) %>% 
+    dplyr::count(variant, lineage, epi_week, sort = TRUE) %>% 
+    bind_rows(del_22289_6)
+  
+  antigenic_mutations_lineages_all <- 
+    inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
+    mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
+  
+  antigenic_mutations_lineages <- 
+    antigenic_mutations_lineages_all %>% 
+    mutate(epi_week = epi_week %>% as.character %>% as.integer) %>% 
+    filter(epi_week >= 46) %>% 
+    pivot_wider(names_from = epi_week, values_from = percent_lineage, names_sort = TRUE, values_fill = 0, id_cols = c(variant, lineage))
+  
+  antigenic_mutations_lineages
+}
 
-sequences_by_week_lineages <- 
-  consortium_uk %>% 
-  dplyr::count(epi_week, lineage, name = "n_sequences_lineage")
+antigenic <- antigenic_mutations_lineages() %T>% write_rds("antigenic_mutations_lineages.rds")
 
-antigenic_mutations <- 
-  mutations_s_uk %>% 
-  filter(variant %in% escape_mutations) %>% 
-  dplyr::count(variant, lineage, epi_week, sort = TRUE) %>% 
-  bind_rows(del_22289_6)
-
-antigenic_mutations_lineages_all <- 
-  inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
-  mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
-
-antigenic_mutations_lineages <- 
-  antigenic_mutations_lineages_all %>% 
-  mutate(epi_week = epi_week %>% as.character %>% as.integer) %>% 
-  filter(epi_week >= 46) %>% 
-  pivot_wider(names_from = epi_week, values_from = percent_lineage, names_sort = TRUE, values_fill = 0, id_cols = c(variant, lineage))
-
-antigenic_mutations_lineages %T>% write_rds("antigenic_mutations_lineages.rds")
 ```
 ### Antigenic heatmap
 ```{r antigenic_heatmap}
@@ -951,7 +942,7 @@ antigenic_mutations_lineages %T>% write_rds("antigenic_mutations_lineages.rds")
 # horz_heat_original <- read.table("horz_heat.csv", row.names = 1, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 horz_heat <-
-  antigenic_mutations_lineages %>% 
+  antigenic %>% 
   filter(lineage == "B.1.1.7" & variant != "N501Y") %>% 
   select(-lineage) %>% 
   inner_join(database %>% 
