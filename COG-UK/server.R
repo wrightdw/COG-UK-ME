@@ -9,7 +9,7 @@ library(DT)
 library(ComplexHeatmap)
 
 source("helpers.R")
-heatmap <- antibody_complex_heatmap(antigenic_mutations_lineages, database)
+
 
 sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
   if(is_character(lineages)){
@@ -511,6 +511,7 @@ shinyServer(function(input, output, session) {
     
     # Display antibody heatmap
     output$antibody_heatmap <- renderPlot({
+      heatmap <- antibody_complex_heatmap(antigenic_mutations_lineages(input$nation_antigenic), database)
       draw(heatmap)
     })
     

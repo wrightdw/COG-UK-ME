@@ -125,3 +125,63 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, spike_databas
   )
   heatmap
 }
+
+antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland")){
+  nation = match.arg(nation)
+  
+  levels_adm1 <- c(Scotland = "UK-SCT",
+                   Wales = "UK-WLS", 
+                   England = "UK-ENG", 
+                   Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
+  
+  if(nation != "UK"){
+    mutations_s_uk %<>% 
+      mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>% 
+      filter(adm1 == nation)
+    
+    consortium_uk %<>%
+      filter(adm1 == nation)
+  }
+  
+  del_22289_6_samples <- 
+    deletions %>% 
+    filter(
+      (ref_start == 22289 & length == 6) 
+    ) %$% samples 
+  
+  ### Antigenic deletions by lineage 22289-22294 (6nt)
+  del_22289_6 <- 
+    consortium_uk %>% 
+    filter(sequence_name %in% del_22289_6_samples) %>% 
+    dplyr::count(lineage, epi_week) %>% 
+    mutate(variant = "del243-244", .before = 1)
+  
+  sequences_by_week_lineages <- 
+    consortium_uk %>% 
+    dplyr::count(epi_week, lineage, name = "n_sequences_lineage")
+  
+  escape_mutations <-
+    database %>%
+    filter(!is.na(escape)) %$% 
+    mutation 
+  
+  antigenic_mutations <- 
+    mutations_s_uk %>% 
+    filter(variant %in% escape_mutations) %>% 
+    dplyr::count(variant, lineage, epi_week, sort = TRUE) %>% 
+    bind_rows(del_22289_6)
+  
+  antigenic_mutations_lineages_all <- 
+    inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
+    mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
+  
+  antigenic_mutations_lineages <- 
+    antigenic_mutations_lineages_all %>% 
+    mutate(epi_week = epi_week %>% as.character %>% as.integer) %>% 
+    filter(epi_week >= 46) %>% 
+    pivot_wider(names_from = epi_week, values_from = percent_lineage, names_sort = TRUE, values_fill = 0, id_cols = c(variant, lineage))
+  
+  antigenic_mutations_lineages
+}
+
+
