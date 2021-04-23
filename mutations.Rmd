@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:    "cog_global_2021-04-21_mutations.csv"
-  global_csv:       "cog_global_2021-04-21_public.csv"
-  consortium_csv:   "cog_global_2021-04-21_consortium.csv"
+  mutations_csv:    "cog_global_2021-04-22_mutations.csv"
+  global_csv:       "cog_global_2021-04-22_public.csv"
+  consortium_csv:   "cog_global_2021-04-22_consortium.csv"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -22,16 +22,16 @@ library(fuzzyjoin)
 library(htmltools)
 library(ComplexHeatmap)
 library(circlize)
-library(seqinr)
+# also require seqinr
 ```
 
 ## Consortium
 ```{r consortium_read}
 consortium_uk <- 
   read_csv((params$consortium_csv), col_types = cols(.default = col_character())) %>% 
-  # select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
-  #        -variants, -lineages_version
-  #        ) %>% # remove unused columns
+  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
+         -mutations, -lineages_version
+         ) %>% # remove unused columns
   type_convert %>% 
   filter(country == "UK" & !is.na(adm1))  %>% 
   select(-country) %>% 
@@ -56,8 +56,8 @@ mutations <-
   type_convert %>% 
   select(-lineages_version, -(t1001i:del_21765_6)) %>%
   distinct %>% # get rid of identical variant calls
-  separate_rows(variants, sep = '\\|') %>% 
-  separate(variants, into = c("gene", "variant"), sep = ':') %>% 
+  separate_rows(mutations, sep = '\\|') %>% 
+  separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
   drop_na() %>%
   filter(gene != "synSNP") %>%
   mutate(position = parse_number(variant))
@@ -93,11 +93,11 @@ genes_positions <-
 
 sequences_by_week <- 
   consortium_uk %>% 
-  count(epi_week, name = "n_sequences")
+  dplyr::count(epi_week, name = "n_sequences")
 
 positions_by_week <- 
   mutations_uk %>%
-  count(epi_week, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
+  dplyr::count(epi_week, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
 
 reference_counts <- 
   positions_by_week %>%
@@ -109,7 +109,7 @@ reference_counts <-
 
 mutation_counts <- 
   mutations_uk %>%
-  count(epi_week, gene, position, variant) %>% 
+  dplyr::count(epi_week, gene, position, variant) %>% 
   mutate(adm1 = "UK")
 
 #### Nations ####
@@ -120,12 +120,12 @@ levels_adm1 <- c(Scotland = "UK-SCT",
 
 sequences_by_week_nations <-
   consortium_uk %>%
-  count(epi_week, adm1, name = "n_sequences")
+  dplyr::count(epi_week, adm1, name = "n_sequences")
 
 positions_by_week_nations <-
   mutations_uk %>%
   mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
-  count(epi_week, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
+  dplyr::count(epi_week, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
 
 reference_counts_nations <- 
   positions_by_week_nations %>%
@@ -137,7 +137,7 @@ reference_counts_nations <-
 mutation_counts_nations <- 
   mutations_uk %>%
   mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
-  count(epi_week, gene, position, variant, adm1)
+  dplyr::count(epi_week, gene, position, variant, adm1)
 
 # TODO calculate UK counts by summing the nation counts
 mutation_reference_counts <- 
@@ -286,51 +286,51 @@ ggsave("variants_overlay_norm.png")
 
 ```{r}
 consortium_uk %>% 
-  count(n501y, del_21765_6)
+  dplyr::count(n501y, del_21765_6)
 ```
 
 ```{r}
 consortium_uk %>%  
   filter(sample_date >= sample_date_28) %>% 
-  count(n501y, del_21765_6)
+  dplyr::count(n501y, del_21765_6)
 
 ```
 ```{r}
 consortium_uk %>%  
-  count(n439k, del_21765_6)
+  dplyr::count(n439k, del_21765_6)
 
 ```
 ```{r}
 consortium_uk %>%  
   filter(sample_date >= sample_date_28) %>% 
-  count(n439k, del_21765_6)
+  dplyr::count(n439k, del_21765_6)
 
 ```
 ```{r}
 
 consortium_uk %>% 
   filter(n501y == "Y" & del_21765_6 == "del")  %>% 
-  count(lineage) %>% 
+  dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
 ```{r}
 
 consortium_uk %>% 
   filter(sample_date >= sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% 
-  count(lineage) %>% 
+  dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
 ```{r}
 consortium_uk %>% 
   filter(n439k == "K" & del_21765_6 == "del")  %>% 
-  count(lineage) %>% 
+  dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
 ```{r}
 
 consortium_uk %>% 
   filter(sample_date >= sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% 
-  count(lineage) %>% 
+  dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
 ```{r}
@@ -340,7 +340,7 @@ mutations %>%
 ```
 ```{r}
 mutations %>% filter(country == "UK" & gene == "S") %>% 
-  count(variant) %>% 
+  dplyr::count(variant) %>% 
   filter(n >1) %>% 
   summarise(sum(n))
 ```
@@ -349,7 +349,7 @@ mutations %>% filter(country == "UK" & gene == "S") %>%
 ```{r}
 mutations %>% 
   filter(country == "UK" & gene == "S") %>% 
-  count(variant) %>% filter(n >100) %>% 
+  dplyr::count(variant) %>% filter(n >100) %>% 
   summarise(sum(n))
 ```
 ```{r}
@@ -392,7 +392,7 @@ mutations_v <- mutations %>% filter(country == "UK" & lineage == "B.1.1.7"
   (gene == "ORF8" & variant == "Y73C") | 
   (gene == "N" & variant == "D3L") | 
   (gene == "N" & variant == "S235F") 
-  )) %>% count(sequence_name, lineage) %>% filter(n == 14) #%>% select(-n)
+  )) %>% dplyr::count(sequence_name, lineage) %>% filter(n == 14) #%>% select(-n)
 
 mutations_v
 ```
@@ -404,7 +404,7 @@ mutations %>% filter(country == "UK"
   (gene == "S" & variant == "K417N") | 
   (gene == "S" & variant == "E484K") | 
   (gene == "S" & variant == "N501Y") 
-  )) %>% count(sequence_name) %>% filter(n == 3)
+  )) %>% dplyr::count(sequence_name) %>% filter(n == 3)
 
 
 ```
@@ -417,7 +417,7 @@ mutations %>% filter(country == "UK"
   (gene == "S" && variant == "Y453F") | 
   (gene == "S" & variant == "I692V") | 
   (gene == "S" & variant == "M1229I") 
-  )) %>% count(sequence_name) %>% filter(n == 3)
+  )) %>% dplyr::count(sequence_name) %>% filter(n == 3)
 
 
 ```
@@ -465,19 +465,19 @@ variants_uk <-
 
 variants_nations <- 
   mutations_s_uk %>% 
-  count(position, variant, adm1) %>% 
+  dplyr::count(position, variant, adm1) %>% 
   pivot_wider(names_from = adm1, values_from = n)
 
 # Sample dates in last 28 days
 variants_uk_28 <- 
   mutations_s_uk %>% 
   filter(sample_date >= sample_date_28) %>% 
-  count(position, variant, name = "UK_28")
+  dplyr::count(position, variant, name = "UK_28")
 
 variants_nations_28 <-
   mutations_s_uk %>% 
     filter(sample_date >= sample_date_28) %>% 
-    count(position, variant, adm1) %>% 
+    dplyr::count(position, variant, adm1) %>% 
     pivot_wider(names_from = adm1, values_from = n) %>% 
     rename_with(~paste0(., "_28"), .cols = starts_with("UK-"))
 
@@ -610,18 +610,18 @@ mutations_s_uk %>%
 ```
 ```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
-  count(variant) %>% 
+  dplyr::count(variant) %>% 
   filter(n == 1) 
 ```
 ```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
-  count(variant) %>% 
+  dplyr::count(variant) %>% 
   filter(n >= 100) 
 ```
 
 ```{r}
 mutations_s_uk %>% 
-  count(variant) %>% 
+  dplyr::count(variant) %>% 
   filter(n >= 5) %>% 
   arrange(desc(n))
 ```
@@ -725,14 +725,14 @@ n_uk_lineages %>% filter(lineage == "B.1.1.298" | str_detect(lineage, "B\\.1\\.1
 ```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
-  count(lineage)
+  dplyr::count(lineage)
 ```
 #### E484K 28 Days
 ```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   filter(variant == "E484K") %>% 
   filter(sample_date >= sample_date_28) %>% 
-  count(lineage)
+  dplyr::count(lineage)
 ```
 #### E484K / B.1.351 Summary
 ```{r eval=FALSE, include=FALSE}
@@ -912,7 +912,7 @@ del_22289_6_samples <-
 del_22289_6 <- 
   consortium_uk %>% 
   filter(sequence_name %in% del_22289_6_samples) %>% 
-  count(lineage, epi_week) %>% 
+  dplyr::count(lineage, epi_week) %>% 
   mutate(variant = "del243-244", .before = 1)
 ```
 ### Antigenic mutations by lineage
@@ -925,12 +925,12 @@ escape_mutations <-
 
 sequences_by_week_lineages <- 
   consortium_uk %>% 
-  count(epi_week, lineage, name = "n_sequences_lineage")
+  dplyr::count(epi_week, lineage, name = "n_sequences_lineage")
 
 antigenic_mutations <- 
   mutations_s_uk %>% 
   filter(variant %in% escape_mutations) %>% 
-  count(variant, lineage, epi_week, sort = TRUE) %>% 
+  dplyr::count(variant, lineage, epi_week, sort = TRUE) %>% 
   bind_rows(del_22289_6)
 
 antigenic_mutations_lineages_all <- 
@@ -1104,6 +1104,7 @@ wt <-
   complete(position) %>% 
   mutate(across(`numSeqs UK`, ~replace_na(.x, n_distinct(consortium_uk$sequence_name))))
 
+library(seqinr) # NB seqinr also has a count function!
 spike_sequence <- 
   read.fasta(params$spike_fasta, seqonly = TRUE) %>% 
   str_extract_all(boundary("character")) %>% 
