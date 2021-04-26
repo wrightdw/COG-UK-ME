@@ -7,7 +7,7 @@ library(Cairo)
 library(dendextend)
 library(seriation)
 
-antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, spike_database){
+antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   
   RBD1_class <- c(403, 405, 406, 408, 409, 414, 415, 416, 417, 420, 421, 449, 453, 455, 456, 457, 458, 459, 460, 473, 474, 475, 476, 477, 484, 486, 487, 489, 490, 492, 493, 494, 495, 496, 498, 500, 501, 502, 503, 504, 505)
   RBD2_class <- c(338, 339, 342, 343, 346, 351, 368, 371, 372, 373, 374, 403, 405, 406, 417, 436, 444, 445, 446, 447, 448, 449, 450, 452, 453, 455, 456, 470, 472, 473, 475, 478, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505)
@@ -19,7 +19,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, spike_databas
     mutations_lineages_epi_weeks %>% 
     filter(lineage == "B.1.1.7" & variant != "N501Y") %>% 
     select(-lineage) %>% 
-    inner_join(spike_database %>% 
+    inner_join(database %>% 
                  select(position, mutation, mab, plasma, vaccine_sera, support, domain) %>% 
                  add_row(position = 243, mutation = "del243-244", mab = TRUE, plasma = NA, vaccine_sera = NA, support = "lower", domain = "NTD"), 
                by = c("variant" = "mutation")) %>%   
@@ -126,7 +126,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, spike_databas
   heatmap
 }
 
-antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland")){
+antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7"){
   nation = match.arg(nation)
   
   levels_adm1 <- c(Scotland = "UK-SCT",
@@ -134,13 +134,16 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
                    England = "UK-ENG", 
                    Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
   
+  mutations_s_uk %<>% filter(lineage == !!lineage)
+  consortium_uk %<>% filter(lineage == !!lineage)
+  
   if(nation != "UK"){
     mutations_s_uk %<>% 
       mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>% 
-      filter(adm1 == nation)
+      filter(adm1 == nation) 
     
     consortium_uk %<>%
-      filter(adm1 == nation)
+      filter(adm1 == nation) 
   }
   
   del_22289_6_samples <- 
@@ -183,5 +186,3 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   
   antigenic_mutations_lineages
 }
-
-

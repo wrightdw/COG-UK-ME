@@ -239,7 +239,7 @@ dashboardPage(
                                          )),
                                          column(width = 10,                                      
                                                 h4("Antigenic mutations on the top of B.1.1.7 defining mutations", class = "text-center"),
-                                                plotOutput("antibody_heatmap", height = "1540px")))),
+                                                plotOutput("antibody_heatmap", height = "auto")))),
                             
                             tabPanel("Notes",                         
                                      h2("Data source and processing"),

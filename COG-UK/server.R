@@ -10,7 +10,6 @@ library(ComplexHeatmap)
 
 source("helpers.R")
 
-
 sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
   if(is_character(lineages)){
     n_nations_lineages <- sum_key_mutations_uk(lineage, adm1, date_from = date_from) # grouped by lineage, adm1
@@ -509,12 +508,23 @@ shinyServer(function(input, output, session) {
       mutation_plot_bar() %>% ggplotly
     })
     
-    # Display antibody heatmap
-    output$antibody_heatmap <- renderPlot({
-      heatmap <- antibody_complex_heatmap(antigenic_mutations_lineages(input$nation_antigenic), database)
-      draw(heatmap)
+    values <- reactiveValues(antigenic = NULL)
+    
+    observe({
+      values$antigenic <- antigenic_mutations_lineages(input$nation_antigenic)
     })
     
+    # Display antibody heatmap
+    output$antibody_heatmap <- renderPlot({
+      heatmap <- antibody_complex_heatmap(values$antigenic)
+      draw(heatmap)
+    }, height = function(){1540})
+    
+    
+    
+    # output$plot.ui <- renderUI({
+    #   plotOutput("plots", height = plotHeight())
+    # })
     observeEvent(input$gene, {
       updateSelectInput(session, "position",
                         choices = mutations_uk %>%
