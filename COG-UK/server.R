@@ -508,24 +508,22 @@ shinyServer(function(input, output, session) {
       mutation_plot_bar() %>% ggplotly
     })
     
-    # values <- reactiveValues(antigenic = NULL)
-    # 
-    # observe({
-    #   values$antigenic <- antigenic_mutations_lineages(input$nation_antigenic)
-    # })
+    values <- reactiveValues()
+
+    observe({
+      values$antigenic <- 
+        antigenic_mutations_lineages(input$nation_antigenic) %>% 
+        antibody_complex_heatmap()
+    })
     
     # Display antibody heatmap
     output$antibody_heatmap <- renderPlot({
-      heatmap <- 
-        antigenic_mutations_lineages() %>% 
-        antibody_complex_heatmap()
-      
-      draw(heatmap)
-    }, height = function(){1540})
+      draw(values$antigenic)
+    }, height = function(){
+      # component_height(values$antigenic) %>% convertHeight("mm", valueOnly = TRUE) %>% max * 2.9 + 100
+      values$antigenic %>% nrow * 13 + 100
+      })
     
-    # output$plot.ui <- renderUI({
-    #   plotOutput("plots", height = plotHeight())
-    # })
     observeEvent(input$gene, {
       updateSelectInput(session, "position",
                         choices = mutations_uk %>%

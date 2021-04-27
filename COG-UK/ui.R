@@ -228,18 +228,17 @@ dashboardPage(
                             
                             tabPanel("Figure 1",
                                      fluidRow(
-                                         # column(width = 2
-                                         #        , prettyRadioButtons(
-                                         #     inputId = "nation_antigenic",
-                                         #     label = "UK nation:", 
-                                         #     choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"
-                                         #                 ),
-                                         #     inline = FALSE, 
-                                         #     status = "info",
-                                         #     fill = TRUE,
-                                         #     selected = "UK"
-                                         # )),
-                                         column(width = 12,                                      
+                                         column(width = 2, prettyRadioButtons(
+                                             inputId = "nation_antigenic",
+                                             label = "UK nation:",
+                                             choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"
+                                                         ),
+                                             inline = FALSE,
+                                             status = "info",
+                                             fill = TRUE,
+                                             selected = "UK"
+                                         )),
+                                         column(width = 10,                                      
                                                 h4("Antigenic mutations on the top of B.1.1.7 defining mutations", class = "text-center"),
                                                 plotOutput("antibody_heatmap", height = "auto")))),
                             

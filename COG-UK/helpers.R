@@ -1,4 +1,5 @@
 library(tidyverse)
+library(magrittr)
 
 library(ComplexHeatmap)
 library(circlize)
@@ -6,6 +7,7 @@ library(circlize)
 library(Cairo)
 library(dendextend)
 library(seriation)
+library(magick)
 
 antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   
@@ -17,8 +19,6 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   
   horz_heat <-
     mutations_lineages_epi_weeks %>% 
-    filter(lineage == "B.1.1.7" & variant != "N501Y") %>% 
-    select(-lineage) %>% 
     inner_join(database %>% 
                  select(position, mutation, mab, plasma, vaccine_sera, support, domain) %>% 
                  add_row(position = 243, mutation = "del243-244", mab = TRUE, plasma = NA, vaccine_sera = NA, support = "lower", domain = "NTD"), 
@@ -105,7 +105,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     
     use_raster = TRUE,
     raster_device = "CairoPNG",
-    #TODO raster_by_magick
+    raster_by_magick = TRUE,
     
     cluster_columns = FALSE,
     cluster_rows = FALSE,
@@ -126,7 +126,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   heatmap
 }
 
-antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7"){
+antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){
   nation = match.arg(nation)
   
   levels_adm1 <- c(Scotland = "UK-SCT",
@@ -134,8 +134,11 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
                    England = "UK-ENG", 
                    Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
   
-  mutations_s_uk %<>% filter(lineage == !!lineage)
-  consortium_uk %<>% filter(lineage == !!lineage)
+  mutations_s_uk %<>% 
+    filter(lineage == !!lineage & variant != defining)
+  
+  consortium_uk %<>% 
+    filter(lineage == !!lineage)
   
   if(nation != "UK"){
     mutations_s_uk %<>% 
@@ -156,12 +159,12 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   del_22289_6 <- 
     consortium_uk %>% 
     filter(sequence_name %in% del_22289_6_samples) %>% 
-    dplyr::count(lineage, epi_week) %>% 
+    dplyr::count(epi_week) %>% 
     mutate(variant = "del243-244", .before = 1)
   
   sequences_by_week_lineages <- 
     consortium_uk %>% 
-    dplyr::count(epi_week, lineage, name = "n_sequences_lineage")
+    dplyr::count(epi_week, name = "n_sequences_lineage")
   
   escape_mutations <-
     database %>%
@@ -171,18 +174,23 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   antigenic_mutations <- 
     mutations_s_uk %>% 
     filter(variant %in% escape_mutations) %>% 
-    dplyr::count(variant, lineage, epi_week, sort = TRUE) %>% 
+    dplyr::count(variant, epi_week, sort = TRUE) %>% 
     bind_rows(del_22289_6)
   
   antigenic_mutations_lineages_all <- 
     inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
-    mutate(percent_lineage = n / n_sequences_lineage * 100 ) 
+    mutate(percentage = n / n_sequences_lineage * 100 ) 
   
   antigenic_mutations_lineages <- 
     antigenic_mutations_lineages_all %>% 
-    mutate(epi_week = epi_week %>% as.character %>% as.integer) %>% 
-    filter(epi_week >= 46) %>% 
-    pivot_wider(names_from = epi_week, values_from = percent_lineage, names_sort = TRUE, values_fill = 0, id_cols = c(variant, lineage))
+    complete(epi_week, nesting(variant), fill = list(n = 0, n_sequences_lineage = 0, percentage = 0)) %>%
+    mutate(epi_week = epi_week %>% as.character %>% as.integer)
+
+  first_occurrence <- antigenic_mutations_lineages %>% filter(n > 0) %$% min(epi_week)
+
+  antigenic_mutations_lineages %<>%
+    filter(epi_week >= first_occurrence) %>%
+    pivot_wider(names_from = epi_week, values_from = percentage, names_sort = TRUE, values_fill = 0, id_cols = variant) 
   
   antigenic_mutations_lineages
 }
