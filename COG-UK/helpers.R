@@ -1,9 +1,7 @@
 library(tidyverse)
 library(magrittr)
-
 library(ComplexHeatmap)
 library(circlize)
-
 library(Cairo)
 library(dendextend)
 library(seriation)
@@ -135,7 +133,7 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
                    Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
   
   mutations_s_uk %<>% 
-    filter(lineage == !!lineage & variant != defining)
+    filter(lineage == !!lineage & !(variant %in% !!defining))
   
   consortium_uk %<>% 
     filter(lineage == !!lineage)
@@ -176,6 +174,11 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
     filter(variant %in% escape_mutations) %>% 
     dplyr::count(variant, epi_week, sort = TRUE) %>% 
     bind_rows(del_22289_6)
+  
+  # no non-defining antigenic mutations in lineage
+  if(plyr::empty(antigenic_mutations)){
+    return(NULL)
+  }
   
   antigenic_mutations_lineages_all <- 
     inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 

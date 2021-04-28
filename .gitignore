@@ -16,3 +16,4 @@ cog.deletions.tsv
 *.pdf
 COG-UK/heatmap.png
 .Rproj.user
+*.numbers

@@ -228,18 +228,27 @@ dashboardPage(
                             
                             tabPanel("Figure 1",
                                      fluidRow(
-                                         column(width = 2, prettyRadioButtons(
-                                             inputId = "nation_antigenic",
-                                             label = "UK nation:",
-                                             choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"
-                                                         ),
-                                             inline = FALSE,
-                                             status = "info",
-                                             fill = TRUE,
-                                             selected = "UK"
-                                         )),
+                                         column(
+                                             width = 2,
+                                             prettyRadioButtons(
+                                                 inputId = "nation_antigenic",
+                                                 label = "UK nation:",
+                                                 choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"),
+                                                 inline = FALSE,
+                                                 status = "info",
+                                                 fill = TRUE,
+                                                 selected = "UK"
+                                             ),
+                                             
+                                             pickerInput(
+                                                 inputId = "lineage_antigenic",
+                                                 label = "Lineage:",
+                                                 choices = vui_voc %$% levels(lineage),
+                                                 selected = "B.1.1.7"
+                                             )
+                                         ), 
                                          column(width = 10,                                      
-                                                h4("Antigenic mutations on the top of B.1.1.7 defining mutations", class = "text-center"),
+                                                h4(textOutput("title_heatmap", inline = TRUE), class = "text-center"),
                                                 plotOutput("antibody_heatmap", height = "auto")))),
                             
                             tabPanel("Notes",                         

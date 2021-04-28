@@ -511,18 +511,41 @@ shinyServer(function(input, output, session) {
     values <- reactiveValues()
 
     observe({
-      values$antigenic <- 
-        antigenic_mutations_lineages(input$nation_antigenic) %>% 
-        antibody_complex_heatmap()
+      defining <- 
+        vui_voc %>% 
+        filter(lineage == input$lineage_antigenic) %$% 
+        mutation
+      
+      antigenic_mutations <- antigenic_mutations_lineages(nation = input$nation_antigenic, lineage = input$lineage_antigenic, defining = defining)
+      if(is.null(antigenic_mutations)){
+        values$antigenic <- NULL
+        values$antigenic_title <- str_c(input$lineage_antigenic, " (", input$nation_antigenic %>% str_replace_all("_", " "), ")", ": no antigenic mutations")
+      } else {
+        values$antigenic_title <- str_c("Antigenic mutations on the top of ", input$lineage_antigenic, " defining mutations (", 
+                                        input$nation_antigenic %>% str_replace_all("_", " "), ")")
+        values$antigenic <- 
+          antibody_complex_heatmap(antigenic_mutations)
+      }
+    })
+    
+    output$title_heatmap <- renderText({
+      values$antigenic_title
     })
     
     # Display antibody heatmap
     output$antibody_heatmap <- renderPlot({
-      draw(values$antigenic)
+      if(is.null(values$antigenic)){
+        ""  
+      } else {
+        draw(values$antigenic)
+      }
     }, height = function(){
-      # component_height(values$antigenic) %>% convertHeight("mm", valueOnly = TRUE) %>% max * 2.9 + 100
-      values$antigenic %>% nrow * 13 + 100
-      })
+      if(is.null(values$antigenic)){
+        1
+      } else {
+        values$antigenic %>% nrow * 13 + 100
+      }
+    })
     
     observeEvent(input$gene, {
       updateSelectInput(session, "position",
