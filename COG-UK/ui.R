@@ -74,7 +74,10 @@ dashboardPage(
         useShinyjs(), # set up the dashboard to use shinyjs  
         tags$head(
             tags$link(rel = "shortcut icon", href = "favicon.png"),
-            tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")),
+            tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+            includeHTML("google-analytics.html")
+        ),
+        
         tabItems(
             tabItem(tabName = "about",
                     fluidRow(

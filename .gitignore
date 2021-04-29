@@ -1,6 +1,5 @@
 .Rproj.user/*
 *.csv
-*.html
 .Rhistory
 *.dcf
 *.rds
@@ -17,3 +16,5 @@ cog.deletions.tsv
 COG-UK/heatmap.png
 .Rproj.user
 *.numbers
+mutations.nb.html
+dasboard.html

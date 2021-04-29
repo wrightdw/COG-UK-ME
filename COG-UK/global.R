@@ -3,7 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-04-28") #TODO derive from directory name
+dataset_date <- ymd("2021-04-29") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -47,9 +47,9 @@ lineages_t3 <-
     "P.2" = "Brazil. E484K and V1176F.",
     "P.3" = "The Philippines. 141-143del, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases 243-244del.",
     "B.1.617" = "India. G142D, E154K, L452R, E484Q, P681R and Q1071H.",
-    "B.1.617.1" = "",
-    "B.1.617.2" = "",
-    "B.1.617.3" = ""
+    "B.1.617.1" = "E154K, L452R, E484Q and P681R.",
+    "B.1.617.2" = "T19R, 156-158del, L452R, T478K, D614G, P681R and D950N.",
+    "B.1.617.3" = "T19R, 156-158del, L452R, E484Q, D614G, P681R and D950N."
     ) %>% 
   enframe("lineage", "reason")
 
