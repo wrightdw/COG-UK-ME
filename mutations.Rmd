@@ -2,9 +2,9 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  mutations_csv:    "cog_global_2021-04-28_mutations.csv"
-  global_csv:       "cog_global_2021-04-28_public.csv"
-  consortium_csv:   "cog_global_2021-04-28_consortium.csv"
+  mutations_csv:    "cog_global_2021-04-29_mutations.csv"
+  global_csv:       "cog_global_2021-04-29_public.csv"
+  consortium_csv:   "cog_global_2021-04-29_consortium.csv"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -1071,7 +1071,7 @@ database_logo %<>%
 database_logo %T>% write_rds("database_logo.rds")
 
 ```
-# VUI and VOC
+### VUI and VOC
 ```{r vui_voc}
 vui_voc <-
   read_csv("VUI and VOC.csv") %>% 
