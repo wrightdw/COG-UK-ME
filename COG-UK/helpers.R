@@ -25,18 +25,24 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     arrange(position, variant) %>% 
     mutate(across(domain, as_factor)) %>% 
     rename(confidence = support) %>% 
-    column_to_rownames("variant")
-
+    column_to_rownames("variant") 
+  
+  col_fun <- 
+    horz_heat %>% 
+    select(-(position:domain)) %>% 
+    unlist(use.names = FALSE) %>% 
+    quantile(na.rm = TRUE, probs = c(0, 0.1, 0.5, 0.978, 1)) %>% # calculate percentile at 10th, 50th, 97th 100th
+    colorRamp2(brewer.pal(5, "Greens")) # define colours for frequency
+  
   horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
   horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
   horz_heat$RBD3 <- ifelse(horz_heat$position %in% RBD3_class, TRUE, NA)
   horz_heat$RBD4 <- ifelse(horz_heat$position %in% RBD4_class, TRUE, NA)
   horz_heat$NTD.1 <- ifelse(horz_heat$position %in% NTD_class, TRUE, NA)
+
+  input <- data.matrix(horz_heat) 
   
-  input <- data.matrix(horz_heat)
-  
-  # define colour heatmap for frequency
-  col_fun = colorRamp2(c( 0, 0.015, 0.5, 2), c("white", "darkolivegreen1","darkolivegreen3","forestgreen"))
+  # col_fun = colorRamp2(c( 0, 0.015, 0.5, 2), c("white", "darkolivegreen1","darkolivegreen3","forestgreen"))
   
   # annotation row
   row_ha = rowAnnotation(
