@@ -6,6 +6,13 @@ library(Cairo)
 library(dendextend)
 library(seriation)
 library(magick)
+library(colorspace)
+
+# https://slowkow.com/notes/pheatmap-tutorial/#quantile-breaks
+quantile_breaks <- function(xs, n = 10) {
+  breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
+  breaks[!duplicated(breaks)]
+}
 
 antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   
@@ -27,13 +34,14 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     rename(confidence = support) %>% 
     column_to_rownames("variant") 
   
-  col_fun <- 
+  qb <<- 
     horz_heat %>% 
     select(-(position:domain)) %>% 
     unlist(use.names = FALSE) %>% 
-    quantile(na.rm = TRUE, probs = c(0, 0.1, 0.5, 0.978, 1)) %>% # calculate percentile at 10th, 50th, 97th 100th
-    colorRamp2(brewer.pal(5, "Greens")) # define colours for frequency
+    quantile_breaks(101) 
   
+  col_fun <- colorRamp2(qb, sequential_hcl(qb %>% length, palette = "Greens 3", rev = TRUE))
+    
   horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
   horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
   horz_heat$RBD3 <- ifelse(horz_heat$position %in% RBD3_class, TRUE, NA)
@@ -41,8 +49,6 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   horz_heat$NTD.1 <- ifelse(horz_heat$position %in% NTD_class, TRUE, NA)
 
   input <- data.matrix(horz_heat) 
-  
-  # col_fun = colorRamp2(c( 0, 0.015, 0.5, 2), c("white", "darkolivegreen1","darkolivegreen3","forestgreen"))
   
   # annotation row
   row_ha = rowAnnotation(
