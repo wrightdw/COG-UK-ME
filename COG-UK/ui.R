@@ -49,8 +49,7 @@ dashboardPage(
                 selected = "UK"
             ),
             
-            chooseSliderSkin("Modern"),
-            setSliderColor("#5bc0de", 1), # Bootstrap info colour
+            chooseSliderSkin("Modern", "#5bc0de"),
             sliderTextInput(
                 inputId = "epi_week",
                 label = "Epidemic week range:", 
@@ -314,9 +313,11 @@ dashboardPage(
                     ))),
             
             tabItem(tabName = "immunology",
-                    tabBox(
-                        title = "Antigenic Information", width = 12,
+                    h1("Antigenic Information"),
+                    tabsetPanel(
+                        # title = "Antigenic Information", width = 12,
                         id = "tabs_antigenic",
+                        type = "tabs",
                         tabPanel("Table 1", 
                                  value = "antibody",
                                  
@@ -365,10 +366,24 @@ dashboardPage(
                             title = "Table 2", 
                             value = "tcell",
                             h2("Spike protein gene mutations in T cell epitopes detected in the UK"),
-                            p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
-                            p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
-                            DTOutput("table_5"),
-                            br(),
+                            box(title = "Table 2", closable = FALSE, width = 12,
+                                status = "info", collapsible = FALSE, icon = icon("table"), 
+                                
+                                p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
+                                p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
+                                DTOutput("table_5")
+                            ),
+                            
+                            box(title = "T Cell Epitopes", closable = FALSE, width = 12,
+                                status = "info", collapsible = FALSE, icon = icon("disease"),
+                                
+                                sliderInput("epitope_position", "Position:",
+                                            min = 1, max = database_logo %>% ncol,
+                                            value = 614, step = 1),
+                                
+                                plotOutput("epitope_sequence")
+                            ),
+                            
                             fluidRow(
                                 column(width = 10, offset = 1,
                                        box(title = "Download Table 2", closable = FALSE, width = 12,

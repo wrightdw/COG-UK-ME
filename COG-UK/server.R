@@ -7,6 +7,7 @@ library(shinyWidgets)
 library(shinyjs)
 library(DT)
 library(ComplexHeatmap)
+library(ggseqlogo)
 
 source("helpers.R")
 
@@ -250,7 +251,6 @@ shinyServer(function(input, output, session) {
     })
     
     ######## Data download inputs ########
-    ## Table 1
     
     # Reactive value to generate downloadable table for selected table 1 mutation metadata
     datasetInput <- reactive({
@@ -557,5 +557,22 @@ shinyServer(function(input, output, session) {
     
     observeEvent(input$dataset,{
       toggleState("downloadData", input$dataset != "")
+    })
+    
+    output$epitope_sequence <- renderPlot({
+      epitopes_positions <- 
+        database_tcell_predictions %>% 
+        filter(`Start position` <= input$epitope_position & `End position` >= input$epitope_position) %>% 
+        distinct(Epitope, `Start position`, `End position`)
+      
+      if(nrow(epitopes_positions) > 0){
+        epitopes_positions %>% 
+          pmap(function(Epitope, `Start position`, `End position`) {
+            database_logo[,`Start position`:`End position`]
+          }) %>% purrr::set_names(epitopes_positions %$% str_c(Epitope, " ", `Start position`, ":", `End position`)) %>% 
+        ggseqlogo(method = "prob", ncol = 2)
+      } else {
+        ""
+      }
     })
 })
