@@ -34,7 +34,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     rename(confidence = support) %>% 
     column_to_rownames("variant") 
   
-  qb <<- 
+  qb <- 
     horz_heat %>% 
     select(-(position:domain)) %>% 
     unlist(use.names = FALSE) %>% 
