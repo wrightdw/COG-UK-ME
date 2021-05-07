@@ -6,6 +6,7 @@ library(shinydashboardPlus)
 library(shinyjs)
 library(formattable)
 library(plotly)
+library(magrittr)
 
 dashboardPage(
     title = "COG-UK Mutation Explorer",
@@ -36,8 +37,8 @@ dashboardPage(
             selectInput("position", "Position:", 
                         mutations_uk %>% distinct(position) %>% arrange(position), 
                         selected = "614", selectize = TRUE),
-            prettySwitch("percentage", "Percentage", FALSE, status = "info"),
-            prettySwitch("ref", "Wild type / other", TRUE,  status = "info"),
+            prettySwitch("percentage", "Percentage", FALSE, status = "info", fill = TRUE),
+            prettySwitch("ref", "Wild type / other", TRUE,  status = "info", fill = TRUE),
             
             prettyRadioButtons(
                 inputId = "nation",
@@ -367,7 +368,7 @@ dashboardPage(
                             value = "tcell",
                             h2("Spike protein gene mutations in T cell epitopes detected in the UK"),
                             box(title = "Table 2", closable = FALSE, width = 12,
-                                status = "info", collapsible = FALSE, icon = icon("table"), 
+                                status = "info", collapsible = FALSE, icon = icon("table"),   
                                 
                                 p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
                                 p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
@@ -377,9 +378,41 @@ dashboardPage(
                             box(title = "T Cell Epitopes", closable = FALSE, width = 12,
                                 status = "info", collapsible = FALSE, icon = icon("disease"),
                                 
+                                # sidebar = boxSidebar(
+                                #     id = "boxsidebar",
+                                #     width = 25,
+                                #     startOpen = TRUE,
+                                #     checkboxInput("somevalue", "Some value", FALSE)
+                                #     
+                                #     ),
+                                
                                 sliderInput("epitope_position", "Position:",
-                                            min = 1, max = database_logo %>% ncol,
+                                            min = 1, max = wt %$% max(position),
                                             value = 614, step = 1),
+                                
+                                switchInput(
+                                    inputId = "epitope_ref", 
+                                    label = "Ref AA", 
+                                    offLabel = "Exclude",
+                                    onLabel = "Include",
+                                    value = TRUE,  
+                                    onStatus = "success", 
+                                    offStatus = "danger",
+                                    inline = TRUE,
+                                    size = "large"
+                                ),
+                                
+                                switchInput(
+                                    inputId = "method",
+                                    offLabel = "Bits",
+                                    onLabel = "Probability",
+                                    value = TRUE,
+                                    label = "Method",
+                                    inline = TRUE,
+                                    onStatus = "info",
+                                    offStatus = "warning",
+                                    size = "large"
+                                ),
                                 
                                 plotOutput("epitope_sequence")
                             ),

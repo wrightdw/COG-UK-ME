@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-06"
+  dataset_date:     "2021-05-07"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -533,8 +533,14 @@ database %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database.rds"))
 ```
 # T cell epitopes
 ```{r tcell}
-tcell <- read_csv(params$tcell_csv)
-read_tsv(params$predictions_tsv) -> predictions
+tcell <- read_csv(params$tcell_csv,
+                  col_types = cols(
+                          `Start position` = col_integer(),
+                          `End position` = col_integer(),
+                          `Supporting references` = col_integer()
+                  ))
+
+predictions <- read_tsv(params$predictions_tsv) 
 
 predictions %<>%
   rename(
@@ -1040,11 +1046,6 @@ hm
 ```
 ### ggseqlogo
 ```{r ggseqlogo}
-database_logo <- 
-  database %>% 
-  mutate(WT = str_sub(mutation, 1, 1), AA = str_sub(mutation, -1), .after = mutation) %>% 
-  filter(`numSeqs UK` > 0) 
-
 wt <-
   mutation_reference_counts %>% 
   filter(gene == "S" & variant == "WT" & adm1 == "UK") %>%
@@ -1064,17 +1065,9 @@ spike_sequence <-
 wt %<>% 
   add_column(AA = spike_sequence) %>% 
   mutate(across(position, as.character)) %>% 
-  mutate(across(position, as.integer))
+  mutate(across(position, as.integer)) %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/wt.rds"))
 
-database_logo %<>%
-  select(position, AA, `numSeqs UK`) %>%
-  bind_rows(wt) %>% 
-  pivot_wider(names_from = position, values_from = `numSeqs UK`, values_fill = 0, names_sort = TRUE) %>%
-  arrange(AA) %>% 
-  column_to_rownames(var = "AA") %>% 
-  as.matrix
-
-database_logo %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_logo.rds"))
+wt %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/wt.rds"))
 ```
 ### VUI and VOC
 ```{r vui_voc}

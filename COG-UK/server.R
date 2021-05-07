@@ -560,6 +560,27 @@ shinyServer(function(input, output, session) {
     })
     
     output$epitope_sequence <- renderPlot({
+      if(!input$epitope_ref){
+        wt %<>% mutate(`numSeqs UK` = 0)
+      }
+      
+      if(input$method){
+        method = "prob"
+      } else {
+        method = "bits"
+      }
+      
+      database_logo <- 
+        database %>% 
+        mutate(WT = str_sub(mutation, 1, 1), AA = str_sub(mutation, -1), .after = mutation) %>% 
+        filter(`numSeqs UK` > 0) %>% 
+        select(position, AA, `numSeqs UK`) %>% 
+        bind_rows(wt) %>%
+        pivot_wider(names_from = position, values_from = `numSeqs UK`, values_fill = 0, names_sort = TRUE) %>%
+        arrange(AA) %>% 
+        column_to_rownames(var = "AA") %>% 
+        as.matrix
+      
       epitopes_positions <- 
         database_tcell_predictions %>% 
         filter(`Start position` <= input$epitope_position & `End position` >= input$epitope_position) %>% 
@@ -570,7 +591,7 @@ shinyServer(function(input, output, session) {
           pmap(function(Epitope, `Start position`, `End position`) {
             database_logo[,`Start position`:`End position`]
           }) %>% purrr::set_names(epitopes_positions %$% str_c(Epitope, " ", `Start position`, ":", `End position`)) %>% 
-        ggseqlogo(method = "prob", ncol = 2)
+        ggseqlogo(method = method, ncol = 2) # TODO separate reactive for method to update plot only
       } else {
         ""
       }
