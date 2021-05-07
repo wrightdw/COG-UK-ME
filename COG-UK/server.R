@@ -6,7 +6,7 @@ library(scales)
 library(shinyWidgets)
 library(shinyjs)
 library(DT)
-library(ComplexHeatmap)
+suppressPackageStartupMessages(library(ComplexHeatmap))
 library(ggseqlogo)
 
 source("helpers.R")
