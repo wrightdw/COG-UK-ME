@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-07"
+  dataset_date:     "2021-05-10"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -60,7 +60,7 @@ consortium_uk
 mutations <-   
   read_csv(mutations_csv, col_types = cols(.default = col_character())) %>% 
   type_convert %>% 
-  select(-lineages_version, -(t1001i:del_21765_6)) %>%
+  select(sequence_name, sample_date, lineage, mutations) %>% 
   distinct %>% # get rid of identical variant calls
   separate_rows(mutations, sep = '\\|') %>% 
   separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
@@ -1073,7 +1073,7 @@ wt %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/wt.rds"))
 ```{r vui_voc}
 vui_voc <-
   read_csv(params$vui_voc_csv) %>% 
-  filter(non_syn == "aa" & gene == "S") %>% 
+  filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
   select(-gene, -details_gene, -non_syn) %>% 
   mutate(across(lineage, as_factor)) %>% 
   mutate(across(lineage, ~fct_relevel(.x, sort)))
