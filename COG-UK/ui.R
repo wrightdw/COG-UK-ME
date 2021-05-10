@@ -378,14 +378,6 @@ dashboardPage(
                             box(title = "T Cell Epitopes", closable = FALSE, width = 12,
                                 status = "info", collapsible = FALSE, icon = icon("disease"),
                                 
-                                # sidebar = boxSidebar(
-                                #     id = "boxsidebar",
-                                #     width = 25,
-                                #     startOpen = TRUE,
-                                #     checkboxInput("somevalue", "Some value", FALSE)
-                                #     
-                                #     ),
-                                
                                 sliderInput("epitope_position", "Position:",
                                             min = 1, max = wt %$% max(position),
                                             value = 614, step = 1),
@@ -395,7 +387,7 @@ dashboardPage(
                                     label = "Ref AA", 
                                     offLabel = "Exclude",
                                     onLabel = "Include",
-                                    value = TRUE,  
+                                    value = FALSE,  
                                     onStatus = "success", 
                                     offStatus = "danger",
                                     inline = TRUE,
@@ -406,7 +398,7 @@ dashboardPage(
                                     inputId = "method",
                                     offLabel = "Bits",
                                     onLabel = "Probability",
-                                    value = TRUE,
+                                    value = FALSE,
                                     label = "Method",
                                     inline = TRUE,
                                     onStatus = "info",
@@ -495,7 +487,7 @@ dashboardPage(
             column(2, tags$a(img(src = "CVR.png", alt = "Centre for Virus Research logo", class = "img-responsive center-block footer-logo"), href="https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank")),
             column(2, tags$a(img(src = "cog-uk.svg", alt = "COG-UK Consortium logo", class = "img-responsive center-block footer-logo"), href="https://www.cogconsortium.uk", target = "_blank")),
             column(2, tags$a(img(src = "climb_big_data.png", alt = "CLIMB logo", class = "img-responsive center-block footer-logo"), href="https://www.climb.ac.uk/", target = "_blank")),
-            column(2, tags$a(img(src = "UOC.png", alt = "University of Cambridge logo", class = "img-responsive center-block footer-logo"), href="https://www.cam.ac.uk"))
+            column(2, tags$a(img(src = "University of Cambridge-colour.gif", alt = "University of Cambridge logo", class = "img-responsive center-block footer-logo"), href="https://www.cam.ac.uk"))
         )
     )
 )
