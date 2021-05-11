@@ -3,7 +3,9 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-dataset_date <- ymd("2021-05-10") #TODO derive from directory name
+source("helpers.R")
+
+dataset_date <- ymd("2021-05-11") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -44,10 +46,10 @@ lineages_t3 <-
     "B.1.1.28" = "The Philippines. Δ141-143, Δ243-244, E484K, N501Y, P681H, E1092K, H1101Y and V1176F.",
     
     "B.1.429" = "California, USA. D614G, G1251V, L452R, P26S, S13I, S1252C and W152C.",
-    # "B.1.324.1" = "UK associated variant. E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
+    "B.1.324.1" = "UK associated variant. E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
     "P.2" = "Brazil. E484K and V1176F.",
     "P.3" = "The Philippines. 141-143del, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases 243-244del.",
-    "B.1.617" = "India. G142D, E154K, L452R, E484Q, P681R and Q1071H.",
+    # "B.1.617" = "India. G142D, E154K, L452R, E484Q, P681R and Q1071H.",
     "B.1.617.1" = "E154K, L452R, E484Q and P681R.",
     "B.1.617.2" = "T19R, 156-158del, L452R, T478K, D614G, P681R and D950N.",
     "B.1.617.3" = "T19R, 156-158del, L452R, E484Q, D614G, P681R and D950N."
@@ -56,35 +58,17 @@ lineages_t3 <-
 
 lineages_t2 %<>% c(lineages_t3$lineage) %>% unique # combine table 2 and 3 lineages for counting
 
-# Construct a regular expression to match the sublineages of a lineage
-sublineage_regex <- function(lineage){
-  str_replace_all(lineage, "\\.", "\\\\\\.") %>% 
-    paste0("^", ., "\\.")
-}
+# TODO precompute and include lineage/mutation combinations
+n_uk_lineages_all <-
+  left_join(
+    sum_key_mutations_by_lineage_uk(lineages_t2),
+    sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>%
+      rename(n_sequences_28 = n_sequences)
+  ) %>% 
+  pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
+  mutate(across(everything(), ~replace_na(.x, 0L)))
 
-sum_key_mutations_uk <- function(..., date_from = NULL){
-  if(!is_null(date_from)){
-    date_from %<>% ymd()
-  }
-
-  if(is.Date(date_from)){
-    consortium_uk %<>% filter(sample_date >= date_from)
-  }
-  
-  consortium_uk %>%
-    group_by(...) %>%
-    summarise(sequences = n(),
-            D614G = sum(d614g == "G"),
-            A222V = sum(a222v == "V"),
-            N439K = sum(n439k == "K"),
-            N501Y = sum(n501y == "Y"),
-            Y453F = sum(y453f == "F"),
-            E484K = sum(e484k == "K"),
-            `∆69-70` = sum(del_21765_6 == "del"),
-            `N439K + ∆69-70` = sum(n439k == "K" & del_21765_6 == "del"),
-            `N501Y + ∆69-70` = sum(n501y == "Y" & del_21765_6 == "del"),
-            `Y453F + ∆69-70` = sum(y453f == "F" & del_21765_6 == "del"),
-            `N501Y + E484K` = sum(n501y == "Y" & e484k == "K"),
-            .groups = "keep"
-  )
-}
+# remove VOCs/VUIs with zero counts
+vui_voc %<>% 
+  semi_join(n_uk_lineages_all %>% filter(variant == "sequences" & n_sequences_UK > 0), by = "lineage") %>% 
+  mutate(lineage = fct_drop(lineage))

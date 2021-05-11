@@ -209,3 +209,64 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   
   antigenic_mutations_lineages
 }
+
+sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
+  if(is_character(lineages)){
+    n_nations_lineages <- sum_key_mutations_uk(lineage, adm1, date_from = date_from) # grouped by lineage, adm1
+    
+    n_uk_lineages <- 
+      n_nations_lineages %>% 
+      group_by(lineage) %>% 
+      summarise(across(sequences:`N501Y + E484K`, sum)) %>% 
+      mutate(adm1 = "UK", .after = lineage)
+    
+    n_uk_lineages_uk_nations <- bind_rows(n_nations_lineages, n_uk_lineages) # grouped by lineage, adm1
+    
+    lapply(lineages, function(x){
+      n_uk_lineages_uk_nations %>% 
+        when(
+          use_regex ~filter(., lineage == x | str_detect(lineage, sublineage_regex(x))),
+          ~filter(., lineage == x)
+        ) %>%
+        group_by(adm1) %>% 
+        select(-lineage) %>% 
+        summarise_all(funs(sum)) %>% #TODO replace deprecated funs
+        mutate(lineage = x, .before = 1)
+    }) %>% 
+      bind_rows() %>% 
+      gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
+  }
+}
+
+# Construct a regular expression to match the sublineages of a lineage
+sublineage_regex <- function(lineage){
+  str_replace_all(lineage, "\\.", "\\\\\\.") %>% 
+    paste0("^", ., "\\.")
+}
+
+sum_key_mutations_uk <- function(..., date_from = NULL){
+  if(!is_null(date_from)){
+    date_from %<>% ymd()
+  }
+  
+  if(is.Date(date_from)){
+    consortium_uk %<>% filter(sample_date >= date_from)
+  }
+  
+  consortium_uk %>%
+    group_by(...) %>%
+    summarise(sequences = n(),
+              D614G = sum(d614g == "G"),
+              A222V = sum(a222v == "V"),
+              N439K = sum(n439k == "K"),
+              N501Y = sum(n501y == "Y"),
+              Y453F = sum(y453f == "F"),
+              E484K = sum(e484k == "K"),
+              `∆69-70` = sum(del_21765_6 == "del"),
+              `N439K + ∆69-70` = sum(n439k == "K" & del_21765_6 == "del"),
+              `N501Y + ∆69-70` = sum(n501y == "Y" & del_21765_6 == "del"),
+              `Y453F + ∆69-70` = sum(y453f == "F" & del_21765_6 == "del"),
+              `N501Y + E484K` = sum(n501y == "Y" & e484k == "K"),
+              .groups = "keep"
+    )
+}

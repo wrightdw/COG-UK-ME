@@ -9,36 +9,6 @@ library(DT)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(ggseqlogo)
 
-source("helpers.R")
-
-sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
-  if(is_character(lineages)){
-    n_nations_lineages <- sum_key_mutations_uk(lineage, adm1, date_from = date_from) # grouped by lineage, adm1
-    
-    n_uk_lineages <- 
-      n_nations_lineages %>% 
-      group_by(lineage) %>% 
-      summarise(across(sequences:`N501Y + E484K`, sum)) %>% 
-      mutate(adm1 = "UK", .after = lineage)
-    
-    n_uk_lineages_uk_nations <- bind_rows(n_nations_lineages, n_uk_lineages) # grouped by lineage, adm1
-    
-    lapply(lineages, function(x){
-      n_uk_lineages_uk_nations %>% 
-        when(
-          use_regex ~filter(., lineage == x | str_detect(lineage, sublineage_regex(x))),
-          ~filter(., lineage == x)
-        ) %>%
-        group_by(adm1) %>% 
-        select(-lineage) %>% 
-        summarise_all(funs(sum)) %>% #TODO replace deprecated funs
-        mutate(lineage = x, .before = 1)
-    }) %>% 
-      bind_rows() %>% 
-      gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
-  }
-}
-
 lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
   mutations_s_uk_lv <- 
     mutations_s_uk %>%
@@ -230,16 +200,6 @@ table_5 = function(){
            `Fold difference` = Fold,
            DOI = doi)
 }
-
-# TODO precompute and include lineage/variant combinations
-n_uk_lineages_all <-
-  left_join(
-    sum_key_mutations_by_lineage_uk(lineages_t2),
-    sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>%
-      rename(n_sequences_28 = n_sequences)
-  ) %>% 
-  pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
-  mutate(across(everything(), ~replace_na(.x, 0L)))
 
 shinyServer(function(input, output, session) {
 
