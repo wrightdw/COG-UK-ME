@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-10"
+  dataset_date:     "2021-05-11"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -1079,6 +1079,10 @@ vui_voc <-
   mutate(across(lineage, ~fct_relevel(.x, sort)))
 
 vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
+```
+### VUI and VOC plot
+```{r lineages_plot}
+n_uk_lineages %>% select(lineage, sequences) %>% filter(lineage %in% unique(vui_voc$lineage))
 ```
 
 ### mydata
