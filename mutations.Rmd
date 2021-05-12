@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-11"
+  dataset_date:     "2021-05-12"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -572,15 +572,6 @@ container_html <- function(summary_var){
     as.character()
 }
 
-# tcell_summary <- 
-#   tcell %>% 
-#   group_by(Epitope, `Start position`, `End position`, CD4_CD8) %>% 
-#   summarise(HLA = HLA %>% unique %>% str_c(collapse = "<br>"),
-#             `Supporting references` = `Supporting references` %>% nested_html,
-#             References = Reference %>% nested_html,
-#             Assays = assay %>% nested_html,
-#             .groups = "drop")
-
 database_tcell <-
   database %>%
   select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
@@ -1069,21 +1060,7 @@ wt %<>%
 
 wt %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/wt.rds"))
 ```
-### VUI and VOC
-```{r vui_voc}
-vui_voc <-
-  read_csv(params$vui_voc_csv) %>% 
-  filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
-  select(-gene, -details_gene, -non_syn) %>% 
-  mutate(across(lineage, as_factor)) %>% 
-  mutate(across(lineage, ~fct_relevel(.x, sort)))
 
-vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
-```
-### VUI and VOC plot
-```{r lineages_plot}
-n_uk_lineages %>% select(lineage, sequences) %>% filter(lineage %in% unique(vui_voc$lineage))
-```
 
 ### mydata
 ```{r eval=FALSE, include=FALSE}
@@ -1107,3 +1084,38 @@ df <- names %>%
 df
 ```
 
+## VUI and VOC
+### VUI and VOC defining mutations
+```{r vui_voc}
+vui_voc <-
+  read_csv(params$vui_voc_csv) %>% 
+  filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
+  select(-gene, -details_gene, -non_syn) %>% 
+  mutate(across(lineage, as_factor)) %>% 
+  mutate(across(lineage, ~fct_relevel(.x, sort)))
+
+vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
+```
+### VUI and VOC plot
+```{r lineages_plot}
+lineages_weeks_nations <- 
+  consortium_uk %>% dplyr::count(lineage, epi_week, adm1)
+
+lineages_weeks_uk <-
+  lineages_weeks_nations %>% 
+  group_by(lineage, epi_week) %>% 
+  summarise(across(n, sum), .groups = "drop") %>% 
+  mutate(adm1 = "UK", .after = epi_week) %>% 
+  bind_rows(lineages_weeks_nations) %>% 
+  arrange(lineage, adm1, epi_week)
+    
+lineages_weeks_uk
+
+lineages_weeks_uk %>%
+  filter(adm1 == "UK" & lineage %in% levels(vui_voc$lineage) & lineage != "B.1.1.7") %>%
+  ggplot(aes(x=epi_week, y=n, group=lineage, color=lineage)) + 
+  geom_line() + 
+  geom_point() +
+  scale_x_discrete(drop = FALSE) + # include all epi_week factor levels
+  theme_classic()
+```
