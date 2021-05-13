@@ -493,11 +493,12 @@ shinyServer(function(input, output, session) {
     })
     
     # Display antibody heatmap
+    # TODO plot caching
     output$antibody_heatmap <- renderPlot({
       if(is.null(values$antigenic)){
         ""  
       } else {
-        draw(values$antigenic)
+        draw(values$antigenic) 
       }
     }, height = function(){
       if(is.null(values$antigenic)){
