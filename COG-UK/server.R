@@ -9,6 +9,18 @@ library(DT)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(ggseqlogo)
 
+lineages_weeks_uk <- 
+  consortium_uk %>%
+  filter((lineage != "B.1.1.7" & lineage %in% levels(vui_voc$lineage)) | (lineage == "B.1.1.7" & e484k == "K")) %>% 
+  mutate(lineage = recode(lineage, B.1.1.7 = "B.1.1.7 with E484K")) %>% 
+  dplyr::count(lineage, epi_week) %>% 
+  mutate(epi_week = fct_drop(epi_week, only = {.} %$% 
+                               levels(epi_week) %>% 
+                               as.integer %>% 
+                               keep(~ .x < epi_week %>% as.character %>% as.integer %>% min) 
+  )) %>%  # drop filtered epi_weeks to exclude from x-axis
+  rename(`Epidemic week` = epi_week, Sequences = n, Lineage = lineage)
+
 lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
   mutations_s_uk_lv <- 
     mutations_s_uk %>%
@@ -556,5 +568,17 @@ shinyServer(function(input, output, session) {
       } else {
         ""
       }
+    })
+    
+    output$variant_time <- renderPlotly({
+      ggplotly(
+        lineages_weeks_uk %>%
+          ggplot(aes(x = `Epidemic week`, y = Sequences, group = Lineage, color = Lineage)) + 
+          geom_line() + 
+          geom_point() +
+          scale_x_discrete(drop = FALSE) + # include all epi_week factor levels
+          theme_classic(),
+        tooltip = c("x","y","colour")
+      )
     })
 })

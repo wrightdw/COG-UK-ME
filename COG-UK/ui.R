@@ -50,7 +50,7 @@ dashboardPage(
                 selected = "UK"
             ),
             
-            chooseSliderSkin("Modern", "#5bc0de"),
+            chooseSliderSkin("Modern", "#5bc0de"), # Bootstrap info colour
             sliderTextInput(
                 inputId = "epi_week",
                 label = "Epidemic week range:", 
@@ -106,92 +106,99 @@ dashboardPage(
                           "Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.", .noWS = c("after-begin", "before-end"))
                     )),
             tabItem(tabName = "report",
-                    fluidRow(
                         h1("COG-UK / Mutation Explorer"),
-                        h3("Latest UK sequence:", max(consortium_uk$sample_date) %>% format("%A %d %B %Y")),
+                    
+                        fluidRow(
+                            infoBox("Latest UK Sequence", max(consortium_uk$sample_date) %>% format("%A %d %B %Y"), icon = icon("calendar")),
+                            infoBox("Data Compiled on", dataset_date %>% format("%A %d %B %Y"), icon = icon("calendar-day"), color = "light-blue"),
+                            infoBox("UK Genomes", total_sequences %>% comma(format = "d"), icon = icon("virus"), color = "teal")
+                        ),
                         
-                        tabBox(
-                            title = "Analysis", width = 12,
+                        tabsetPanel(
                             id = "tabs_report",
+                            type = "tabs",
                             tabPanel("Table 1",
-                                     fluidRow(
-                                         column(
-                                             width = 12, 
-                                             h2("1. Spike gene mutations"),
-                                             p("Individual amino acid replacements detected in UK genomes are shown in Table 1 (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
-                                             p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
-                                             dataTableOutput("table_1"),
-                                             br()
-                                         )
-                                     ),
+                                     h2("Spike gene mutations"),
+                                     box(title = "Mutational Analysis: Table 1", closable = FALSE, width = 12,
+                                         status = "info", collapsible = FALSE, icon = icon("table"),   
+                                         
+                                         p("Individual amino acid replacements detected in UK genomes are shown in Table 1 (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
+                                         p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
+                                         dataTableOutput("table_1")
+                                     ), # end box
                                      
-                                     fluidRow(
-                                         column(width = 12,
-                                                box(title = "Download Metadata", closable = FALSE, width = 6, height = 500,
-                                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                                    fluidRow(
-                                                        column(
-                                                            width = 8,
-                                                            p("Download a CSV file, for each amino acid replacement in table 1, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
-                                                        ),
-                                                        
-                                                        (function() { 
-                                                            database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
-                                                            
-                                                            column(
-                                                                width = 4, 
-                                                                selectizeInput(
-                                                                    inputId = "dataset", 
-                                                                    label = "Choose amino acid replacement:",
-                                                                    choices = database$mutation, 
-                                                                    options = list(dropdownParent = 'body') # prevent dropdown opening behind footer
-                                                                ),
-                                                                downloadButton("downloadData", "Download", class = "btn-info"))
-                                                        })()
-                                                    ) 
-                                                ), 
-                                                
-                                                box(title = "Download Table 1", closable = FALSE, width = 6, height = 500,
-                                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                                    fluidRow(
-                                                        column(
-                                                            width = 8,
-                                                            p("Download a CSV file comprising complete table 1 data.")
-                                                        ),
-                                                        
-                                                        column(
-                                                            width = 4, 
-                                                            downloadButton("downloadTable1", "Download", class = "btn-info"))
-                                                    )
-                                                )
+                                     box(title = "Download Metadata", closable = FALSE, width = 6, height = 500,
+                                         status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                         fluidRow(
+                                             column(
+                                                 width = 8,
+                                                 p("Download a CSV file, for each amino acid replacement in table 1, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
+                                             ),
+                                             
+                                             (function() { 
+                                                 database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
+                                                 
+                                                 column(
+                                                     width = 4, 
+                                                     selectizeInput(
+                                                         inputId = "dataset", 
+                                                         label = "Choose amino acid replacement:",
+                                                         choices = database$mutation, 
+                                                         options = list(dropdownParent = 'body') # prevent dropdown opening behind footer
+                                                     ),
+                                                     downloadButton("downloadData", "Download", class = "btn-info"))
+                                             })()
+                                         ) 
+                                     ), 
+                                     
+                                     box(title = "Download Table 1", closable = FALSE, width = 6, height = 500,
+                                         status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                         fluidRow(
+                                             column(
+                                                 width = 8,
+                                                 p("Download a CSV file comprising complete table 1 data.")
+                                             ),
+                                             
+                                             column(
+                                                 width = 4, 
+                                                 downloadButton("downloadTable1", "Download", class = "btn-info"))
                                          )
                                      )
                             ),
                             
                             tabPanel("Table 2", 
-                                     h2("2. Spike gene mutations of potential importance"),
-                                     p("Single spike gene mutations of potential or clinical and public health importance, based on
+                                     h2("Spike gene mutations of potential importance"),
+                                     box(title = "Mutational Analysis: Table 2", closable = FALSE, width = 12,
+                                         status = "info", collapsible = FALSE, icon = icon("table"),   
+                                         p("Single spike gene mutations of potential or clinical and public health importance, based on
                                  current evidence, are listed in Table 2."),
-                                 p(strong("Caveat:"), "the table aims to provide information on individual mutations, but this is rapidly
-                                 becoming an over-simplification because mutations are increasingly arising in a
-                                 range of combinations."),
-                                 p(em("NB Numbers are lower than in Table 1 because Table 2 only considers specific lineages.")),
-                                 dataTableOutput("table_2")
+                                         p(strong("Caveat:"), "the table aims to provide information on individual mutations, but this is rapidly
+                                         becoming an over-simplification because mutations are increasingly arising in a
+                                         range of combinations."),
+                                         p(em("NB Numbers are lower than in Table 1 because Table 2 only considers specific lineages.")),
+                                         dataTableOutput("table_2")
+                                     )
                             ), 
                             
                             tabPanel("Table 3", 
-                                     h2("3. Variants of interest detected in the UK"),
+                                     h2("Variants of interest detected in the UK"),
+                                     fluidRow(
+                                         box(title = "Mutational Analysis: Table 3", closable = FALSE, width = 12,
+                                             status = "info", collapsible = FALSE, icon = icon("table"),                                                
+                                             dataTableOutput("table_3")
+                                         )
+                                     ),
                                      
                                      fluidRow(
-                                         column(width = 12,
-                                                dataTableOutput("table_3"),
-                                                br()
+                                         box(title = "Variants over Time", closable = FALSE, width = 12,
+                                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
+                                             plotlyOutput("variant_time", height = "50vh")    
                                          )
                                      ),
                                      
                                      fluidRow(
                                          column(width = 6, 
-                                                box(title = "Download Metadata", closable = FALSE, width = 12, 
+                                                box(title = "Download Metadata", closable = FALSE, width = NULL, 
                                                     status = "info", collapsible = FALSE, icon = icon("file-download"),
                                                     p("Download a CSV file, for each variant in table 3, containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
                                                     selectizeInput("concern", "Choose lineage:",
@@ -203,15 +210,17 @@ dashboardPage(
                                                                    ) %>% sort),
                                                     downloadButton("downloadConcern", "Download", class = "btn-info")),
                                                 
-                                                    box(title = "Download Table 3", closable = FALSE, width = 12, 
+                                                    box(title = "Download Table 3", closable = FALSE, width = NULL, 
                                                         status = "info", collapsible = FALSE, icon = icon("file-download"), 
                                                                 p("Download a CSV file comprising complete table 3 data."),
                                                                 downloadButton("downloadTable3", "Download", class = "btn-info"))
                                                 ),
+                                         
                                          column(width = 6,
-                                                box(title = "Spike Protein Structure (B.1.1.7)", closable = FALSE, width = 12, 
+                                                box(title = "Spike Protein Structure (B.1.1.7)", closable = FALSE, width = NULL, 
                                                     status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                                    img(src = "structure.png", class = "center-block img-responsive")))
+                                                    img(src = "structure.png", class = "center-block img-responsive"))
+                                                )
                                      ),
                                      
                                      fluidRow(
@@ -300,7 +309,6 @@ dashboardPage(
                                     )
                             )
                         ) # end tabBox
-                    ) # end fluidRow
             ), # end tabItem
             
             tabItem(tabName = "dashboard",
@@ -316,16 +324,14 @@ dashboardPage(
             tabItem(tabName = "immunology",
                     h1("Antigenic Information"),
                     tabsetPanel(
-                        # title = "Antigenic Information", width = 12,
                         id = "tabs_antigenic",
                         type = "tabs",
                         tabPanel("Table 1", 
                                  value = "antibody",
+                                 h2("Spike protein gene mutations of potential immunogenic significance detected in the UK"),
                                  
-                                 fluidRow(
-                                     column(
-                                         width = 12,
-                                         h2("Spike protein gene mutations of potential immunogenic significance detected in the UK"),
+                                 box(title = "Antigenic Information: Table 1", closable = FALSE, width = 12,
+                                     status = "info", collapsible = FALSE, icon = icon("table"), 
                                          p('The table lists those mutations in the spike gene identified in the UK dataset that have been
                                          associated with weaker neutralisation of the virus by convalescent plasma from people who
                                          have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
@@ -333,41 +339,39 @@ dashboardPage(
                                          p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
                                          vaccines or the immune response to natural SARS-CoV-2 infection.")),
                                          
-                                         DTOutput("table_4"),
-                                         br(),
+                                         DTOutput("table_4")
+                                 ), # end box
                                          
-                                         box(title = "Download Data", closable = FALSE, width = 12, height = 500,
-                                             status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                             fluidRow(
-                                                 column(
-                                                     width = 6,
-                                                     p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage.
-                                                Cumulative UK sequences are filtered by the selected amino acid replacement.")
-                                                 ),
-                                                
-                                                column(
-                                                    width = 6, 
-                                                    selectizeInput("selectEscape", "Choose amino acid replacement:",
-                                                                   choices = database %>% 
-                                                                       filter(!is.na(escape)) %>% 
-                                                                       filter(`numSeqs UK` > 0) %>% 
-                                                                       arrange(desc(`numSeqs UK`), mutation) %$% 
-                                                                       mutation, 
-                                                                   options = list(dropdownParent = 'body')), # prevent dropdown opening behind footer
-                                                    
-                                                    downloadButton("downloadEscape", "Download", class = "btn-info")
-                                                )
-                                             ) # end fluidRow
-                                         ) # end box
-                                     ) # end column
-                                 ), # end fluidRow
+                                 box(title = "Download Data", closable = FALSE, width = 12, height = 500,
+                                     status = "info", collapsible = FALSE, icon = icon("file-download"),
+                                     fluidRow(
+                                         column(
+                                             width = 6,
+                                             p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage.
+                                        Cumulative UK sequences are filtered by the selected amino acid replacement.")
+                                         ),
+                                        
+                                        column(
+                                            width = 6, 
+                                            selectizeInput("selectEscape", "Choose amino acid replacement:",
+                                                           choices = database %>% 
+                                                               filter(!is.na(escape)) %>% 
+                                                               filter(`numSeqs UK` > 0) %>% 
+                                                               arrange(desc(`numSeqs UK`), mutation) %$% 
+                                                               mutation, 
+                                                           options = list(dropdownParent = 'body')), # prevent dropdown opening behind footer
+                                            
+                                            downloadButton("downloadEscape", "Download", class = "btn-info")
+                                        )
+                                     ) # end fluidRow
+                                 ) # end box
                         ), # end tabPanel
                         
                         tabPanel(
                             title = "Table 2", 
                             value = "tcell",
                             h2("Spike protein gene mutations in T cell epitopes detected in the UK"),
-                            box(title = "Table 2", closable = FALSE, width = 12,
+                            box(title = "Antigenic Information: Table 2", closable = FALSE, width = 12,
                                 status = "info", collapsible = FALSE, icon = icon("table"),   
                                 
                                 p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
