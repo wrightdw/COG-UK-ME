@@ -1,0 +1,1132 @@
+params <-
+list(dataset_date = "2021-05-15", spike_csv = "spike_escape_info.csv", 
+    spike_extra_csv = "spike_escape_extra.csv", tcell_csv = "tcell_long.csv", 
+    deletions_tsv = "cog.deletions.tsv", predictions_tsv = "Prediction_from_Morten.txt", 
+    spike_fasta = "sequence.fasta", vui_voc_csv = "VUI and VOC.csv")
+
+#' ---
+#' title:  "COG-UK Mutations"
+#' output: html_notebook
+#' params: 
+#'   dataset_date:     "2021-05-15"
+#'   spike_csv:        "spike_escape_info.csv"
+#'   spike_extra_csv:  "spike_escape_extra.csv"
+#'   tcell_csv:        "tcell_long.csv"
+#'   deletions_tsv:    "cog.deletions.tsv"
+#'   predictions_tsv:  "Prediction_from_Morten.txt"
+#'   spike_fasta:      "sequence.fasta"
+#'   vui_voc_csv:      "VUI and VOC.csv"
+#' ---
+## ----libs-----------------------------------------------------------------------------------------------
+library(tidyverse)
+library(magrittr)
+library(wesanderson)
+library(RColorBrewer)
+library(lubridate)
+library(fuzzyjoin)
+library(htmltools)
+# also require seqinr
+
+## ----files----------------------------------------------------------------------------------------------
+mutations_csv <- str_c("cog_global_", params$dataset_date, "_mutations.csv")
+global_csv <- str_c("cog_global_", params$dataset_date, "_public.csv")
+consortium_csv <- str_c("cog_global_", params$dataset_date, "_consortium.csv")
+
+dir.create(str_c("COG-UK/", params$dataset_date))
+
+#' 
+#' ## Consortium
+## ----consortium_read------------------------------------------------------------------------------------
+consortium_uk <- 
+  read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
+  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
+         -mutations, -lineages_version
+         ) %>% # remove unused columns
+  type_convert %>% 
+  filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
+  select(-country) %>% 
+  distinct # remove duplicates
+
+epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
+
+consortium_uk %<>% 
+  mutate(across(c(epi_week, adm1), as_factor)) %>%
+  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
+  write_rds(str_c("COG-UK/", params$dataset_date, "/consortium_uk.rds"))
+
+sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
+
+consortium_uk
+
+#' 
+#' ## Mutations
+## ----read-----------------------------------------------------------------------------------------------
+mutations <-   
+  read_csv(mutations_csv, col_types = cols(.default = col_character())) %>% 
+  select(sequence_name, sample_date, lineage, mutations) %>% 
+  type_convert %>% 
+  distinct %>% # get rid of identical variant calls
+  separate_rows(mutations, sep = '\\|') %>% 
+  separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
+  drop_na() %>%
+  filter(gene != "synSNP") %>%
+  mutate(position = parse_number(variant))
+
+public <- 
+  read_csv(global_csv, col_types = cols(.default = col_character())) %>% 
+  select(-cog_id, -gisaid_id, -(pillar_2:travel_history), -lineage_support,
+         -lineages_version
+         ) %>% 
+  type_convert %>% 
+  distinct # remove duplicates
+
+mutations %<>% inner_join(public)
+
+mutations_uk <- 
+  mutations %>%
+  filter(country == "UK" & !is.na(adm1)) %>% 
+  select(-country) %>% 
+  mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
+  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %>% 
+  semi_join(consortium_uk, by = c("sequence_name", "sample_date", "lineage", "epi_week")) %T>%  # exclude Crown dependencies and British Overseas Territories
+  write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
+
+mutations_uk
+
+#' 
+#' ## Mutation / REF counts
+## -------------------------------------------------------------------------------------------------------
+#### UK ### 
+# TODO calculate UK counts by summing nation counts
+genes_positions <- 
+  mutations_uk %>% 
+  distinct(gene, position) # gene / position combinations actually found in mutations
+
+sequences_by_week <- 
+  consortium_uk %>% 
+  dplyr::count(epi_week, name = "n_sequences")
+
+positions_by_week <- 
+  mutations_uk %>%
+  dplyr::count(epi_week, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
+
+reference_counts <- 
+  positions_by_week %>%
+  inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
+  inner_join(sequences_by_week) %>% 
+  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
+  filter(n > 0) %>%  # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
+  mutate(adm1 = "UK")
+
+mutation_counts <- 
+  mutations_uk %>%
+  dplyr::count(epi_week, gene, position, variant) %>% 
+  mutate(adm1 = "UK")
+
+#### Nations ####
+levels_adm1 <- c(Scotland = "UK-SCT",
+                 Wales = "UK-WLS", 
+                 England = "UK-ENG", 
+                 Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
+
+sequences_by_week_nations <-
+  consortium_uk %>%
+  dplyr::count(epi_week, adm1, name = "n_sequences")
+
+positions_by_week_nations <-
+  mutations_uk %>%
+  mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
+  dplyr::count(epi_week, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
+
+reference_counts_nations <- 
+  positions_by_week_nations %>%
+  inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
+  inner_join(sequences_by_week_nations) %>% 
+  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
+  filter(n > 0) # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
+
+mutation_counts_nations <- 
+  mutations_uk %>%
+  mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
+  dplyr::count(epi_week, gene, position, variant, adm1)
+
+# TODO calculate UK counts by summing the nation counts
+mutation_reference_counts <- 
+  bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %>% 
+  mutate(across(variant, as_factor)) %T>%
+  write_rds(str_c("COG-UK/", params$dataset_date, "/mutation_reference_counts.rds"))
+
+mutation_reference_counts
+
+#' ### Total sequences per epidemic week
+## ----consortium_counts, eval=FALSE, include=FALSE-------------------------------------------------------
+## n_uk <-
+##   consortium_uk %>%
+##   # filter(sample_date >= 2020-11-13) %>%
+##   # filter(epi_week < 50) %>%
+##   group_by(epi_week) %>%
+##   summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"),
+##             N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del")) #%>%
+##             # mutate_at(vars(D614G:DEL_69_70), cumsum) # cumulative counts
+##             # mutate_at(vars(sequences:DEL_69_70), cumsum) # cumulative counts to normalise against cumulative sequences
+## 
+## n_uk
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk %>%
+##   select(-epi_week) %>%
+##   summarise_all(funs(sum))
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_28 <-
+##   consortium_uk %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   group_by(epi_week) %>%
+##   summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"),
+##             N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del"))
+## n_uk_28
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_28 %>%
+##   select(-epi_week) %>%
+##   summarise_all(funs(sum))
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## theme_set(theme_classic() + theme(legend.position = "none"))
+## 
+## pal <- wes_palette("Cavalcanti1", type = "discrete")
+## update_geom_defaults("point", list(color = pal[1]))
+## update_geom_defaults("line", list(color = pal[1]))
+## 
+##  ggplot(n_uk, aes(x = epi_week, y = sequences)) +
+##   geom_line() + geom_point() + labs(x = "Epidemic week", y = "Sequences", title = "Sequences per Week")
+## 
+##  ggsave("Sequences.png")
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## pal <- brewer.pal(n = 5, name = "Set1")
+## update_geom_defaults("point", list(color = pal[2]))
+## update_geom_defaults("line", list(color = pal[2]))
+## 
+##  ggplot(n_uk, aes(x = epi_week, y = D614G / sequences)) +
+##   geom_line() + geom_point() + labs(x = "Epidemic week", y = "D614G (normalised)", title = "D614G") + ylim(0,1)
+##  ggsave("D614G.png")
+## 
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## update_geom_defaults("point", list(color = pal[1]))
+## update_geom_defaults("line", list(color = pal[1]))
+## 
+##  ggplot(n_uk, aes(x = epi_week, y = A222V / sequences)) +
+##   geom_line() + geom_point() + labs(x = "Epidemic week", y = "A222V (normalised)", title = "A222V") + ylim(0,1)
+##  ggsave("A222V.png")
+## 
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## update_geom_defaults("point", list(color = pal[4]))
+## update_geom_defaults("line", list(color = pal[4]))
+## 
+##  ggplot(n_uk, aes(x = epi_week, y = N439K / sequences)) +
+##   geom_line() + geom_point() + labs(x = "Epidemic week", y = "N439K (normalised)", title = "N439K") + ylim(0,1)
+##  ggsave("N439K.png")
+## 
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## update_geom_defaults("point", list(color = pal[5]))
+## update_geom_defaults("line", list(color = pal[5]))
+## 
+##  ggplot(n_uk, aes(x = epi_week, y = N501Y / sequences)) +
+##   geom_line() + geom_point() + labs(x = "Epidemic week", y = "N501Y (normalised)", title = "N501Y") + ylim(0,1)
+##  ggsave("N501Y.png")
+## 
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## update_geom_defaults("point", list(color = pal[3]))
+## update_geom_defaults("line", list(color = pal[3]))
+## 
+##  ggplot(n_uk, aes(x = epi_week, y = DEL_69_70 / sequences)) +
+##   geom_line() + geom_point() + labs(x = "Epidemic week", y = "Deletion 69-70 (normalised)", title = "Deletion 69-70") + ylim(0,1)
+## ggsave("DEL_69_70.png")
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_long <-
+##   n_uk %>%
+##   select(-c(sequences, D614G)) %>%
+##   gather(key = "variant", value = "seq_raw", -epi_week)
+## n_uk_long
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_long_norm <-
+##   n_uk %>%
+##   mutate_at(vars(D614G:DEL_69_70), funs((. / sequences) * 100)) %>%
+##   select(-c(sequences, D614G)) %>%
+##   gather(key = "variant", value = "seq_norm", -epi_week)
+## n_uk_long_norm
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## theme_set(theme_classic())
+## n_uk_long %>%
+##   ggplot(aes(x = epi_week, y = seq_raw)) +
+##   geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
+##   labs(x = "Epidemic week", y = "Sequences", title = "Variant Viral Sequences per Week")  +
+##   # ylim(0,100) +
+##   theme(legend.title = element_blank()) + scale_color_manual(values = pal)
+## ggsave("variants_overlay.png")
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## theme_set(theme_classic())
+## n_uk_long_norm %>%
+## ggplot(aes(x = epi_week, y = seq_norm)) +
+##   geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
+##   labs(x = "Epidemic week", y = "% Sequences (normalised)", title = "Variant Viral Sequences per Week (Normalised)")  +
+##   # ylim(0,100) +
+##   theme(legend.title = element_blank()) + scale_color_manual(values = pal)
+## ggsave("variants_overlay_norm.png")
+
+#' 
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## consortium_uk %>%
+##   dplyr::count(n501y, del_21765_6)
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## consortium_uk %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   dplyr::count(n501y, del_21765_6)
+## 
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## consortium_uk %>%
+##   dplyr::count(n439k, del_21765_6)
+## 
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## consortium_uk %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   dplyr::count(n439k, del_21765_6)
+## 
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## 
+## consortium_uk %>%
+##   filter(n501y == "Y" & del_21765_6 == "del")  %>%
+##   dplyr::count(lineage) %>%
+##   arrange(desc(n))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## 
+## consortium_uk %>%
+##   filter(sample_date >= sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>%
+##   dplyr::count(lineage) %>%
+##   arrange(desc(n))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## consortium_uk %>%
+##   filter(n439k == "K" & del_21765_6 == "del")  %>%
+##   dplyr::count(lineage) %>%
+##   arrange(desc(n))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## 
+## consortium_uk %>%
+##   filter(sample_date >= sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>%
+##   dplyr::count(lineage) %>%
+##   arrange(desc(n))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations %>%
+##   filter(country == "UK" & gene == "S") %>%
+##   summarise(n(), n_distinct(sequence_name))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations %>% filter(country == "UK" & gene == "S") %>%
+##   dplyr::count(variant) %>%
+##   filter(n >1) %>%
+##   summarise(sum(n))
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations %>%
+##   filter(country == "UK" & gene == "S") %>%
+##   dplyr::count(variant) %>% filter(n >100) %>%
+##   summarise(sum(n))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+##  # awk '/S:P681H/
+##  #  && /S:N501Y/
+##  #   && /orf1ab:T1001I/
+##  #   && /orf1ab:A1708D/
+##  #   && /orf1ab:I2230T/
+##  #   && /S:A570D/
+##  #   && /S:T716I/
+##  #   && /S:S982A/
+##  #   && /S:D1118H/
+##  #   && /ORF8:Q27*/
+##  #   && /ORF8:R52I/
+##  #   && /ORF8:Y73C/
+##  #   && /N:D3L/
+##  #   && /N:S235F/ { print;}' /cephfs/covid/bham/results/phylogenetics/20201215/metadata/cog_global_2020-12-20_mutations.csv
+##  #
+## 
+##  # awk '/S:P681H/  && /S:N501Y/ && /orf1ab:T1001I/   && /orf1ab:A1708D/   && /orf1ab:I2230T/   && /S:A570D/   && /S:T716I/   && /S:S982A/   && /S:D1118H/ && /ORF8:Q27*/   && /ORF8:R52I/   && /ORF8:Y73C/   && /N:D3L/   && /N:S235F/ { print;}' cog_global_2020-12-20_mutations.csv
+##  #
+##  #
+##  #  awk '/S:P681H/  && /S:N501Y/ && /orf1ab:T1001I/   && /orf1ab:A1708D/   && /orf1ab:I2230T/   && /S:A570D/   && /S:T716I/   && /S:S982A/   && /S:D1118H/ && /ORF8:Q27*/   && /ORF8:R52I/   && /ORF8:Y73C/   && /N:D3L/   && /N:S235F/ { print;}' cog_global_2020-12-21_mutations.csv > mutations_v_020-12-21.csv
+## 
+## 
+## mutations_v <- mutations %>% filter(country == "UK" & lineage == "B.1.1.7"
+##                      & sample_date >= "2020-11-24"
+##                      & (
+##   (gene == "S" & variant == "P681H") |
+##   (gene == "S" & variant == "N501Y") |
+##   (gene == "orf1ab" & variant == "T1001I") |
+##   (gene == "orf1ab" & variant == "A1708D") |
+##   (gene == "orf1ab" & variant == "I2230T") |
+##   (gene == "S" & variant == "A570D") |
+##   (gene == "S" & variant == "T716I") |
+##   (gene == "S" & variant == "S982A") |
+##   (gene == "S" & variant == "D1118H") |
+##   (gene == "ORF8" & variant == "Q27*") |
+##   (gene == "ORF8" & variant == "R52I") |
+##   (gene == "ORF8" & variant == "Y73C") |
+##   (gene == "N" & variant == "D3L") |
+##   (gene == "N" & variant == "S235F")
+##   )) %>% dplyr::count(sequence_name, lineage) %>% filter(n == 14) #%>% select(-n)
+## 
+## mutations_v
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations %>% filter(country == "UK"
+##                      # & sample_date >= "2020-11-13"
+##                      & (
+##   (gene == "S" & variant == "K417N") |
+##   (gene == "S" & variant == "E484K") |
+##   (gene == "S" & variant == "N501Y")
+##   )) %>% dplyr::count(sequence_name) %>% filter(n == 3)
+## 
+## 
+
+## ----cluster5, eval=FALSE, include=FALSE----------------------------------------------------------------
+## # Cluster 5 is Y453F, 69-70del, I692V and M1229I
+## #
+## mutations %>% filter(country == "UK"
+##                      # & sample_date >= "2020-11-13"
+##                      & (
+##   (gene == "S" && variant == "Y453F") |
+##   (gene == "S" & variant == "I692V") |
+##   (gene == "S" & variant == "M1229I")
+##   )) %>% dplyr::count(sequence_name) %>% filter(n == 3)
+## 
+## 
+
+#' 
+#' # Deletions
+## ----deletions------------------------------------------------------------------------------------------
+deletions <- 
+  read_tsv(params$deletions_tsv) %>% 
+  separate_rows(samples, sep = '\\|')
+
+deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
+
+#' ## Database
+## ----database-------------------------------------------------------------------------------------------
+mutations_s_uk <- 
+  mutations_uk %>% 
+  filter(gene == "S") %>% 
+  mutate(across(c(variant, position), fct_drop))
+
+lineage_distinct <- 
+  mutations_s_uk %>% 
+  group_by(position, variant) %>% 
+  summarise(n_lineages = n_distinct(lineage), .groups = "drop") 
+
+lineages <- 
+  mutations_s_uk %>% 
+  distinct(position, variant, lineage) %>% 
+  group_by(position, variant) %>% 
+  arrange(position, variant, lineage, .by_group = TRUE) %>% 
+  summarise(lineages = toString(lineage), .groups = "drop")
+
+## UK and nations
+# All sample dates
+variants_uk <-
+  mutations_s_uk %>% 
+  group_by(position, variant) %>% 
+  summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
+
+variants_nations <- 
+  mutations_s_uk %>% 
+  dplyr::count(position, variant, adm1) %>% 
+  pivot_wider(names_from = adm1, values_from = n)
+
+# Sample dates in last 28 days
+variants_uk_28 <- 
+  mutations_s_uk %>% 
+  filter(sample_date >= sample_date_28) %>% 
+  dplyr::count(position, variant, name = "UK_28")
+
+variants_nations_28 <-
+  mutations_s_uk %>% 
+    filter(sample_date >= sample_date_28) %>% 
+    dplyr::count(position, variant, adm1) %>% 
+    pivot_wider(names_from = adm1, values_from = n) %>% 
+    rename_with(~paste0(., "_28"), .cols = starts_with("UK-"))
+
+database <- 
+  read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
+  type_convert %>% 
+  mutate(across(c(mutation, position), as_factor)) %>% 
+  mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>% # hyperlink to citation DOI
+  group_by(position, mutation) %>% 
+  summarise(escape = escape %>% unique %>% sort %>% toString, 
+            anchor = anchor %>% unique %>% str_c(collapse = "<br>"), # line breaks between hyperlinks
+            mab = mab %>% any,
+            plasma = plasma %>% any,
+            vaccine_sera = vaccine_sera %>% any,
+            support = support %>% unique %>% toString,
+            domain = domain %>% unique %>% toString, 
+            .groups = "drop")
+
+join_cols <- c("mutation" = "variant", "position" = "position")
+
+database %<>% 
+  full_join(lineage_distinct, by = join_cols) %>% 
+  full_join(lineages, by = join_cols) %>% 
+  full_join(variants_uk,  by = join_cols) %>% 
+  full_join(variants_nations,  by = join_cols) %>% 
+  full_join(variants_uk_28,  by = join_cols) %>% 
+  full_join(variants_nations_28,  by = join_cols) 
+
+database %<>%
+  rename(
+    `# Global Lineages associated with` = n_lineages, 
+    `Global Lineages` = lineages, 
+    
+    `numSeqs UK` = UK,
+    `numSeqs Eng` = `UK-ENG`,
+    `numSeqs NI` = `UK-NIR`,
+    `numSeqs Scotland` = `UK-SCT`,
+    `numSeqs Wales` = `UK-WLS`,
+
+    `numSeqs UK 28 days` = UK_28,
+    `numSeqs Eng 28 days` = `UK-ENG_28`,
+    `numSeqs Scotland 28 days` = `UK-SCT_28`,
+    `numSeqs Wales 28 days` = `UK-WLS_28`, 
+    `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
+  mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
+  mutate(across(c(position, mutation), as.character)) %>% 
+  mutate(across(position, as.integer)) %>% 
+  arrange(position, mutation) %>% 
+  mutate(across(c(support, domain, mutation), as_factor)) %>% 
+  mutate(support = fct_relevel(support, "lower", "medium", "high"))
+
+database %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database.rds"))
+
+#' # T cell epitopes
+## ----tcell----------------------------------------------------------------------------------------------
+tcell <- read_csv(params$tcell_csv,
+                  col_types = cols(
+                          `Start position` = col_integer(),
+                          `End position` = col_integer(),
+                          `Supporting references` = col_integer()
+                  ))
+
+predictions <- read_tsv(params$predictions_tsv) 
+
+predictions %<>%
+  rename(
+    position = X1, 
+    mutation = X2, 
+    Epitope = X3, 
+    `Start position` = X5, 
+    `End position` = X6, 
+    CD4_CD8 = X7,
+    HLA_prediction = X8) %>% 
+  select(-(starts_with("X")))
+
+tcell %<>%
+  mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
+  mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))
+
+nested_html <- function(summary_var){
+  summary_var %>% 
+    unique %>% 
+    map(function(i) div(i, class = "nested-row")) %>% 
+    div(class = "nested-container") %>% 
+    as.character()
+}
+
+container_html <- function(summary_var){
+  summary_var %>% 
+    map(function(i) div(HTML(i), class = "cell-row")) %>% 
+    div(class = "cell-container") %>% 
+    as.character()
+}
+
+database_tcell <-
+  database %>%
+  select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+  filter(`numSeqs UK` > 0) %>% # filter zero counts from predicted antibodies not observed in mutations
+  fuzzy_inner_join(
+    tcell,
+    by = c("position" = "Start position",
+           "position" = "End position"),
+    match_fun = list(`>=`, `<=`))
+
+database_tcell_predictions <- 
+  database_tcell %>% 
+  left_join(predictions) %>% 
+  select(-HLA_prediction) %>% 
+  mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) 
+
+database_tcell_predictions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## consortium_v <-
+##   consortium_uk %>%
+##   filter(n501y == "Y" &
+##          del_21765_6 == "del" &
+##          sample_date >= "2020-11-24" &
+##          lineage == "B.1.1.7"
+##         )
+## consortium_v
+
+## -------------------------------------------------------------------------------------------------------
+mutations_s_uk %>% 
+  summarise(n_distinct(variant))
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   dplyr::count(variant) %>%
+##   filter(n == 1)
+
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   dplyr::count(variant) %>%
+##   filter(n >= 100)
+
+#' 
+## -------------------------------------------------------------------------------------------------------
+mutations_s_uk %>% 
+  dplyr::count(variant) %>% 
+  filter(n >= 5) %>% 
+  arrange(desc(n))
+
+#' 
+#' ### Table 1
+## ----table_1--------------------------------------------------------------------------------------------
+database %>% 
+  slice_max(`numSeqs UK`, n = 15) %>% 
+  select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
+
+## ----appendix, eval=FALSE, include=FALSE----------------------------------------------------------------
+## database %>%
+##   filter(`numSeqs UK` >= 5) %>%
+##   arrange(desc(`numSeqs UK`)) %>%
+##   select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %T>% write_csv("appendix.csv")
+
+#' 
+#' 
+## ----setdiff--------------------------------------------------------------------------------------------
+setdiff(
+consortium_uk %>% filter(d614g == "G") %>% select(sequence_name),
+mutations_s_uk %>% filter(variant == "D614G") %>% select(sequence_name)
+)
+
+#' ### Lineages
+## ----lineage_counts-------------------------------------------------------------------------------------
+n_uk_lineages <- 
+  consortium_uk %>% 
+  # filter(sample_date >= sample_date_28) %>% 
+  group_by(lineage) %>%
+  summarise(sequences = n(), 
+            D614G = sum(d614g == "G"), 
+            A222V = sum(a222v == "V"), 
+            N439K = sum(n439k == "K"), 
+            N501Y = sum(n501y == "Y"), 
+            Y453F = sum(y453f == "F"),
+            DEL_69_70 = sum(del_21765_6 == "del"), 
+            N439K_DEL_69_70 = sum(n439k == "K" & del_21765_6 == "del"), 
+            N501Y_DEL_69_70 = sum(n501y == "Y" & del_21765_6 == "del"),
+            Y453F_DEL_69_70 = sum(y453f == "F" & del_21765_6 == "del")
+  )
+
+n_uk_lineages
+
+#' #### B.1
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>%
+##   filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>%
+##   select(-lineage) %>%
+##   summarise_all(funs(sum))
+
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>%
+##   filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>%
+##   mutate(lineage_top = "B.1")
+
+#' #### B.1.177
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>%
+##   filter(lineage == "B.1.177" | str_detect(lineage, "^B\\.1\\.177\\.")) %>%
+##   select(-lineage) %>%
+##   summarise_all(funs(sum))
+
+#' #### B.1.141
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>% filter(lineage == "B.1.141" | str_detect(lineage, "^B\\.1\\.141\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+#' #### B.1.258
+#' 
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>% filter(lineage == "B.1.258" | str_detect(lineage, "^B\\.1\\.258\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+#' #### B.1.1
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>% filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+#' 
+#' #### B.1.1.7
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>% filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+#' 
+#' 
+#' #### B.1.1.70
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>% filter(lineage == "B.1.1.70" | str_detect(lineage, "B\\.1\\.1\\.70\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+## 
+
+#' 
+#' #### B.1.351
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>% filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.351\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+#' 
+#' #### B.1.1.298
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## n_uk_lineages %>% filter(lineage == "B.1.1.298" | str_detect(lineage, "B\\.1\\.1\\.298\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
+
+#' #### E484K
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   dplyr::count(lineage)
+
+#' #### E484K 28 Days
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   dplyr::count(lineage)
+
+#' #### E484K / B.1.351 Summary
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>%
+##   summarise("n_E484K_B.1.351" = n_distinct(sequence_name))
+
+#' #### E484K / B.1.351 Summary 28 Days
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   summarise("n_28_E484K_B.1.351 " = n_distinct(sequence_name))
+
+#' #### E484K / B.1.1.248
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>% summarise("n_E484K_B.1.1.248" = n_distinct(sequence_name))
+## 
+
+#' #### E484K / B.1.1.248 28 Days
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   summarise("n_E484K_B.1.1.248" = n_distinct(sequence_name))
+
+#' 
+#' #### E484K / B.1.1.7
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% summarise("n_E484K_B.1.1.7" = n_distinct(sequence_name))
+
+#' #### E484K / B.1.1.7 28 Days
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   summarise("n_E484K_B.1.1.7" = n_distinct(sequence_name))
+
+#' 
+#' #### E484K / B.1.1
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K_B.1.1" = n_distinct(sequence_name))
+
+#' #### E484K / B.1.1 28 Days
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K__28_B.1.1" = n_distinct(sequence_name))
+
+#' #### N501Y + E484K / B.1.351 Summary
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## intersect(
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>%
+##   distinct(sequence_name),
+## 
+## consortium_uk %>%
+##   filter(n501y == "Y") %>%
+##   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>%
+##   distinct(sequence_name)
+## )
+
+#' 
+#' #### E484K + N501Y / B.1.351
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## intersect(
+## mutations_s_uk %>%
+##   filter(variant == "E484K") %>%
+##   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   distinct(sequence_name),
+## 
+## consortium_uk %>%
+##   filter(n501y == "Y") %>%
+##   filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>%
+##   filter(sample_date >= sample_date_28) %>%
+##   distinct(sequence_name)
+## )
+
+#' ### Escape Mutations
+## ----escape, eval=FALSE, include=FALSE------------------------------------------------------------------
+## escape <-
+##   read_csv("list_escape_2.csv", col_names = "mutation")
+## 
+## database %>%
+##   right_join(escape) %>%
+##   select(mutation, `numSeqs UK`:`numSeqs Wales 28 days`) %T>%
+##   write_csv("escape_counts.csv")
+
+#' 
+#' ### Escape mutations sample names
+## ----escape_ids, eval=FALSE, include=FALSE--------------------------------------------------------------
+## escape_t4 <-
+## c(
+## "G446V",
+## "L452R",
+## "E484Q",
+## "K444R",
+## "E484K",
+## "Y508H",
+## "N440K",
+## "L455F",
+## "A831V",
+## "A475V",
+## "F490S",
+## "V483A",
+## "R346K",
+## "K378N",
+## "K444N",
+## 'G446S',
+## "N450D",
+## "K150R",
+## "R346S",
+## "K150T",
+## "V445A",
+## "G446A",
+## "Y449H",
+## "E484A",
+## "Y453F", "N439K"
+## )
+## 
+## lapply(escape_t4,  function(x){
+##     mutations_s_uk %>%
+##         filter(variant == x) %>%
+##         distinct(sequence_name) %T>% {{.} %$%
+##         write_lines(sequence_name, paste0(x, ".txt"))}
+## })
+
+#' ## nsp12
+## ----nsp12, eval=FALSE, include=FALSE-------------------------------------------------------------------
+## mutations_uk %>%
+##   mutate(across(position, as.character)) %>%
+##   mutate(across(position, as.numeric)) %>%
+##   filter(gene == "orf1ab" & between(position, 4393, 5324)) %>%
+##   mutate(nsp12_variant = str_c(str_sub(variant, 1, 1), position - 4392, str_sub(variant, -1, -1) ) ) %>%
+##   group_by(gene, variant, nsp12_variant) %>%
+##   summarise(sequences = n_distinct(sequence_name)) %>%
+##   ungroup %>%
+##   slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
+
+#' ## Antigenic
+#' ### Antigenic mutations by lineage
+#' Would you be able to prepare a file with all the antigenic mutations (filtered from Will’s antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
+#' 
+## ----antigenic_mutations, eval=FALSE, include=FALSE-----------------------------------------------------
+## antigenic <-
+##   antigenic_mutations_lineages() %T>%
+##   write_rds(str_c("COG-UK/", params$dataset_date, "/antigenic_mutations_lineages.rds"))
+## 
+## antigenic
+
+#' ### Antigenic heatmap
+## ----antigenic_heatmap, eval=FALSE, include=FALSE-------------------------------------------------------
+## suppressPackageStartupMessages(library(ComplexHeatmap))
+## suppressPackageStartupMessages(library(circlize))
+## 
+## # horz_heat_original <- read.table("horz_heat.csv", row.names = 1, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+## 
+## horz_heat <-
+##   antigenic_mutations_lineages() %>%
+##   filter(lineage == "B.1.1.7" & variant != "N501Y") %>%
+##   select(-lineage) %>%
+##   inner_join(database %>%
+##                select(position, mutation, mab, plasma, vaccine_sera, support, domain) %>%
+##                add_row(position = 243, mutation = "del243-244", mab = TRUE, plasma = NA, vaccine_sera = NA, support = "lower", domain = "NTD"),
+##              by = c("variant" = "mutation")) %>%
+##   mutate(across(where(is.logical), ~na_if(.x, FALSE))) %>%
+##   arrange(position, variant) %>%
+##   mutate(across(domain, as_factor)) %>%
+##   select(-position) %>%
+##   rename(confidence = support) %>%
+##   column_to_rownames("variant")
+## 
+## input <- data.matrix(horz_heat)
+## 
+## # define colour heatmap for frequency
+## col_fun = colorRamp2(c( 0, 0.015, 0.5, 2), c("white", "darkolivegreen1","darkolivegreen3","forestgreen"))
+## 
+## # annotation row
+## row_ha = rowAnnotation(
+##   Effect_mab = horz_heat$mab,
+##   Effect_plasma = horz_heat$plasma,
+##   Effect_vaccine = horz_heat$vaccine_sera,
+##   confidence = horz_heat$confidence,
+##   na_col = 'white',
+##   col = list(
+##     confidence = c(
+##       "lower" = "lightgoldenrod",
+##       "medium" = "lightgoldenrod3",
+##       "high" = "lightgoldenrod4"
+##     ),
+##     Effect_mab = c("TRUE" = "black"),
+##     Effect_plasma = c("TRUE" = "black"),
+##     Effect_vaccine = c("TRUE" = "black")
+##   ),
+##   annotation_legend_param = list(confidence = list (at = c(
+##     "high", "medium", "lower"
+##   )))
+## )
+## 
+## # domain
+## row_ha2 = rowAnnotation(domain = (horz_heat$domain),
+##                         col = list(
+##                           domain = c(
+##                             "FP" = "seashell2",
+##                             "NTD" = "navajowhite",
+##                             "RBD" = "pink",
+##                             "RBM" = "plum1",
+##                             "SP" = "lightblue1"
+##                           )
+##                         ))
+## 
+## # remove x from name of columns (epiweek)
+## # colnames(horz_heat) <- gsub("X","",colnames(horz_heat))
+## 
+## # pdf("heatmap.pdf", height = 10)
+## png("heatmap.png", height = 800, type = "cairo-png")
+## hm <- Heatmap(
+##   subset(input, select = -c(mab:domain)),
+##   name = "Percentage %",
+##   column_title = "Antigenic mutations in lineage B.1.1.7",
+##   use_raster = TRUE,
+##   cluster_columns = FALSE,
+##   cluster_rows = FALSE,
+##   row_order = order((horz_heat$domain)),
+##   row_split = (horz_heat$domain),
+##   column_names_rot = 0,
+##   row_gap = unit(2, "mm"),
+##   border = TRUE,
+##   width = ncol(input) * unit(1.8, "mm"),
+##   height = nrow(input) * unit(1.8, "mm"),
+##   col = col_fun,
+##   na_col = 'white',
+##   column_names_gp = grid::gpar(fontsize = 4),
+##   row_names_gp = grid::gpar(fontsize = 4),
+##   right_annotation = row_ha,
+##   left_annotation = row_ha2
+## )
+## hm
+## dev.off()
+## hm
+## 
+## # RBD1_class<-c(403, 405, 406, 408, 409, 414, 415, 416, 417, 420, 421, 449, 453, 455, 456, 457, 458, 459, 460, 473, 474, 475, 476, 477, 484, 486, 487, 489, 490, 492, 493, 494, 495, 496, 498, 500, 501, 502, 503, 504, 505)
+## # RBD2_class<-c(338, 339, 342, 343, 346, 351, 368, 371, 372, 373, 374, 403, 405, 406, 417, 436, 444, 445, 446, 447, 448, 449, 450, 452, 453, 455, 456, 470, 472, 473, 475, 478, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505)
+## # RBD3_class<-c(333, 334, 335, 337, 339, 340, 341, 342, 343, 344, 345, 346, 354, 356, 357, 358, 359, 360, 361, 438, 439, 440, 441, 442, 443, 446, 499, 500)
+## # RBD4_class<-c(369, 370, 371, 372, 374, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 390, 430, 431)
+## # NTD_class<-c(15, 18, 19, 22, 28, 74, 77, 80, 123, 136, 139, 140, 141, 142, 144, 145, 146, 147, 148, 149, 150, 151, 152, 157, 158, 164, 244, 246, 247, 248, 249, 250, 251, 252, 253, 255, 257, 258)
+## 
+## # horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
+## # horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
+## # horz_heat$RBD3 <- ifelse(horz_heat$position %in% RBD3_class, TRUE, NA)
+## # horz_heat$RBD4 <- ifelse(horz_heat$position %in% RBD4_class, TRUE, NA)
+## # horz_heat$NTD.1 <- ifelse(horz_heat$position %in% NTD_class, TRUE, NA)
+## 
+## # col_fun = colorRamp2(c( 0, 0.015, 0.5, 2), c("white", "darkolivegreen1","darkolivegreen3","forestgreen"))
+## #
+## # row_ha= rowAnnotation(Effect_mab = horz_heat[,20], Effect_plasma = horz_heat [,21], Effect_vaccine= horz_heat [,22], confidence = horz_heat[,23],
+## #                         na_col = 'white', col= list(
+## #                         confidence = c("lower" = "lightgoldenrod", "medium" = "lightgoldenrod3", "high" = "lightgoldenrod4"),
+## #                         Effect_mab = c("TRUE" = "black"),
+## #                         Effect_plasma = c("TRUE" ="black"),
+## #                         Effect_vaccine = c("TRUE" = "black")),
+## #                       annotation_legend_param = list(confidence = list (at = c("high", "medium", "lower")))
+## #                       )
+## #
+## # row_ha2=rowAnnotation(domain = (horz_heat[,24]), Ab_class1 = (horz_heat[,30]),Ab_class2 = (horz_heat[,31]),Ab_class3 = (horz_heat[,32]),Ab_class4 = (horz_heat[,33]),Ab_classe5 = (horz_heat[,34]),
+## #                       na_col = 'white',
+## #                       width = ncol(horz_heat)*unit(0.8, "mm"),
+## #                       col=list(
+## #                       domain = c("FP" ="seashell2", "NTD"= "navajowhite", "RBD" = "pink", "RBM" = "plum1","SP"= "lightblue1"),
+## #                       Ab_class1 =c ("TRUE" = "lightgreen"),
+## #                       Ab_class2 =c("TRUE" = "goldenrod1"),
+## #                       Ab_class3 =c("TRUE" = "cornflowerblue"),
+## #                       Ab_class4 =c("TRUE" = "tomato"),
+## #                       Ab_class5 =c("TRUE" = "magenta")),
+## #                       show_legend = c(domain = FALSE, Ab_class1 = FALSE,Ab_class2 = FALSE,Ab_class3 = FALSE,Ab_class4 = FALSE,Ab_class5 = FALSE)
+## #                       )
+## #
+## # colnames(input)<-gsub("X","",colnames(input))
+## #
+## # Heatmap(input[,2:18], name = "Percentage %", column_title = "Antigenic mutations on the top of B.1.1.7", use_raster = TRUE,cluster_columns = FALSE,
+## #         row_order = order((horz_heat[,24])),
+## #         row_split = (horz_heat[,24]),
+## #         column_names_rot=0,
+## #         row_gap = unit(2, "mm"),  border = TRUE,
+## #         width = ncol(input)*unit(1.8, "mm"),
+## #                height = nrow(input)*unit(1.8, "mm"),
+## #         col=col_fun,
+## #         na_col = 'white' ,
+## #               column_names_gp = grid::gpar(fontsize = 4),
+## #         row_names_gp = grid::gpar(fontsize = 4),
+## #         right_annotation = row_ha,
+## #         left_annotation = row_ha2
+## #         )
+## 
+
+#' ### ggseqlogo
+## ----ggseqlogo------------------------------------------------------------------------------------------
+wt <-
+  mutation_reference_counts %>% 
+  filter(gene == "S" & variant == "WT" & adm1 == "UK") %>%
+  group_by(position) %>% 
+  summarise(`numSeqs UK` = sum(n)) %>% 
+  mutate(position = fct_drop(position) %>% fct_expand(1:1274 %>% as.character) %>% fct_inseq) %>% 
+  complete(position) %>% 
+  mutate(across(`numSeqs UK`, ~replace_na(.x, n_distinct(consortium_uk$sequence_name))))
+
+library(seqinr) # NB seqinr also has a count function!
+spike_sequence <- 
+  read.fasta(params$spike_fasta, seqonly = TRUE) %>% 
+  str_extract_all(boundary("character")) %>% 
+  flatten_chr() %>% 
+  c("*") # append stop codon
+
+wt %<>% 
+  add_column(AA = spike_sequence) %>% 
+  mutate(across(position, as.character)) %>% 
+  mutate(across(position, as.integer)) %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/wt.rds"))
+
+wt %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/wt.rds"))
+
+#' 
+#' 
+#' ### mydata
+## ----eval=FALSE, include=FALSE--------------------------------------------------------------------------
+## # library(tidyverse)
+## # library(magrittr)
+## 
+## mydata <- read_csv("mydata.csv")
+## 
+## names <-
+##   c("MA0018.2",
+##     "MA0031.1",
+##     "MA0139.1",
+##     "MA0158.1")
+## 
+## df <- names %>%
+##     purrr::set_names() %>%
+##     map(function(i)
+##       gather(mydata, "key", "value", starts_with(i)) %$% as.integer(value) %>% array(dim = c(4, length(.)/4))
+##     ) %>% as.list
+## 
+## df
+
+#' 
+#' ## VUI and VOC
+#' ### VUI and VOC defining mutations
+## ----vui_voc, eval=FALSE, include=FALSE-----------------------------------------------------------------
+## lineages_weeks_nations <-
+##   consortium_uk %>% dplyr::count(lineage, epi_week, adm1)
+## 
+## lineages_weeks_uk <-
+##   lineages_weeks_nations %>%
+##   group_by(lineage, epi_week) %>%
+##   summarise(across(n, sum), .groups = "drop") %>%
+##   mutate(adm1 = "UK", .after = epi_week) %>%
+##   bind_rows(lineages_weeks_nations) %>%
+##   arrange(lineage, adm1, epi_week)
+## 
+## vui_voc <-
+##   read_csv(params$vui_voc_csv) %>%
+##   filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
+##   select(-gene, -details_gene, -non_syn) %>%
+##   mutate(across(lineage, as_factor)) %>%
+##   mutate(across(lineage, ~fct_relevel(.x, sort)))
+## 
+## vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
+
+#' ### VUI and VOC plot
+## ----lineages_plot, eval=FALSE, include=FALSE-----------------------------------------------------------
+## lineages_weeks_uk <-
+##   consortium_uk %>%
+##   dplyr::count(lineage, epi_week, adm1) %>%
+##   group_by(lineage, epi_week) %>%
+##   summarise(across(n, sum), .groups = "drop") %>%
+##   mutate(adm1 = "UK", .after = epi_week) %>%
+##   bind_rows(lineages_weeks_nations) %>%
+##   arrange(lineage, adm1, epi_week)
+## 
+## # lineages_weeks_uk %T>%
+## #   write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk.rds"))
+## 
+## lineages_weeks_uk %>%
+##   filter(adm1 == "UK" & lineage %in% levels(vui_voc$lineage) & lineage != "B.1.1.7") %>%
+##   ggplot(aes(x=epi_week, y=n, group=lineage, color=lineage)) +
+##   geom_line() +
+##   geom_point() +
+##   scale_x_discrete(drop = FALSE) + # include all epi_week factor levels
+##   theme_classic()
+
