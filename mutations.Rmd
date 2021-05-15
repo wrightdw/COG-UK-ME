@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-14"
+  dataset_date:     "2021-05-15"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -19,8 +19,6 @@ library(RColorBrewer)
 library(lubridate)
 library(fuzzyjoin)
 library(htmltools)
-suppressPackageStartupMessages(library(ComplexHeatmap))
-suppressPackageStartupMessages(library(circlize))
 # also require seqinr
 ```
 ```{r files}
@@ -59,8 +57,8 @@ consortium_uk
 ```{r read}
 mutations <-   
   read_csv(mutations_csv, col_types = cols(.default = col_character())) %>% 
-  type_convert %>% 
   select(sequence_name, sample_date, lineage, mutations) %>% 
+  type_convert %>% 
   distinct %>% # get rid of identical variant calls
   separate_rows(mutations, sep = '\\|') %>% 
   separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
@@ -70,10 +68,10 @@ mutations <-
 
 public <- 
   read_csv(global_csv, col_types = cols(.default = col_character())) %>% 
-  type_convert %>% 
   select(-cog_id, -gisaid_id, -(pillar_2:travel_history), -lineage_support,
          -lineages_version
          ) %>% 
+  type_convert %>% 
   distinct # remove duplicates
 
 mutations %<>% inner_join(public)
@@ -155,8 +153,7 @@ mutation_reference_counts <-
 mutation_reference_counts
 ```
 ### Total sequences per epidemic week
-
-```{r consortium_counts}
+```{r consortium_counts, eval=FALSE, include=FALSE}
 n_uk <- 
   consortium_uk %>% 
   # filter(sample_date >= 2020-11-13) %>% 
@@ -170,15 +167,13 @@ n_uk <-
 n_uk
 ```
 
-
-
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk %>% 
   select(-epi_week) %>% 
   summarise_all(funs(sum))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_28 <- 
   consortium_uk %>% 
   filter(sample_date >= sample_date_28) %>%
@@ -187,14 +182,13 @@ n_uk_28 <-
             N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del"))
 n_uk_28
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_28 %>% 
   select(-epi_week) %>% 
   summarise_all(funs(sum))
 ```
 
-
-```{r}
+```{r eval=FALSE, include=FALSE}
 theme_set(theme_classic() + theme(legend.position = "none"))
 
 pal <- wes_palette("Cavalcanti1", type = "discrete")
@@ -206,7 +200,7 @@ update_geom_defaults("line", list(color = pal[1]))
 
  ggsave("Sequences.png")
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 pal <- brewer.pal(n = 5, name = "Set1")
 update_geom_defaults("point", list(color = pal[2]))
 update_geom_defaults("line", list(color = pal[2]))
@@ -217,7 +211,7 @@ update_geom_defaults("line", list(color = pal[2]))
 
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 update_geom_defaults("point", list(color = pal[1]))
 update_geom_defaults("line", list(color = pal[1]))
 
@@ -226,7 +220,7 @@ update_geom_defaults("line", list(color = pal[1]))
  ggsave("A222V.png")
 
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 update_geom_defaults("point", list(color = pal[4]))
 update_geom_defaults("line", list(color = pal[4]))
 
@@ -236,7 +230,7 @@ update_geom_defaults("line", list(color = pal[4]))
 
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 update_geom_defaults("point", list(color = pal[5]))
 update_geom_defaults("line", list(color = pal[5]))
 
@@ -245,7 +239,7 @@ update_geom_defaults("line", list(color = pal[5]))
  ggsave("N501Y.png")
 
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 update_geom_defaults("point", list(color = pal[3]))
 update_geom_defaults("line", list(color = pal[3]))
 
@@ -253,14 +247,14 @@ update_geom_defaults("line", list(color = pal[3]))
   geom_line() + geom_point() + labs(x = "Epidemic week", y = "Deletion 69-70 (normalised)", title = "Deletion 69-70") + ylim(0,1)
 ggsave("DEL_69_70.png")
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_long <- 
   n_uk %>% 
   select(-c(sequences, D614G)) %>% 
   gather(key = "variant", value = "seq_raw", -epi_week) 
 n_uk_long
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 n_uk_long_norm <- 
   n_uk %>% 
   mutate_at(vars(D614G:DEL_69_70), funs((. / sequences) * 100)) %>%
@@ -269,7 +263,7 @@ n_uk_long_norm <-
 n_uk_long_norm
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 theme_set(theme_classic())
 n_uk_long %>% 
   ggplot(aes(x = epi_week, y = seq_raw)) + 
@@ -279,7 +273,7 @@ n_uk_long %>%
   theme(legend.title = element_blank()) + scale_color_manual(values = pal) 
 ggsave("variants_overlay.png")
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 theme_set(theme_classic())
 n_uk_long_norm %>% 
 ggplot(aes(x = epi_week, y = seq_norm)) + 
@@ -291,75 +285,74 @@ ggsave("variants_overlay_norm.png")
 ```
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 consortium_uk %>% 
   dplyr::count(n501y, del_21765_6)
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 consortium_uk %>%  
   filter(sample_date >= sample_date_28) %>% 
   dplyr::count(n501y, del_21765_6)
 
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 consortium_uk %>%  
   dplyr::count(n439k, del_21765_6)
 
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 consortium_uk %>%  
   filter(sample_date >= sample_date_28) %>% 
   dplyr::count(n439k, del_21765_6)
 
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 consortium_uk %>% 
   filter(n501y == "Y" & del_21765_6 == "del")  %>% 
   dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 consortium_uk %>% 
   filter(sample_date >= sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% 
   dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 consortium_uk %>% 
   filter(n439k == "K" & del_21765_6 == "del")  %>% 
   dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 consortium_uk %>% 
   filter(sample_date >= sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% 
   dplyr::count(lineage) %>% 
   arrange(desc(n))
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations %>% 
   filter(country == "UK" & gene == "S") %>% 
   summarise(n(), n_distinct(sequence_name))
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations %>% filter(country == "UK" & gene == "S") %>% 
   dplyr::count(variant) %>% 
   filter(n >1) %>% 
   summarise(sum(n))
 ```
 
-
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations %>% 
   filter(country == "UK" & gene == "S") %>% 
   dplyr::count(variant) %>% filter(n >100) %>% 
   summarise(sum(n))
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
  # awk '/S:P681H/
  #  && /S:N501Y/
  #   && /orf1ab:T1001I/
@@ -404,7 +397,7 @@ mutations_v <- mutations %>% filter(country == "UK" & lineage == "B.1.1.7"
 mutations_v
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations %>% filter(country == "UK" 
                      # & sample_date >= "2020-11-13" 
                      & (
@@ -415,7 +408,7 @@ mutations %>% filter(country == "UK"
 
 
 ```
-```{r cluster5}
+```{r cluster5, eval=FALSE, include=FALSE}
 # Cluster 5 is Y453F, 69-70del, I692V and M1229I
 # 
 mutations %>% filter(country == "UK" 
@@ -870,7 +863,7 @@ lapply(escape_t4,  function(x){
 })
 ```
 ## nsp12
-```{r nsp12}
+```{r nsp12, eval=FALSE, include=FALSE}
 mutations_uk %>% 
   mutate(across(position, as.character)) %>% 
   mutate(across(position, as.numeric)) %>% 
@@ -894,6 +887,8 @@ antigenic
 ```
 ### Antigenic heatmap
 ```{r antigenic_heatmap, eval=FALSE, include=FALSE}
+suppressPackageStartupMessages(library(ComplexHeatmap))
+suppressPackageStartupMessages(library(circlize))
 
 # horz_heat_original <- read.table("horz_heat.csv", row.names = 1, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
@@ -1086,7 +1081,7 @@ df
 
 ## VUI and VOC
 ### VUI and VOC defining mutations
-```{r vui_voc}
+```{r vui_voc, eval=FALSE, include=FALSE}
 lineages_weeks_nations <-
   consortium_uk %>% dplyr::count(lineage, epi_week, adm1)
 
@@ -1108,7 +1103,7 @@ vui_voc <-
 vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
 ```
 ### VUI and VOC plot
-```{r lineages_plot}
+```{r lineages_plot, eval=FALSE, include=FALSE}
 lineages_weeks_uk <-
   consortium_uk %>% 
   dplyr::count(lineage, epi_week, adm1) %>% 
