@@ -5,7 +5,7 @@ library(RColorBrewer)
 
 source("helpers.R")
 
-dataset_date <- ymd("2021-05-16") #TODO derive from directory name
+dataset_date <- ymd("2021-05-17") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -14,7 +14,7 @@ mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds
 database_tcell_predictions <- str_c(dataset_date, "/database_tcell_predictions.rds") %>% read_rds # spike T cell info and predictions
 deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates)
 vui_voc <- read_rds("vui_voc.rds") # VUI/VOC defining mutations in spike protein
-wt <- read_rds(str_c(dataset_date, "/wt.rds")) # apike protein wild type amino acid counts
+wt <- read_rds(str_c(dataset_date, "/wt.rds")) # spike protein wild type amino acid counts
 
 mutations_s_uk <- 
   mutations_uk %>% 
