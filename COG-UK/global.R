@@ -50,9 +50,10 @@ lineages_t3 <-
     "P.2" = "Brazil. E484K and V1176F.",
     "P.3" = "The Philippines. 141-143del, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases 243-244del.",
     # "B.1.617" = "India. G142D, E154K, L452R, E484Q, P681R and Q1071H.",
-    "B.1.617.1" = "E154K, L452R, E484Q and P681R.",
-    "B.1.617.2" = "T19R, 156-158del, L452R, T478K, D614G, P681R and D950N.",
-    "B.1.617.3" = "T19R, 156-158del, L452R, E484Q, D614G, P681R and D950N."
+    "B.1.617.1" = "India. E154K, L452R, E484Q and P681R.",
+    "B.1.617.2" = "India. T19R, 156-158del, L452R, T478K, D614G, P681R and D950N.",
+    "B.1.617.3" = "India. T19R, 156-158del, L452R, E484Q, D614G, P681R and D950N.",
+    "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, 144del, N439K, E484K, D614G, P681H, I1130V, D1139H."
     ) %>% 
   enframe("lineage", "reason")
 

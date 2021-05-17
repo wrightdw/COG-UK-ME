@@ -1081,18 +1081,7 @@ df
 
 ## VUI and VOC
 ### VUI and VOC defining mutations
-```{r vui_voc, eval=FALSE, include=FALSE}
-lineages_weeks_nations <-
-  consortium_uk %>% dplyr::count(lineage, epi_week, adm1)
-
-lineages_weeks_uk <-
-  lineages_weeks_nations %>% 
-  group_by(lineage, epi_week) %>% 
-  summarise(across(n, sum), .groups = "drop") %>% 
-  mutate(adm1 = "UK", .after = epi_week) %>% 
-  bind_rows(lineages_weeks_nations) %>% 
-  arrange(lineage, adm1, epi_week)
-
+```{r vui_voc, eval=FALSE, include=TRUE}
 vui_voc <-
   read_csv(params$vui_voc_csv) %>% 
   filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
@@ -1102,6 +1091,7 @@ vui_voc <-
 
 vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
 ```
+
 ### VUI and VOC plot
 ```{r lineages_plot, eval=FALSE, include=FALSE}
 lineages_weeks_uk <-
