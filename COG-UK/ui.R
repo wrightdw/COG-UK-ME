@@ -22,11 +22,24 @@ dashboardPage(
     ),
     
     sidebar = dashboardSidebar(
-        sidebarMenu(id="sidebar_menu",
-                    menuItem("Mutation Explorer", tabName = "report", icon = icon("viruses")), 
-                    menuItem("Visualiser", icon = icon("eye"), tabName = "dashboard"),
-                    menuItem("Antigenic Information", tabName = "immunology", icon = icon("shield-virus")),
-                    menuItem("About", tabName = "about", icon = icon("info-circle"))
+        sidebarMenu(
+            id = "sidebar_menu",
+            menuItem(
+                "Mutation Explorer",
+                tabName = "report",
+                icon = icon("viruses"),
+                menuSubItem("Table 1"),
+                menuSubItem("Table 3"),
+                menuSubItem("Figure 1"),
+                menuSubItem("Notes")
+            ),
+            menuItem("Visualiser", icon = icon("eye"), tabName = "dashboard"),
+            menuItem(
+                "Antigenic Information",
+                tabName = "immunology",
+                icon = icon("shield-virus")
+            ),
+            menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
         conditionalPanel(
@@ -105,6 +118,7 @@ dashboardPage(
                           "COG-UK/ME is based on the CLIMB framework, and maintained by the ", a(href = "https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank", .noWS = "outside", "MRC-University of Glasgow Centre for Virus Research"), ".",
                           "Follow", a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.", .noWS = c("after-begin", "before-end"))
                     )),
+            
             tabItem(tabName = "report",
                         h1("COG-UK / Mutation Explorer"),
                     
@@ -189,12 +203,12 @@ dashboardPage(
                                          )
                                      ),
                                      
-                                     fluidRow(
-                                         box(title = "Variants over Time", closable = FALSE, width = 12,
-                                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
-                                             plotlyOutput("variant_time", height = "50vh")    
-                                         )
-                                     ),
+                                     # fluidRow(
+                                     #     box(title = "Variants over Time", closable = FALSE, width = 12,
+                                     #         status = "info", collapsible = FALSE, icon = icon("chart-line"),
+                                     #         plotlyOutput("variant_time", height = "50vh")    
+                                     #     )
+                                     # ),
                                      
                                      fluidRow(
                                          column(width = 6, 
@@ -310,6 +324,8 @@ dashboardPage(
                             )
                         ) # end tabBox
             ), # end tabItem
+            
+            tabItem("vui_voc"),
             
             tabItem(tabName = "dashboard",
                     fluidRow(box(
