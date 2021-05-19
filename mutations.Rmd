@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-15"
+  dataset_date:     "2021-05-19"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -22,7 +22,6 @@ library(htmltools)
 # also require seqinr
 ```
 ```{r files}
-mutations_csv <- str_c("cog_global_", params$dataset_date, "_mutations.csv")
 global_csv <- str_c("cog_global_", params$dataset_date, "_public.csv")
 consortium_csv <- str_c("cog_global_", params$dataset_date, "_consortium.csv")
 
@@ -34,16 +33,22 @@ dir.create(str_c("COG-UK/", params$dataset_date))
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
-         -mutations, -lineages_version
+         -lineages_version
          ) %>% # remove unused columns
-  type_convert %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
   select(-country) %>% 
-  distinct # remove duplicates
+  type_convert 
+
+mutations_uk <- 
+  consortium_uk %>% 
+  select(sequence_name, sample_date, lineage, mutations) %>% 
+  distinct # get rid of identical variant calls
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
 
 consortium_uk %<>% 
+  select(-mutations) %>% 
+  distinct %>%  # remove duplicates
   mutate(across(c(epi_week, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/consortium_uk.rds"))
@@ -54,12 +59,8 @@ consortium_uk
 ```
 
 ## Mutations
-```{r read}
-mutations <-   
-  read_csv(mutations_csv, col_types = cols(.default = col_character())) %>% 
-  select(sequence_name, sample_date, lineage, mutations) %>% 
-  type_convert %>% 
-  distinct %>% # get rid of identical variant calls
+```{r mutations_consortium}
+mutations_uk %<>%    
   separate_rows(mutations, sep = '\\|') %>% 
   separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
   drop_na() %>%
@@ -71,14 +72,12 @@ public <-
   select(-cog_id, -gisaid_id, -(pillar_2:travel_history), -lineage_support,
          -lineages_version
          ) %>% 
+  filter(country == "UK" & !is.na(adm1)) %>% 
   type_convert %>% 
   distinct # remove duplicates
 
-mutations %<>% inner_join(public)
-
-mutations_uk <- 
-  mutations %>%
-  filter(country == "UK" & !is.na(adm1)) %>% 
+mutations_uk %<>% 
+  inner_join(public) %>% 
   select(-country) %>% 
   mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %>% 
@@ -87,9 +86,8 @@ mutations_uk <-
 
 mutations_uk
 ```
-
 ## Mutation / REF counts
-```{r}
+```{r mutations_refs}
 #### UK ### 
 # TODO calculate UK counts by summing nation counts
 genes_positions <- 
@@ -1081,7 +1079,7 @@ df
 
 ## VUI and VOC
 ### VUI and VOC defining mutations
-```{r vui_voc, eval=FALSE, include=TRUE}
+```{r vui_voc}
 vui_voc <-
   read_csv(params$vui_voc_csv) %>% 
   filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
