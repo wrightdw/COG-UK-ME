@@ -174,7 +174,7 @@ table_3 <- function(){
     relocate(n_sequences_28_UK, .after = `UK (%)`) %>% 
     mutate(`UK 28 days (%)` = n_sequences_28_UK / total_sequences_28,
            .after = n_sequences_28_UK) %>%
-    arrange(lineage) %>% 
+    arrange(desc(n_sequences_28_UK), desc(n_sequences_UK), lineage) %>% 
     relocate(n_sequences_28_England, .after = n_sequences_England) %>% 
     relocate(n_sequences_28_Northern_Ireland, .after = n_sequences_Northern_Ireland) %>% 
     relocate(n_sequences_28_Scotland, .after = n_sequences_Scotland) %>% 
@@ -364,12 +364,12 @@ shinyServer(function(input, output, session) {
     )
     
     
-    output$table_2 <- renderDT({
-      table_2() %>% 
-          datatable(filter = "none", rownames = FALSE, 
-                    options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
-          formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
-    })
+    # output$table_2 <- renderDT({
+    #   table_2() %>% 
+    #       datatable(filter = "none", rownames = FALSE, 
+    #                 options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
+    #       formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
+    # })
     
     output$table_3 <- renderDT({
       table_3() %>% 
