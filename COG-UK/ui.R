@@ -172,19 +172,19 @@ dashboardPage(
                     )),
             
             tabItem("vui_voc", 
+                    # fluidRow(
+                    #     box(title = "Variants over Time", closable = FALSE, width = 12,
+                    #         status = "info", collapsible = FALSE, icon = icon("chart-line"),
+                    #         plotlyOutput("variant_time", height = "50vh")
+                    #     )
+                    # ),
+                    
                     fluidRow(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) detected in the UK data", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),                                                
                             dataTableOutput("table_3")
                         )
                     ),
-                    
-                    # fluidRow(
-                    #     box(title = "Variants over Time", closable = FALSE, width = 12,
-                    #         status = "info", collapsible = FALSE, icon = icon("chart-line"),
-                    #         plotlyOutput("variant_time", height = "50vh")    
-                    #     )
-                    # ),
                     
                     fluidRow(
                         column(width = 6, 
@@ -485,7 +485,6 @@ dashboardPage(
                         )
                     )
             )
-            
         ) # end tabItems
     ), # end dashboardBody ##8a7967
     

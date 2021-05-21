@@ -1090,10 +1090,12 @@ vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
 ```
 
 ### VUI and VOC plot
-```{r lineages_plot, eval=FALSE, include=FALSE}
+```{r lineages_plot, eval=FALSE, include=TRUE}
+lineages_weeks_nations <-
+  consortium_uk %>% dplyr::count(lineage, epi_week, adm1)
+
 lineages_weeks_uk <-
-  consortium_uk %>% 
-  dplyr::count(lineage, epi_week, adm1) %>% 
+  lineages_weeks_nations %>% 
   group_by(lineage, epi_week) %>% 
   summarise(across(n, sum), .groups = "drop") %>% 
   mutate(adm1 = "UK", .after = epi_week) %>% 
@@ -1110,4 +1112,5 @@ lineages_weeks_uk %>%
   geom_point() +
   scale_x_discrete(drop = FALSE) + # include all epi_week factor levels
   theme_classic()
+
 ```
