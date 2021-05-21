@@ -74,7 +74,7 @@ table_1 <- function(){
            `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
            `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
            `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
-           `Date of first appearance in UK` = earliest) 
+           `Date of first detection in UK` = earliest) 
 }
 
 table_2 <- function(){

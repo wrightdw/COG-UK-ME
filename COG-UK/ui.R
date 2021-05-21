@@ -9,11 +9,10 @@ library(plotly)
 library(magrittr)
 
 dashboardPage(
-    title = "COG-UK Mutation Explorer",
+    title = "COG-UK/Mutation Explorer",
     skin = "black",
     
     header = dashboardHeader(
-        titleWidth = 250,
         title = tags$a(
         href = '.',
         tags$img(src = 'COG_ME_LOGO2-ORIZCOLOR.png', width = "200px", title = "COG-UK/Mutation Explorer")
@@ -29,23 +28,15 @@ dashboardPage(
                 style = "padding:15px"
             ))),
     
-    sidebar = dashboardSidebar(width = 250,
+    sidebar = dashboardSidebar(
         sidebarMenu(
             id = "sidebar_menu",
-            # menuItem(
-            #     "Mutation Explorer",
-            #     icon = icon("viruses"),
-            #     startExpanded = TRUE
-            # ),
-            
-            menuItem("Variants of Interest (VOC/VUI)", tabName = "vui_voc", selected = TRUE, icon = icon("viruses")),
-            menuItem("Spike Mutations", tabName = "report", icon = icon("virus")),
-            menuItem("Antigenic Mutations (VOC/VUI)", tabName = "figure_1", icon = icon("fire-alt")),
-            
-            menuItem("Mutation Visualiser", icon = icon("eye"), tabName = "dashboard"),
-            
-            menuItem("Immunogenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
+            menuItem("VOCs/VUIs in the UK", tabName = "vui_voc", selected = TRUE, icon = icon("viruses")),
+            menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
+            menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
+            menuItem("Spike Mutation Counts", tabName = "report", icon = icon("virus")),
+            menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -123,8 +114,7 @@ dashboardPage(
                             ),
                             
                             h3("Data source and processing"),
-                            p(str_c("The analysis described in this report is based on ", total_sequences %>% comma(format = "d")
-                                    ," UK-derived genomes sequenced by COG-UK: complete data in the MRC-CLIMB database to ", dataset_date %>% format("%d/%m/%Y"), ", with the latest sequence from ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"),  ".")),
+                            p(str_c("The analysis described in this report is based on ", em(total_sequences %>% comma(format = "d")), " UK-derived genomes after dedeuplication, sequenced by COG-UK: complete data in the MRC-CLIMB database to ", dataset_date %>% format("%d/%m/%Y"), ", with the latest sequence from ", max(consortium_uk$sample_date) %>% format("%d/%m/%Y"),  ".")),
                             p("A report of the geographic distribution and prevalence of SARS-CoV-2 lineages in general, and global variants of interest, can be found ", a(href = "https://cov-lineages.org/global_report.html", target = "_blank", "here", .noWS = "outside"), ". Amino acid replacement, insertion and deletion counts for all SARS-CoV-2 genes in the global GISAID database can be found ", a(href = "http://cov-glue.cvr.gla.ac.uk/", target = "_blank", "here", .noWS = "outside"), ".", .noWS = c("after-begin", "before-end")),
                             
                             h3("Limitations"),
@@ -182,10 +172,8 @@ dashboardPage(
                     )),
             
             tabItem("vui_voc", 
-                    # h1("COG-UK / Mutation Explorer"),
-                    # h2("Variants of interest detected in the UK"),
                     fluidRow(
-                        box(title = "Variants of interest detected in the UK", closable = FALSE, width = 12,
+                        box(title = "Variants of concern (VOC) and under investigation (VUI) detected in the UK data", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),                                                
                             dataTableOutput("table_3")
                         )
@@ -200,7 +188,7 @@ dashboardPage(
                     
                     fluidRow(
                         column(width = 6, 
-                               box(title = "Download Metadata", closable = FALSE, width = NULL, 
+                               box(title = "Download metadata", closable = FALSE, width = NULL, 
                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
                                    p("Download a CSV file, for each variant, containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
                                    selectizeInput("concern", "Choose lineage:",
@@ -212,29 +200,29 @@ dashboardPage(
                                                   ) %>% sort),
                                    downloadButton("downloadConcern", "Download", class = "btn-info")),
                                
-                               box(title = "Download Table", closable = FALSE, width = NULL, 
+                               box(title = "Download table", closable = FALSE, width = NULL, 
                                    status = "info", collapsible = FALSE, icon = icon("file-download"), 
                                    p("Download a CSV file comprising complete table data."),
                                    downloadButton("downloadTable3", "Download", class = "btn-info"))
                         ),
                         
                         column(width = 6,
-                               box(title = "Spike Protein Structure (B.1.1.7)", closable = FALSE, width = NULL, 
+                               box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = NULL, 
                                    status = "orange", collapsible = TRUE, icon = icon("microscope"),
                                    img(src = "structure.png", class = "center-block img-responsive"))
                         )
                     ),
                     
                     fluidRow(
-                        box(title = "Spike Protein Mutations (B.1.351)", closable = FALSE, width = 4, 
+                        box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 4, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"), height = 480,
                             img(src = "mutants_lineage_B.1.351.png", class = "center-block img-responsive")),
                         
-                        box(title = "Spike Protein Mutations (P.1)", closable = FALSE, width = 4, 
+                        box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 4, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
                             img(src = "mutants_lineage_P.1.png", class = "center-block img-responsive")),
                         
-                        box(title = "Spike Protein Mutations (B.1.1.7)", closable = FALSE, width = 4, 
+                        box(title = "Spike protein putations (B.1.1.7)", closable = FALSE, width = 4, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
                             img(src = "lineage_B.1.1.7.png", height = "480px", class = "center-block img-responsive"))
                     )
@@ -243,7 +231,7 @@ dashboardPage(
             tabItem(tabName = "report",
                     # h1("COG-UK/Mutation Explorer"),
                     fluidRow(
-                        box(title = "Spike gene mutations", closable = FALSE, width = 12,
+                        box(title = "Spike amino acid replacements detected in the UK data: frequency, nations and date of first detection", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),   
                             
                             p("Individual amino acid replacements detected in UK genomes are shown (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
@@ -253,7 +241,7 @@ dashboardPage(
                     ),
                     
                     fluidRow(
-                        box(title = "Download Metadata", closable = FALSE, width = 6, height = 500,
+                        box(title = "Download metadata", closable = FALSE, width = 6, height = 500,
                             status = "info", collapsible = FALSE, icon = icon("file-download"),
                             fluidRow(
                                 column(
@@ -277,7 +265,7 @@ dashboardPage(
                             ) 
                         ), 
                         
-                        box(title = "Download Table", closable = FALSE, width = 6, height = 500,
+                        box(title = "Download table", closable = FALSE, width = 6, height = 500,
                             status = "info", collapsible = FALSE, icon = icon("file-download"),
                             fluidRow(
                                 column(
@@ -296,7 +284,7 @@ dashboardPage(
             tabItem(tabName = "figure_1", 
                     fluidRow(
                         box(width = 12, closable = FALSE,  status = "warning", collapsible = FALSE, icon = icon("fire-alt"),
-                            title = "Antigenic mutations in Variants of Concern/Variants under Investigation",
+                            title = "Antigenic amino acid replacements in variants of concern (VOC) and variants under investigation (VUI) in addition to their defining mutations",
                             fluidRow(
                                 column(
                                     width = 2,
@@ -332,13 +320,13 @@ dashboardPage(
                         status = "info",
                         collapsible = FALSE,
                         closable = FALSE, 
-                        title = "Mutational Frequencies",
+                        title = "Spike amino acid replacement frequencies by week in the UK data",
                         icon = icon("chart-bar")
                     ))),
             
             tabItem(tabName = "immunology",
                     value = "antibody",
-                    box(title = "Antigenic information: spike protein gene mutations of potential immunogenic significance detected in the UK", 
+                    box(title = "Spike amino acid replacements reported to confer antigenic change relevant to antibodies, detected in the UK data", 
                         closable = FALSE, width = 12,
                         status = "info", collapsible = FALSE, icon = icon("table"), 
                         p('The table lists those mutations in the spike gene identified in the UK dataset that have been
@@ -384,7 +372,7 @@ dashboardPage(
                         )
                     ), # end box
                     
-                    box(title = "Download Data", closable = FALSE, width = 12, height = 500,
+                    box(title = "Download data", closable = FALSE, width = 12, height = 500,
                         status = "info", collapsible = FALSE, icon = icon("file-download"),
                         fluidRow(
                             column(
@@ -410,63 +398,78 @@ dashboardPage(
             ), # end tabItem
             
             tabItem(tabName = "t_cell",
-                    box(title = "Spike protein gene mutations in T cell epitopes detected in the UK", closable = FALSE, width = 12,
-                        status = "info", collapsible = FALSE, icon = icon("table"),   
-                        
-                        p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
-                        p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
-                        
-                        DTOutput("table_5"),
-                        
-                        h4("Table Key"),
-                        tags$ul(
-                            tags$li("WT Percentile Rank Value and Mut Percentile Rank Value: predicted IC50 nM for the corresponding reported restricting allele. 
+                    fluidRow(
+                        box(title = "Spike amino acid replacements in T cell epitopes, detected in the UK data", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("table"),   
+                            
+                            p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
+                            p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
+                            
+                            DTOutput("table_5"),
+                            
+                            h4("Table Key"),
+                            tags$ul(
+                                tags$li("WT Percentile Rank Value and Mut Percentile Rank Value: predicted IC50 nM for the corresponding reported restricting allele. 
                                     Predictions were performed using the NetMHCpan BA 4.1 algorithm, hosted by the IEDB."),
-                            tags$li("Fold difference indicates Increase/decrease in affinity defined by a two-fold difference in predicted IC50 nM."),
-                            tags$li("Binding is reported as a percentile rank value (as described ",a("here", href = "http://www.cbs.dtu.dk/services/NetMHCpan/", target = "_blank", .noWS = "outside"),"), the lower the value the stronger the binding.", 
-                                    tags$ul(tags$li("For HLA-I, values less then 2 are binders and values less than 0.5 strong binders."), 
-                                            tags$li("For HLA-II, values less then 5 are binders and values less than 1 strong binders.")),
-                                    .noWS = c("after-begin"))
+                                tags$li("Fold difference indicates Increase/decrease in affinity defined by a two-fold difference in predicted IC50 nM."),
+                                tags$li("Binding is reported as a percentile rank value (as described ",a("here", href = "http://www.cbs.dtu.dk/services/NetMHCpan/", target = "_blank", .noWS = "outside"),"), the lower the value the stronger the binding.", 
+                                        tags$ul(tags$li("For HLA-I, values less then 2 are binders and values less than 0.5 strong binders."), 
+                                                tags$li("For HLA-II, values less then 5 are binders and values less than 1 strong binders.")),
+                                        .noWS = c("after-begin"))
+                            )
                         )
                     ),
                     
-                    box(title = "T Cell Epitope Sequence Viewer", closable = FALSE, width = 12,
-                        status = "info", collapsible = FALSE, icon = icon("disease"),
-                        
-                        sliderInput("epitope_position", "Position:",
-                                    min = 1, max = wt %$% max(position),
-                                    value = 614, step = 1),
-                        
-                        switchInput(
-                            inputId = "epitope_ref", 
-                            label = "Ref AA", 
-                            offLabel = "Exclude",
-                            onLabel = "Include",
-                            value = FALSE,  
-                            onStatus = "success", 
-                            offStatus = "danger",
-                            inline = TRUE,
-                            size = "large"
-                        ),
-                        
-                        switchInput(
-                            inputId = "method",
-                            offLabel = "Bits",
-                            onLabel = "Probability",
-                            value = FALSE,
-                            label = "Method",
-                            inline = TRUE,
-                            onStatus = "info",
-                            offStatus = "warning",
-                            size = "large"
-                        ),
-                        
-                        plotOutput("epitope_sequence")
+                    fluidRow(
+                        box(title = "T cell epitope sequence viewer", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("disease"),
+                            
+                            sliderInput("epitope_position", "Position:",
+                                        min = 1, max = wt %$% max(position),
+                                        value = 614, step = 1),
+                            
+                            switchInput(
+                                inputId = "epitope_ref", 
+                                label = "Ref AA", 
+                                offLabel = "Exclude",
+                                onLabel = "Include",
+                                value = FALSE,  
+                                onStatus = "success", 
+                                offStatus = "danger",
+                                inline = TRUE,
+                                size = "large"
+                            ),
+                            
+                            switchInput(
+                                inputId = "method",
+                                offLabel = "Bits",
+                                onLabel = "Probability",
+                                value = FALSE,
+                                label = "Method",
+                                inline = TRUE,
+                                onStatus = "info",
+                                offStatus = "warning",
+                                size = "large"
+                            ),
+                            
+                            plotOutput("epitope_sequence"),
+                            
+                            p(.noWS = c("after-begin", "before-end"), 
+                              "Move the slider to see sequence logs showing amino acid replacements in any epitope that overlaps on a specific position in the spike protein sequence.
+                              Each letter represents an amino acid replacement present in a specific epitope. 
+                              The number below the sequence logo shows the position relative to the start position of the epitope.
+                              The height of a letter gives a measure of frequency of a mutation, whereas colour indicates amino acid chemistry.
+                              Frequencies are normalised within each epitope on a scale of entropy (0 to 4.3 bits).
+                              The wild-type epitope sequence and the start and end positions of the epitope are displayed above each sequence logo."),
+                            p(.noWS = c("after-begin", "before-end"), 
+                              "We thank Wagih, Omar.", 
+                              a(.noWS = c("after-begin", "before-end"), href = "https://doi.org/10.1093/bioinformatics/btx469", target = "_blank", "ggseqlogo: a versatile R package for drawing sequence logos."), em("Bioinformatics (2017)"), ".")
+                        )
                     ),
                     
                     fluidRow(
                         column(width = 10, offset = 1,
-                               box(title = "Download Table", closable = FALSE, width = 12,
+                               box(title = "Download table", closable = FALSE, width = 12,
                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
                                    fluidRow(
                                        column(
