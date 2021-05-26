@@ -72,6 +72,8 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     )))
   )
   
+  domain_palette <- qualitative_hcl(6, palette = "Set3")
+  
   # domain
   row_ha2 = rowAnnotation(
     Domain = horz_heat$domain,
@@ -82,11 +84,12 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     `Ab class 5` = horz_heat$NTD.1,
     col = list(
       Domain = c(
-        "FP" = "seashell2",
-        "NTD" = "navajowhite",
-        "RBD" = "pink",
-        "RBM" = "plum1",
-        "SP" = "lightblue1"
+        "SP" = domain_palette[4],
+        "NTD" = domain_palette[2],
+        "FP" = domain_palette[3],
+        "RBD" = domain_palette[1],
+        "RBM" = domain_palette[6],
+        "S2" = domain_palette[5]
       ),
       `Ab class 1` = c ("TRUE" = "lightgreen"),
       `Ab class 2` = c("TRUE" = "goldenrod1"),
