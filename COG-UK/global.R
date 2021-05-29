@@ -5,7 +5,7 @@ library(RColorBrewer)
 
 source("helpers.R")
 
-dataset_date <- ymd("2021-05-26") #TODO derive from directory name
+dataset_date <- ymd("2021-05-29") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -45,7 +45,6 @@ lineages_t3 <-
     "B.1.526" = "New York, USA. L5F, T95I, D253G, E484K or S477N and A701V",
     "A.27" = "Mayotte. L18F, L452R, N501Y, A653V, H655Y, Q677H, D796Y and G1219V.",
     "B.1.1.28" = "The Philippines. Δ141-143, Δ243-244, E484K, N501Y, P681H, E1092K, H1101Y and V1176F.",
-    
     "B.1.429" = "California, USA. D614G, G1251V, L452R, P26S, S13I, S1252C and W152C.",
     "B.1.324.1" = "UK associated variant. E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
     "P.2" = "Brazil. E484K and V1176F.",
@@ -54,7 +53,8 @@ lineages_t3 <-
     "B.1.617.1" = "India. E154K, L452R, E484Q and P681R.",
     "B.1.617.2" = "India. T19R, Δ156-157, R158G, L452R, T478K, D614G, P681R and D950N.",
     "B.1.617.3" = "India. T19R, Δ156-158, L452R, E484Q, D614G, P681R and D950N.",
-    "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V, D1139H."
+    "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V and D1139H.",
+    "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S."
     ) %>% 
   enframe("lineage", "reason")
 
