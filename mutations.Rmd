@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-26"
+  dataset_date:     "2021-05-29"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -33,14 +33,16 @@ dir.create(str_c("COG-UK/", params$dataset_date))
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
-  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), -lineage_support,
-         -lineages_version, -country
+  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history),
+         -lineages_version, -country, 
+         -received_date, -collection_date, -published_date, -starts_with("scorpio"), 
+         -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
          ) %>% # remove unused columns
   type_convert 
 
 mutations_uk <- 
   consortium_uk %>% 
-  select(sequence_name, sample_date, lineage, mutations) %>% 
+  select(sequence_name, sample_date, epi_week, lineage, mutations) %>% 
   distinct # get rid of identical variant calls
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
@@ -68,16 +70,17 @@ mutations_uk %<>%
 
 public <- 
   read_csv(global_csv, col_types = cols(.default = col_character())) %>% 
-  select(-cog_id, -gisaid_id, -(pillar_2:travel_history), -lineage_support,
-         -lineages_version
-         ) %>% 
+  # select(-cog_id, -gisaid_id, -is_pillar_2, -is_surveillance, is_travel_history, 
+  #        -lineages_version
+  #        ) %>% 
   filter(country == "UK" & !is.na(adm1)) %>% 
+  select(sequence_name, sample_date, epi_week, lineage, adm1) %>% 
   type_convert %>% 
   distinct # remove duplicates
 
 mutations_uk %<>% 
   inner_join(public) %>% 
-  select(-country) %>% 
+  # select(-country) %>% 
   mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %>% 
   semi_join(consortium_uk, by = c("sequence_name", "sample_date", "lineage", "epi_week")) %T>%  # exclude Crown dependencies and British Overseas Territories
