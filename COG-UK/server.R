@@ -13,6 +13,12 @@ library(ggseqlogo)
 # lineages_days_uk <- consortium_uk %>%
 # filter(lineage %in% levels(vui_voc$lineage)) %>%
 # dplyr::count(lineage, sample_date)
+# 
+epi_lookup <- 
+  tibble(
+    epi_date = seq(from = ymd("2020-01-26"), to = consortium_uk %$% max(sample_date), by = "week"),
+    epi_week = consortium_uk %$% levels(epi_week)
+  )  
 
 lineages_weeks_uk <- 
   consortium_uk %>%
@@ -25,7 +31,8 @@ lineages_weeks_uk <-
                                as.integer %>% 
                                keep(~ .x < epi_week %>% as.character %>% as.integer %>% min) 
   )) %>%  # drop filtered epi_weeks to exclude from x-axis
-  rename(`Epidemic week` = epi_week, Sequences = n, Lineage = lineage)
+  inner_join(epi_lookup) %>% 
+  rename(`Epidemic week` = epi_week, `Start date` = epi_date, Sequences = n, Lineage = lineage)
 
 lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
   mutations_s_uk_lv <- 
@@ -577,45 +584,27 @@ shinyServer(function(input, output, session) {
     })
     
     output$variant_time <- renderPlotly({
-      # ggplotly(
-      #   lineages_weeks_uk %>%
-      #     ggplot(aes(fill = Lineage, y = Sequences, x = `Epidemic week`) ) +
-      #     scale_x_discrete(drop=FALSE) +
-      #     theme_classic() +
-      #     theme(plot.title = element_text(hjust = 0.5)) +
-      #     labs(x = "Epidemic Week",
-      #          y = "Sequences",
-      #          fill = "Variant"
-      #          # title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")
-      #     ) +
-      #     # scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) +
-      #     geom_bar(position="stack", stat="identity")
-      # )
+      max_date <- lineages_weeks_uk %$% max(`Start date`)
       
-      # ggplotly(
-      #   lineages_days_uk %>%
-      #     ggplot(aes(fill = lineage, y = n, x = sample_date ) ) +
-      #     # scale_x_discrete(drop=FALSE) +
-      #     theme_classic() +
-      #     theme(plot.title = element_text(hjust = 0.5)) +
-      #     labs(x = "Date",
-      #          y = "Sequences",
-      #          fill = "Variant"
-      #          # title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")
-      #     ) +
-      #     # scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) +
-      #     geom_bar(position="stack", stat="identity")
-      # )
-      # 
-    #   ggplotly(
-    #     lineages_weeks_uk %>%
-    #       ggplot(aes(x = `Epidemic week`, y = Sequences, group = Lineage, color = Lineage)) + 
-    #       geom_line() + 
-    #       geom_point() +
-    #       scale_x_discrete(drop = FALSE) + # include all epi_week factor levels
-    #       theme_classic(),
-    #     tooltip = c("x","y","colour")
-    #   )
-    #   
+      ggplotly(
+        lineages_weeks_uk %>%
+          ggplot(aes(fill = Lineage, y = Sequences, x = `Start date`) ) +
+          theme_classic() +
+          scale_fill_discrete_qualitative(palette = "Dynamic") +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          labs(x = "Sample date",
+               y = "Sequences",
+               fill = "Variant"
+          ) +
+          
+          # scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) +
+          annotate("rect", 
+                   xmax = max_date + days(3), 
+                   xmin = max_date - days(10), 
+                   ymin = 0, 
+                   ymax = lineages_weeks_uk %$% max(Sequences) + 500,
+                   alpha = 0.2) +
+        geom_bar(position="stack", stat="identity")
+      )
     })
 })

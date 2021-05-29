@@ -173,13 +173,16 @@ dashboardPage(
                     )),
             
             tabItem("vui_voc", 
-                    # fluidRow(
-                    #     box(title = "Variants over Time", closable = FALSE, width = 12,
-                    #         status = "info", collapsible = FALSE, icon = icon("chart-line"),
-                    #         plotlyOutput("variant_time", height = "50vh")
-                    #     )
-                    # ),
-                    
+                    fluidRow(
+                        box(title = "Variants of concern (VOC) and under investigation (VUI) by week", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("chart-line"),
+                            plotlyOutput("variant_time", height = "70vh"),
+                            p("Variant sequence counts are grouped by week, starting on Sunday.
+                              The most recent sequence data (approx. the last two weeks) have low sample numbers
+                              so are highlighted with a grey box.")
+                        )
+                    ),
+
                     fluidRow(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) detected in the UK data", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),                                                
@@ -215,22 +218,39 @@ dashboardPage(
                     ),
                     
                     fluidRow(
-                        box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 4, 
-                            status = "orange", collapsible = TRUE, icon = icon("microscope"), height = 480,
-                            img(src = "mutants_lineage_B.1.351.png", class = "center-block img-responsive")),
-                        
-                        box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 4, 
+                        box(title = "Spike protein mutations (B.1.1.7)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "mutants_lineage_P.1.png", class = "center-block img-responsive")),
+                            img(src = "lineage_B.1.1.7_web.png", 
+                                class = "center-block img-responsive", 
+                                height = 480,
+                                alt = "B.1.1.7 spike structure with mutations")),
                         
-                        box(title = "Spike protein putations (B.1.1.7)", closable = FALSE, width = 4, 
+                        box(title = "Spike protein mutations (B.1.617.2)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "lineage_B.1.1.7.png", height = "480px", class = "center-block img-responsive"))
+                            img(src = "mutants_lineage_B.1.617.2_web.png", 
+                                class = "center-block img-responsive", 
+                                height = 480,
+                                alt = "B.1.617.2 spike structure with mutations"))
+                    ), 
+                    
+                    fluidRow(
+                        box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 6, 
+                            status = "orange", collapsible = TRUE, icon = icon("microscope"), 
+                            img(src = "mutants_lineage_B.1.351_web.png", 
+                                class = "center-block img-responsive", 
+                                height = 480,
+                                alt = "B.1.351 spike structure with mutations")),
+                        
+                        box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 6, 
+                            status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                            img(src = "mutants_lineage_P.1_web.png", 
+                                class = "center-block img-responsive", 
+                                height = 480, 
+                                alt = "P.1 spike structure with mutations"))
                     )
             ),
             
             tabItem(tabName = "report",
-                    # h1("COG-UK/Mutation Explorer"),
                     fluidRow(
                         box(title = "Spike amino acid replacements detected in the UK data: frequency, nations and date of first detection", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),   
