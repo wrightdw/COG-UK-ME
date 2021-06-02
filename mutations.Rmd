@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-05-29"
+  dataset_date:     "2021-06-02"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -1117,3 +1117,15 @@ lineages_weeks_uk %>%
   theme_classic()
 
 ```
+### Constellations UpSet plot
+```{r upset, eval=FALSE, include=FALSE}
+mutations_s_uk_wide <-
+  mutations_s_uk %>% 
+  filter(lineage %in% levels(vui_voc$lineage)) %>% 
+  filter(lineage %in% c("B.1.1.7", "B.1.351", "P.1")) %>% 
+  mutate(logical_true = TRUE) %>% 
+  pivot_wider(names_from = variant, values_from = logical_true, id_cols = c(sequence_name, variant), values_fill = FALSE)
+
+mutations_s_uk_wide
+```
+
