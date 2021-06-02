@@ -9,11 +9,6 @@ library(DT)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(ggseqlogo)
 
-# #TEST
-# lineages_days_uk <- consortium_uk %>%
-# filter(lineage %in% levels(vui_voc$lineage)) %>%
-# dplyr::count(lineage, sample_date)
-# 
 epi_lookup <- 
   tibble(
     epi_date = seq(from = ymd("2020-01-26"), to = consortium_uk %$% max(sample_date), by = "week"),
@@ -22,6 +17,7 @@ epi_lookup <-
 
 lineages_weeks_uk <- 
   consortium_uk %>%
+  # filter(adm1 == "Scotland") %>% 
   filter(lineage %in% levels(vui_voc$lineage)) %>% 
   # filter((lineage != "B.1.1.7" & lineage %in% levels(vui_voc$lineage)) | (lineage == "B.1.1.7" & e484k == "K")) %>% 
   # mutate(lineage = recode(lineage, B.1.1.7 = "B.1.1.7 with E484K")) %>% 
@@ -463,14 +459,12 @@ shinyServer(function(input, output, session) {
                                                     as.numeric %>% 
                                                     keep(~ .x < input$epi_week[1] | .x > input$epi_week[2]) %>% 
                                                     as.character)) %>% # drop filtered epi_weeks to exclude from x-axis
-        ggplot(aes(fill=variant, y=n, x=epi_week) ) +
-        scale_x_discrete(drop=FALSE) +
+        inner_join(epi_lookup) %>% 
+        rename(`Sample date` = epi_date, Sequences = n, Mutation = variant) %>% # display names
+        ggplot(aes(fill = Mutation, y = Sequences, x = `Sample date`) ) +
         theme_classic() +
         theme(plot.title = element_text(hjust = 0.5)) +
-        labs(x = "Epidemic Week", 
-             y = "Sequences", 
-             fill = "Variant",
-             title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")) +
+        labs(title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")) +
         scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) 
     }) 
     
