@@ -9,27 +9,6 @@ library(DT)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(ggseqlogo)
 
-epi_lookup <- 
-  tibble(
-    epi_date = seq(from = ymd("2020-01-26"), to = consortium_uk %$% max(sample_date), by = "week"),
-    epi_week = consortium_uk %$% levels(epi_week)
-  )  
-
-lineages_weeks_uk <- 
-  consortium_uk %>%
-  # filter(adm1 == "Scotland") %>% 
-  filter(lineage %in% levels(vui_voc$lineage)) %>% 
-  # filter((lineage != "B.1.1.7" & lineage %in% levels(vui_voc$lineage)) | (lineage == "B.1.1.7" & e484k == "K")) %>% 
-  # mutate(lineage = recode(lineage, B.1.1.7 = "B.1.1.7 with E484K")) %>% 
-  dplyr::count(lineage, epi_week) %>% 
-  mutate(epi_week = fct_drop(epi_week, only = {.} %$% 
-                               levels(epi_week) %>% 
-                               as.integer %>% 
-                               keep(~ .x < epi_week %>% as.character %>% as.integer %>% min) 
-  )) %>%  # drop filtered epi_weeks to exclude from x-axis
-  inner_join(epi_lookup) %>% 
-  rename(`Epidemic week` = epi_week, `Start date` = epi_date, Sequences = n, Lineage = lineage)
-
 lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
   mutations_s_uk_lv <- 
     mutations_s_uk %>%
@@ -459,9 +438,9 @@ shinyServer(function(input, output, session) {
                                                     as.numeric %>% 
                                                     keep(~ .x < input$epi_week[1] | .x > input$epi_week[2]) %>% 
                                                     as.character)) %>% # drop filtered epi_weeks to exclude from x-axis
-        inner_join(epi_lookup) %>% 
-        rename(`Sample date` = epi_date, Sequences = n, Mutation = variant) %>% # display names
-        ggplot(aes(fill = Mutation, y = Sequences, x = `Sample date`) ) +
+        # inner_join(epi_lookup) %>% 
+        rename(`Epidemic week` = epi_week, Sequences = n, Mutation = variant) %>% # display names
+        ggplot(aes(fill = Mutation, y = Sequences, x = `Epidemic week`) ) +
         theme_classic() +
         theme(plot.title = element_text(hjust = 0.5)) +
         labs(title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")) +
@@ -582,9 +561,12 @@ shinyServer(function(input, output, session) {
       
       ggplotly(
         lineages_weeks_uk %>%
+          filter(Lineage != "Variants: other") %>% 
           ggplot(aes(fill = Lineage, y = Sequences, x = `Start date`) ) +
           theme_classic() +
           scale_fill_discrete_qualitative(palette = "Dynamic") +
+          scale_x_date(breaks = date_breaks("1 month"),
+                       labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
                y = "Sequences",

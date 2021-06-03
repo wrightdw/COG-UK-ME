@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-06-02"
+  dataset_date:     "2021-06-03"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -40,9 +40,20 @@ consortium_uk <-
          ) %>% # remove unused columns
   type_convert 
 
+# Epidemic week / Sunday date conversion
+epi_lookup <-
+  tibble(
+    epi_date = seq(from = ymd("2020-01-26"), to = consortium_uk %$% max(sample_date), by = "week"),
+    epi_week = seq(consortium_uk %$% min(epi_week), consortium_uk %$% max(epi_week))
+  )
+
+consortium_uk %<>% 
+  inner_join(epi_lookup) %>% 
+  relocate(epi_date, .after = epi_week)
+
 mutations_uk <- 
   consortium_uk %>% 
-  select(sequence_name, sample_date, epi_week, lineage, mutations) %>% 
+  select(sequence_name, sample_date, epi_week, epi_date, lineage, mutations) %>% 
   distinct # get rid of identical variant calls
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
@@ -51,7 +62,7 @@ consortium_uk %<>%
   select(-mutations) %>% 
   distinct %>%  # remove duplicates
   mutate(across(c(epi_week, adm1), as_factor)) %>%
-  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% 
+  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% # expand factor levels to include missing weeks
   write_rds(str_c("COG-UK/", params$dataset_date, "/consortium_uk.rds"))
 
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
@@ -70,9 +81,6 @@ mutations_uk %<>%
 
 public <- 
   read_csv(global_csv, col_types = cols(.default = col_character())) %>% 
-  # select(-cog_id, -gisaid_id, -is_pillar_2, -is_surveillance, is_travel_history, 
-  #        -lineages_version
-  #        ) %>% 
   filter(country == "UK" & !is.na(adm1)) %>% 
   select(sequence_name, sample_date, epi_week, lineage, adm1) %>% 
   type_convert %>% 
@@ -80,10 +88,11 @@ public <-
 
 mutations_uk %<>% 
   inner_join(public) %>% 
-  # select(-country) %>% 
+  inner_join(epi_lookup) %>% 
+  relocate(epi_date, .after = epi_week) %>% 
   mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %>% 
-  semi_join(consortium_uk, by = c("sequence_name", "sample_date", "lineage", "epi_week")) %T>%  # exclude Crown dependencies and British Overseas Territories
+  semi_join(consortium_uk, by = c("sequence_name", "sample_date", "lineage", "epi_week")) %T>% # exclude Crown dependencies and British Overseas Territories
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
 
 mutations_uk
@@ -1128,4 +1137,21 @@ mutations_s_uk_wide <-
 
 mutations_s_uk_wide
 ```
+### VUI/VOC/other
+```{r vui_voc_other}
+vui_voc_other <- 
+  consortium_uk %>%
+  filter(!(lineage %in% levels(vui_voc$lineage))) %>% 
+  dplyr::count(epi_date) %>% 
+  mutate(lineage = "Variants: other")
 
+lineages_weeks_uk <- 
+  consortium_uk %>%
+  filter(lineage %in% levels(vui_voc$lineage)) %>% 
+  dplyr::count(lineage, epi_date) %>% 
+  bind_rows(vui_voc_other) %>% 
+  rename(`Start date` = epi_date, Sequences = n, Lineage = lineage)
+
+lineages_weeks_uk %T>% 
+  write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk.rds"))
+```
