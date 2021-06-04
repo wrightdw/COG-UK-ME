@@ -176,14 +176,18 @@ dashboardPage(
                     fluidRow(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) by week", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
-                            # sliderTextInput(
-                            #     inputId = "variant_week",
-                            #     label = "Date range:", 
-                            #     choices = epi_lookup$epi_date,
-                            #     selected = c(epi_lookup %$% min(epi_date),
-                            #                  epi_lookup %$% max(epi_date)),
-                            #     animate = TRUE
-                            # ),
+                            sliderInput(
+                                inputId = "variant_range", 
+                                label = "Date range:",
+                                min = lineages_weeks_uk %$% min(`Start date`), 
+                                max = lineages_weeks_uk %$% max(`Start date`), 
+                                value = c(lineages_weeks_uk %>% filter(Lineage != "Variants: other") %$% min(`Start date`),
+                                          lineages_weeks_uk %$% max(`Start date`)),
+                                step = 7,
+                                ticks = FALSE,
+                                animate = TRUE,
+                                timeFormat = "%d %b %y"
+                            ),
                             
                             plotlyOutput("variant_time", height = "70vh"),
                             p("Variant sequence counts are grouped by week, starting on Sunday.

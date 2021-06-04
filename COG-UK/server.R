@@ -558,10 +558,10 @@ shinyServer(function(input, output, session) {
     
     output$variant_time <- renderPlotly({
       max_date <- lineages_weeks_uk %$% max(`Start date`)
-      
-      ggplotly(
+      ggplotly({
+        vui_voc_plot <- 
         lineages_weeks_uk %>%
-          filter(Lineage != "Variants: other") %>% 
+          filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Lineage, y = Sequences, x = `Start date`) ) +
           theme_classic() +
           scale_fill_discrete_qualitative(palette = "Dynamic") +
@@ -571,16 +571,39 @@ shinyServer(function(input, output, session) {
           labs(x = "Sample date",
                y = "Sequences",
                fill = "Variant"
-          ) +
-          
-          # scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) +
-          annotate("rect", 
-                   xmax = max_date + days(3), 
-                   xmin = max_date - days(10), 
-                   ymin = 0, 
-                   ymax = lineages_weeks_uk %$% max(Sequences) + 500,
-                   alpha = 0.2) +
-        geom_bar(position="stack", stat="identity")
-      )
+          ) 
+        
+        # TODO refactor
+        # Set height of annotation box according to highest weekly total sequences
+        ymax <- 
+          lineages_weeks_uk %>% group_by(`Start date`) %>% 
+          summarise(Sequences = sum(Sequences)) %$%
+          max(Sequences)
+        
+        # display annotation if upper slider is in latest 2 weeks
+        if(input$variant_range[2] >= lineages_weeks_uk %$% max(`Start date`) ){
+          vui_voc_plot <- 
+            vui_voc_plot +
+            annotate("rect", 
+                     xmax = max_date + days(3), 
+                     xmin = max_date - days(10), 
+                     ymin = 0, 
+                     ymax = ymax,
+                     alpha = 0.2)
+        } else if (input$variant_range[2] >= lineages_weeks_uk %$% max(`Start date`) - days(7)){
+          vui_voc_plot <- 
+            vui_voc_plot +
+            annotate("rect", 
+                     xmax = max_date + days(-4), 
+                     xmin = max_date - days(10), 
+                     ymin = 0, 
+                     ymax = ymax,
+                     alpha = 0.2)
+        }
+        
+        vui_voc_plot <- vui_voc_plot + geom_bar(position="stack", stat="identity")    
+        
+        vui_voc_plot
+      })
     })
 })
