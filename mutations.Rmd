@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-06-04"
+  dataset_date:     "2021-06-07"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -22,7 +22,7 @@ library(htmltools)
 # also require seqinr
 ```
 ```{r files}
-global_csv <- str_c("cog_global_", params$dataset_date, "_public.csv")
+# global_csv <- str_c("cog_global_", params$dataset_date, "_public.csv")
 consortium_csv <- str_c("cog_global_", params$dataset_date, "_consortium.csv")
 
 dir.create(str_c("COG-UK/", params$dataset_date))
@@ -47,25 +47,24 @@ epi_lookup <-
     epi_week = seq(consortium_uk %$% min(epi_week), consortium_uk %$% max(epi_week))
   )
 
+epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
+sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
+
 consortium_uk %<>% 
   inner_join(epi_lookup) %>% 
-  relocate(epi_date, .after = epi_week)
+  relocate(epi_date, .after = epi_week) %>% 
+  mutate(across(c(epi_week, adm1), as_factor)) %>%
+  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) # expand factor levels to include any missing weeks
 
 mutations_uk <- 
   consortium_uk %>% 
-  select(sequence_name, sample_date, epi_week, epi_date, lineage, mutations) %>% 
+  select(sequence_name, sample_date, epi_week, epi_date, lineage, adm1, mutations) %>% 
   distinct # get rid of identical variant calls
-
-epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
 
 consortium_uk %<>% 
   select(-mutations) %>% 
-  distinct %>%  # remove duplicates
-  mutate(across(c(epi_week, adm1), as_factor)) %>%
-  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %T>% # expand factor levels to include missing weeks
+  distinct %T>% # remove duplicates
   write_rds(str_c("COG-UK/", params$dataset_date, "/consortium_uk.rds"))
-
-sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 
 consortium_uk
 ```
@@ -77,22 +76,8 @@ mutations_uk %<>%
   separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
   drop_na() %>%
   filter(gene != "synSNP") %>%
-  mutate(position = parse_number(variant))
-
-public <- 
-  read_csv(global_csv, col_types = cols(.default = col_character())) %>% 
-  filter(country == "UK" & !is.na(adm1)) %>% 
-  select(sequence_name, sample_date, epi_week, lineage, adm1) %>% 
-  type_convert %>% 
-  distinct # remove duplicates
-
-mutations_uk %<>% 
-  inner_join(public) %>% 
-  inner_join(epi_lookup) %>% 
-  relocate(epi_date, .after = epi_week) %>% 
-  mutate(across(c(epi_week, gene, position, variant, adm1), as_factor)) %>%
-  mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) %>% 
-  semi_join(consortium_uk, by = c("sequence_name", "sample_date", "lineage", "epi_week")) %T>% # exclude Crown dependencies and British Overseas Territories
+  mutate(position = parse_number(variant)) %>% 
+  mutate(across(c(gene, position, variant), as_factor)) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
 
 mutations_uk
@@ -107,11 +92,11 @@ genes_positions <-
 
 sequences_by_week <- 
   consortium_uk %>% 
-  dplyr::count(epi_week, name = "n_sequences")
+  dplyr::count(epi_week, epi_date, name = "n_sequences")
 
 positions_by_week <- 
   mutations_uk %>%
-  dplyr::count(epi_week, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
+  dplyr::count(epi_week, epi_date, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
 
 reference_counts <- 
   positions_by_week %>%
@@ -123,23 +108,17 @@ reference_counts <-
 
 mutation_counts <- 
   mutations_uk %>%
-  dplyr::count(epi_week, gene, position, variant) %>% 
+  dplyr::count(epi_week, epi_date, gene, position, variant) %>% 
   mutate(adm1 = "UK")
 
 #### Nations ####
-levels_adm1 <- c(Scotland = "UK-SCT",
-                 Wales = "UK-WLS", 
-                 England = "UK-ENG", 
-                 Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
-
 sequences_by_week_nations <-
   consortium_uk %>%
-  dplyr::count(epi_week, adm1, name = "n_sequences")
+  dplyr::count(epi_week, epi_date, adm1, name = "n_sequences")
 
 positions_by_week_nations <-
   mutations_uk %>%
-  mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
-  dplyr::count(epi_week, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
+  dplyr::count(epi_week, epi_date, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
 
 reference_counts_nations <- 
   positions_by_week_nations %>%
@@ -150,13 +129,12 @@ reference_counts_nations <-
 
 mutation_counts_nations <- 
   mutations_uk %>%
-  mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>%  # recode nation names from consortium
-  dplyr::count(epi_week, gene, position, variant, adm1)
+  dplyr::count(epi_week, epi_date, gene, position, variant, adm1)
 
 # TODO calculate UK counts by summing the nation counts
 mutation_reference_counts <- 
   bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %>% 
-  mutate(across(variant, as_factor)) %T>%
+  mutate(across(variant, as_factor)) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutation_reference_counts.rds"))
 
 mutation_reference_counts
