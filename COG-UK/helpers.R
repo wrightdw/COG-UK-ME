@@ -142,11 +142,11 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
 antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){
   nation = match.arg(nation)
   
-  levels_adm1 <- c(Scotland = "UK-SCT",
-                   Wales = "UK-WLS", 
-                   England = "UK-ENG", 
-                   Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
-  
+  # levels_adm1 <- c(Scotland = "UK-SCT",
+  #                  Wales = "UK-WLS", 
+  #                  England = "UK-ENG", 
+  #                  Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
+  # 
   mutations_s_uk %<>% 
     filter(lineage == !!lineage & !(variant %in% !!defining))
   
@@ -155,7 +155,7 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   
   if(nation != "UK"){
     mutations_s_uk %<>% 
-      mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>% 
+      # mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>% 
       filter(adm1 == nation) 
     
     consortium_uk %<>%

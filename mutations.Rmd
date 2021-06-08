@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-06-07"
+  dataset_date:     "2021-06-08"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -22,7 +22,6 @@ library(htmltools)
 # also require seqinr
 ```
 ```{r files}
-# global_csv <- str_c("cog_global_", params$dataset_date, "_public.csv")
 consortium_csv <- str_c("cog_global_", params$dataset_date, "_consortium.csv")
 
 dir.create(str_c("COG-UK/", params$dataset_date))
@@ -422,6 +421,7 @@ deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds")
 mutations_s_uk <- 
   mutations_uk %>% 
   filter(gene == "S") %>% 
+  select(-gene) %>% 
   mutate(across(c(variant, position), fct_drop))
 
 lineage_distinct <- 
@@ -459,7 +459,7 @@ variants_nations_28 <-
     filter(sample_date >= sample_date_28) %>% 
     dplyr::count(position, variant, adm1) %>% 
     pivot_wider(names_from = adm1, values_from = n) %>% 
-    rename_with(~paste0(., "_28"), .cols = starts_with("UK-"))
+    rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
 
 database <- 
   read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
@@ -492,16 +492,16 @@ database %<>%
     `Global Lineages` = lineages, 
     
     `numSeqs UK` = UK,
-    `numSeqs Eng` = `UK-ENG`,
-    `numSeqs NI` = `UK-NIR`,
-    `numSeqs Scotland` = `UK-SCT`,
-    `numSeqs Wales` = `UK-WLS`,
+    `numSeqs Eng` = England,
+    `numSeqs NI` = Northern_Ireland,
+    `numSeqs Scotland` = Scotland,
+    `numSeqs Wales` = Wales,
 
     `numSeqs UK 28 days` = UK_28,
-    `numSeqs Eng 28 days` = `UK-ENG_28`,
-    `numSeqs Scotland 28 days` = `UK-SCT_28`,
-    `numSeqs Wales 28 days` = `UK-WLS_28`, 
-    `numSeqs NI 28 days` = `UK-NIR_28`) %>% 
+    `numSeqs Eng 28 days` = England_28,
+    `numSeqs Scotland 28 days` = Scotland_28,
+    `numSeqs Wales 28 days` = Wales_28, 
+    `numSeqs NI 28 days` = Northern_Ireland_28) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
   mutate(across(c(position, mutation), as.character)) %>% 
   mutate(across(position, as.integer)) %>% 
@@ -580,7 +580,7 @@ consortium_v <-
         )
 consortium_v
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   summarise(n_distinct(variant))
 ```
@@ -595,7 +595,7 @@ mutations_s_uk %>%
   filter(n >= 100) 
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 mutations_s_uk %>% 
   dplyr::count(variant) %>% 
   filter(n >= 5) %>% 
@@ -616,7 +616,7 @@ database %>%
 ```
 
 
-```{r setdiff}
+```{r setdiff, eval=FALSE, include=FALSE}
 setdiff(
 consortium_uk %>% filter(d614g == "G") %>% select(sequence_name),
 mutations_s_uk %>% filter(variant == "D614G") %>% select(sequence_name)
@@ -1128,7 +1128,7 @@ lineages_weeks_uk <-
   filter(lineage %in% levels(vui_voc$lineage)) %>% 
   dplyr::count(lineage, epi_date) %>% 
   bind_rows(vui_voc_other) %>% 
-  rename(`Start date` = epi_date, Sequences = n, Lineage = lineage)
+  rename(`Start date` = epi_date, Sequences = n, Variant = lineage)
 
 lineages_weeks_uk %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk.rds"))

@@ -35,11 +35,6 @@ lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
       bind_rows(summarise(., n_sequences_28 = sum(n_sequences_28)) %>% 
                   mutate(adm1 = "UK"))
   ) %>%
-    mutate(adm1 = recode(adm1, 
-                         `UK-ENG` = "England",
-                         `UK-NIR` = "Northern_Ireland",
-                         `UK-SCT` = "Scotland",
-                         `UK-WLS` = "Wales")) %>% 
     pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>%
     mutate(lineage = !!lineage, variant = !!variant, .before = 1)
 }
@@ -212,12 +207,13 @@ shinyServer(function(input, output, session) {
     
     ######## Data download inputs ########
     
+    ## Mutations
     # Reactive value to generate downloadable table for selected table 1 mutation metadata
     datasetInput <- reactive({
       mutations_s_uk %>% 
         filter(variant == input$dataset) %>% 
         filter(sample_date >= sample_date_28) %>% 
-        select(sequence_name, sample_date, epi_week, lineage) %>% 
+        select(sequence_name, sample_date, epi_week, epi_date, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
     
@@ -227,7 +223,7 @@ shinyServer(function(input, output, session) {
         mutate(across(ends_with("(%)"), ~.x * 100)) # convert decimal fraction to percentage
     })
     
-    ## Table 3
+    ## Variants
     # Reactive value to generate downloadable table for selected lineage + mutation
     # TODO regex switch
     concernInput <- reactive({
@@ -257,7 +253,7 @@ shinyServer(function(input, output, session) {
       }
       
       concern_download %>% 
-        select(sequence_name, sample_date, epi_week, lineage) %>% 
+        select(sequence_name, sample_date, epi_week, epi_date, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
     
@@ -267,11 +263,12 @@ shinyServer(function(input, output, session) {
         mutate(across(ends_with("(%)"), ~.x * 100)) # convert decimal fraction to percentage
     })
     
+    ## Antigenic mutations
     # Reactive value to generate downloadable table for selected mutation
     escapeInput <- reactive({
       mutations_s_uk %>% 
         filter(variant == input$selectEscape) %>% 
-        select(sequence_name, sample_date, epi_week, lineage) %>% 
+        select(sequence_name, sample_date, epi_week, epi_date, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
     
@@ -361,7 +358,7 @@ shinyServer(function(input, output, session) {
     
     output$table_3 <- renderDT({
       table_3() %>% 
-        datatable(filter = "none", rownames = FALSE, 
+        datatable(filter = "none", escape = FALSE, rownames = FALSE, 
                   options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
         formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
     })
@@ -432,21 +429,18 @@ shinyServer(function(input, output, session) {
         filter(gene == input$gene & position == input$position) %>%
         mutate(variant = variant %>% fct_infreq) %>% # fix variant colour by frequency
         filter(adm1 == input$nation) %>%
-        filter(epi_week %in% c(input$epi_week[1]:input$epi_week[2])) %>% # match because epi_week is factor
-        mutate(epi_week = fct_drop(epi_week, only = {.} %$% 
-                                                    levels(epi_week) %>% 
-                                                    as.numeric %>% 
-                                                    keep(~ .x < input$epi_week[1] | .x > input$epi_week[2]) %>% 
-                                                    as.character)) %>% # drop filtered epi_weeks to exclude from x-axis
-        # inner_join(epi_lookup) %>% 
-        rename(`Epidemic week` = epi_week, Sequences = n, Mutation = variant) %>% # display names
-        ggplot(aes(fill = Mutation, y = Sequences, x = `Epidemic week`) ) +
+        filter(epi_date >= input$mutation_range[1] & epi_date <= input$mutation_range[2]) %>% 
+        rename(`Sample date` = epi_date, Sequences = n, Mutation = variant) %>% # display names
+        ggplot(aes(fill = Mutation, y = Sequences, x = `Sample date`) ) +
         theme_classic() +
         theme(plot.title = element_text(hjust = 0.5)) +
         labs(title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")) +
-        scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) 
+        scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) +
+        scale_x_date(breaks = date_breaks("1 month"),
+                     labels = date_format("%b %y"))
     }) 
     
+    # mutation plot by percentage or count
     mutation_plot_bar <- reactive({
       if(input$percentage){
         gg_bar <- 
@@ -562,21 +556,21 @@ shinyServer(function(input, output, session) {
         vui_voc_plot <- 
         lineages_weeks_uk %>%
           filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2]) %>% 
-          ggplot(aes(fill = Lineage, y = Sequences, x = `Start date`) ) +
+          ggplot(aes(fill = Variant, y = Sequences, x = `Start date`) ) +
           theme_classic() +
           scale_fill_discrete_qualitative(palette = "Dynamic") +
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
-               y = "Sequences",
-               fill = "Variant"
+               y = "Sequences"
           ) 
         
         # TODO refactor
         # Set height of annotation box according to highest weekly total sequences
         ymax <- 
-          lineages_weeks_uk %>% group_by(`Start date`) %>% 
+          lineages_weeks_uk %>% 
+          group_by(`Start date`) %>% 
           summarise(Sequences = sum(Sequences)) %$%
           max(Sequences)
         

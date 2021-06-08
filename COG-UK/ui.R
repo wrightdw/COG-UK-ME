@@ -29,6 +29,10 @@ dashboardPage(
             ))),
     
     sidebar = dashboardSidebar(
+        disable = FALSE, 
+        minified = FALSE, 
+        collapsed = FALSE,
+        
         sidebarMenu(
             id = "sidebar_menu",
             menuItem("VOCs/VUIs in the UK", tabName = "vui_voc", selected = TRUE, icon = icon("viruses")),
@@ -62,14 +66,6 @@ dashboardPage(
             ),
             
             chooseSliderSkin("Modern", "#5bc0de"), # Bootstrap info colour
-            sliderTextInput(
-                inputId = "epi_week",
-                label = "Epidemic week range:", 
-                choices = consortium_uk$epi_week %>% levels,
-                selected = c(consortium_uk$epi_week %>% levels %>% first, 
-                             consortium_uk$epi_week %>% levels %>% last),
-                animate = TRUE
-            )
         ),
         conditionalPanel(
             condition = "input.sidebar_menu == 'immunology' && input.tabs_antigenic == 'antibody'", 
@@ -176,12 +172,14 @@ dashboardPage(
                     fluidRow(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) by week", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
+                            
+                            chooseSliderSkin("Modern", "#5bc0de"), # Bootstrap info colour
                             sliderInput(
                                 inputId = "variant_range", 
                                 label = "Date range:",
                                 min = lineages_weeks_uk %$% min(`Start date`), 
                                 max = lineages_weeks_uk %$% max(`Start date`), 
-                                value = c(lineages_weeks_uk %>% filter(Lineage != "Variants: other") %$% min(`Start date`),
+                                value = c(lineages_weeks_uk %>% filter(Variant != "Variants: other") %$% min(`Start date`),
                                           lineages_weeks_uk %$% max(`Start date`)),
                                 step = 7,
                                 ticks = FALSE,
@@ -207,7 +205,7 @@ dashboardPage(
                         column(width = 6, 
                                box(title = "Download metadata", closable = FALSE, width = NULL, 
                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
-                                   p("Download a CSV file, for each variant, containing COG-UK sequence name, sample date, epidemic week and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
+                                   p("Download a CSV file, for each variant, containing COG-UK sequence name, sample date, epidemiological week, epidemiological week start date and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
                                    selectizeInput("concern", "Choose lineage:",
                                                   choices = c(lineages_t3$lineage, 
                                                               "B.1.1.7 + E484K", 
@@ -280,7 +278,7 @@ dashboardPage(
                             fluidRow(
                                 column(
                                     width = 8,
-                                    p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemic week, and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
+                                    p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemiological week, epidemiological week start date and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
                                 ),
                                 
                                 (function() { 
@@ -349,7 +347,21 @@ dashboardPage(
             
             tabItem(tabName = "dashboard",
                     fluidRow(box(
+                        sliderInput(
+                            inputId = "mutation_range", 
+                            label = "Date range:",
+                            min = mutations_uk %$% min(epi_date), 
+                            max = mutations_uk %$% max(epi_date), 
+                            value = c(mutations_uk %$% min(epi_date),
+                                      mutations_uk %$% max(epi_date)),
+                            step = 7,
+                            ticks = FALSE,
+                            animate = TRUE,
+                            timeFormat = "%d %b %y"
+                        ),
+                        
                         plotlyOutput("mutation_time", height = "80vh"), 
+                        
                         width = 12,
                         status = "info",
                         collapsible = FALSE,
@@ -411,7 +423,7 @@ dashboardPage(
                         fluidRow(
                             column(
                                 width = 6,
-                                p("Download a CSV file containing COG-UK sequence name, sample date, epidemic week and global lineage.
+                                p("Download a CSV file containing COG-UK sequence name, sample date, epidemiological week, epidemiological week start date and global lineage.
                                         Cumulative UK sequences are filtered by the selected amino acid replacement.")
                             ),
                             
