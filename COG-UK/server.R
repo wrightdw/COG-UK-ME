@@ -425,7 +425,8 @@ shinyServer(function(input, output, session) {
         mutation_reference_counts %<>% filter(variant != "WT") 
       }
       
-      mutation_reference_counts %>% 
+      mutation_reference_plot <- 
+        mutation_reference_counts %>% 
         filter(gene == input$gene & position == input$position) %>%
         mutate(variant = variant %>% fct_infreq) %>% # fix variant colour by frequency
         filter(adm1 == input$nation) %>%
@@ -438,20 +439,65 @@ shinyServer(function(input, output, session) {
         scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) +
         scale_x_date(breaks = date_breaks("1 month"),
                      labels = date_format("%b %y"))
+      
+
+      # mutation_reference_plot <- mutation_reference_plot + geom_bar(position="stack", stat="identity")    
+      mutation_reference_plot
     }) 
     
     # mutation plot by percentage or count
     mutation_plot_bar <- reactive({
+      
+      max_date <- mutation_reference_counts %$% max(epi_date)
+      gg_bar <- mutation_plot()
+      
+      # upper range slider is in most recent 2 weeks
+      if (input$mutation_range[2] >= max_date - days(7)){
+        if(input$mutation_range[2] >= max_date ){
+          xmax = max_date + days(3)
+        } else{
+          xmax = max_date + days(-4)
+        }
+        
+        if(input$percentage){
+          ymax <- 1
+        } else {
+          # TODO cache maximum weekly counts for UK and nations
+          if(input$nation == "UK"){
+            ymax <-
+              consortium_uk %>%
+              count(epi_date) %$%
+              max(n)
+          } else {
+            ymax <-
+              consortium_uk %>%
+              filter(adm1 == input$nation) %>% 
+              count(epi_date) %$%
+              max(n)
+          }
+        }
+        
+        gg_bar <- 
+          gg_bar + 
+          annotate("rect",
+                   xmax = xmax,
+                   xmin = max_date - days(10),
+                   ymin = 0,
+                   ymax = ymax,
+                   alpha = 0.2)
+      }
+      
       if(input$percentage){
         gg_bar <- 
-          mutation_plot() +
+          gg_bar +
           geom_bar(position="fill", stat="identity") +
           scale_y_continuous(labels = scales::percent_format())
       } else {
         gg_bar <- 
-          mutation_plot() +
+          gg_bar + 
           geom_bar(position="stack", stat="identity")
       }
+      
       gg_bar
     }) %>% debounce(500) # allow 500ms to update percentage switch so don't display plot immediately
     
@@ -551,7 +597,6 @@ shinyServer(function(input, output, session) {
     })
     
     output$variant_time <- renderPlotly({
-      max_date <- lineages_weeks_uk %$% max(`Start date`)
       ggplotly({
         vui_voc_plot <- 
         lineages_weeks_uk %>%
@@ -566,29 +611,26 @@ shinyServer(function(input, output, session) {
                y = "Sequences"
           ) 
         
-        # TODO refactor
         # Set height of annotation box according to highest weekly total sequences
         ymax <- 
-          lineages_weeks_uk %>% 
-          group_by(`Start date`) %>% 
-          summarise(Sequences = sum(Sequences)) %$%
-          max(Sequences)
+          consortium_uk %>% 
+          count(epi_date) %$% 
+          max(n)
+        
+        max_date <- lineages_weeks_uk %$% max(`Start date`)
         
         # display annotation if upper slider is in latest 2 weeks
-        if(input$variant_range[2] >= lineages_weeks_uk %$% max(`Start date`) ){
+        if (input$variant_range[2] >= max_date - days(7)){
+          if(input$variant_range[2] >= max_date ){
+            xmax = max_date + days(3) 
+          } else{
+            xmax = max_date + days(-4) 
+          }
+          
           vui_voc_plot <- 
             vui_voc_plot +
             annotate("rect", 
-                     xmax = max_date + days(3), 
-                     xmin = max_date - days(10), 
-                     ymin = 0, 
-                     ymax = ymax,
-                     alpha = 0.2)
-        } else if (input$variant_range[2] >= lineages_weeks_uk %$% max(`Start date`) - days(7)){
-          vui_voc_plot <- 
-            vui_voc_plot +
-            annotate("rect", 
-                     xmax = max_date + days(-4), 
+                     xmax = xmax, 
                      xmin = max_date - days(10), 
                      ymin = 0, 
                      ymax = ymax,
@@ -600,4 +642,5 @@ shinyServer(function(input, output, session) {
         vui_voc_plot
       })
     })
+    
 })

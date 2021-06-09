@@ -361,12 +361,15 @@ dashboardPage(
                         ),
                         
                         plotlyOutput("mutation_time", height = "80vh"), 
+                        p("Mutation counts are grouped by week, starting on Sunday.
+                              The most recent sequence data (approx. the last two weeks) have low sample numbers
+                              so are highlighted with a grey box."),
                         
                         width = 12,
                         status = "info",
                         collapsible = FALSE,
                         closable = FALSE, 
-                        title = "Spike amino acid replacement frequencies by week in the UK data",
+                        title = "Amino acid replacement frequencies by week in the UK data",
                         icon = icon("chart-bar")
                     ))),
             
