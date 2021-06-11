@@ -45,6 +45,13 @@ dashboardPage(
         ),
         
         conditionalPanel(
+            condition =  "input.sidebar_menu == 'vui_voc'",
+            hr(),
+            prettySwitch("variant_percentage", "Percentage", FALSE, status = "info", fill = TRUE),
+            prettySwitch("variant_day", "By day", FALSE, status = "info", fill = TRUE)
+        ),
+        
+        conditionalPanel(
             condition =  "input.sidebar_menu == 'dashboard'",
             hr(),
             selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), 
@@ -68,7 +75,7 @@ dashboardPage(
             chooseSliderSkin("Modern", "#5bc0de"), # Bootstrap info colour
         ),
         conditionalPanel(
-            condition = "input.sidebar_menu == 'immunology' && input.tabs_antigenic == 'antibody'", 
+            condition = "input.sidebar_menu == 'immunology'", 
             hr(),
             prettyCheckboxGroup("escape", "Escape:",
                                 c("Monoclonal Ab" = "monoclonal",
@@ -173,24 +180,26 @@ dashboardPage(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) by week", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
                             
+                            plotlyOutput("variant_time", height = "70vh"),
+                            
                             chooseSliderSkin("Modern", "#5bc0de"), # Bootstrap info colour
                             sliderInput(
                                 inputId = "variant_range", 
                                 label = "Date range:",
-                                min = lineages_weeks_uk %$% min(`Start date`), 
-                                max = lineages_weeks_uk %$% max(`Start date`), 
-                                value = c(lineages_weeks_uk %>% filter(Variant != "Variants: other") %$% min(`Start date`),
-                                          lineages_weeks_uk %$% max(`Start date`)),
-                                step = 7,
+                                min = lineages_days_uk_all %$% min(sample_date), 
+                                max = lineages_days_uk_all %$% max(sample_date), 
+                                value = c(lineages_weeks_uk_all %>% filter(lineage %in% levels(vui_voc$lineage)) %$% min(epi_date),
+                                          lineages_days_uk_all %$% max(sample_date)),
+                                step = 1,
                                 ticks = FALSE,
-                                animate = TRUE,
+                                animate = FALSE,
                                 timeFormat = "%d %b %y"
                             ),
                             
-                            plotlyOutput("variant_time", height = "70vh"),
-                            p("Variant sequence counts are grouped by week, starting on Sunday.
-                              The most recent sequence data (approx. the last two weeks) have low sample numbers
-                              so are highlighted with a grey box.")
+                            p("Variant sequence counts are grouped either by week starting on Sunday or by day.
+                              The most recent sequence data (approx. the last two weeks) have low sample numbers,
+                              so are highlighted with a grey box for the last two weeks of the weekly chart 
+                              or from the second-to-last Sunday onwards for the daily chart.")
                         )
                     ),
 

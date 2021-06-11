@@ -348,14 +348,6 @@ shinyServer(function(input, output, session) {
       contentType = "text/csv"
     )
     
-    
-    # output$table_2 <- renderDT({
-    #   table_2() %>% 
-    #       datatable(filter = "none", rownames = FALSE, 
-    #                 options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
-    #       formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
-    # })
-    
     output$table_3 <- renderDT({
       table_3() %>% 
         datatable(filter = "none", escape = FALSE, rownames = FALSE, 
@@ -596,10 +588,91 @@ shinyServer(function(input, output, session) {
       }
     })
     
-    output$variant_time <- renderPlotly({
-      ggplotly({
+    variant_plot <- reactive({
+      
+      if(input$variant_day){
+        
+        variants_other_day <- 
+          lineages_days_uk_all %>% 
+          filter(!(lineage %in% levels(vui_voc$lineage))) %>% 
+          group_by(sample_date) %>% summarise(n_day = sum(n_day)) %>% 
+          mutate(lineage = "Variants: other", .before = sample_date) %>% 
+          ungroup
+        
+        lineages_days_uk <- 
+          lineages_days_uk_all %>% 
+          filter(lineage %in% levels(vui_voc$lineage)) %>% 
+          bind_rows(variants_other_day) %>% 
+          rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
+        
         vui_voc_plot <- 
-        lineages_weeks_uk %>%
+          lineages_days_uk %>%
+          filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2]) %>% 
+          ggplot(aes(fill = Variant, y = Sequences, x = `Sample date`) ) +
+          theme_classic() +
+          scale_fill_discrete_qualitative(palette = "Dynamic") +
+          scale_x_date(breaks = date_breaks("1 month"),
+                       labels = date_format("%b %y")) +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          labs(x = "Sample date",
+               y = "Sequences"
+          ) 
+        
+        # Set height of annotation box according to highest weekly total sequences 
+        if(input$variant_percentage){
+          ymax <- 1
+        } else {
+          ymax <- 
+            ymax <- 
+            lineages_days_uk %>% 
+            group_by(`Sample date`) %>% 
+            summarise(total_week = sum(Sequences)) %$% 
+            max(total_week)
+        }
+        
+        # display annotation from Sunday on 2nd last epiweek for consistency with weeks plot
+        max_epi_date <- lineages_weeks_uk_all %$% max(epi_date) 
+        
+        # display annotation if upper slider is in latest 2 weeks
+        if (input$variant_range[2] >= max_epi_date - days(7)){
+          vui_voc_plot <- 
+            vui_voc_plot +
+            annotate("rect", 
+                     xmax = input$variant_range[2] + days(1), 
+                     xmin = max_epi_date - days(8), 
+                     ymin = 0, 
+                     ymax = ymax,
+                     alpha = 0.2)
+        }
+        
+        if(input$variant_percentage){
+          vui_voc_plot <- 
+            vui_voc_plot +
+            geom_bar(position="fill", stat="identity", width = 1) +
+            scale_y_continuous(labels = scales::percent_format())
+        } else {
+          vui_voc_plot <- 
+            vui_voc_plot + 
+            geom_bar(position="stack", stat="identity", width = 1)
+        }
+        
+        vui_voc_plot
+      } else {
+        variants_other_week <- 
+          lineages_weeks_uk_all %>% 
+          filter(!(lineage %in% levels(vui_voc$lineage))) %>% 
+          group_by(epi_date) %>% summarise(n_week = sum(n_week)) %>% 
+          mutate(lineage = "Variants: other", .before = epi_date) %>% 
+          ungroup
+        
+        lineages_weeks_uk <- 
+          lineages_weeks_uk_all %>% 
+          filter(lineage %in% levels(vui_voc$lineage)) %>% 
+          bind_rows(variants_other_week) %>% 
+          rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
+        
+        vui_voc_plot <- 
+          lineages_weeks_uk %>%
           filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Variant, y = Sequences, x = `Start date`) ) +
           theme_classic() +
@@ -612,10 +685,16 @@ shinyServer(function(input, output, session) {
           ) 
         
         # Set height of annotation box according to highest weekly total sequences
-        ymax <- 
-          consortium_uk %>% 
-          count(epi_date) %$% 
-          max(n)
+        if(input$variant_percentage){
+          ymax <- 1
+        } else {
+          ymax <- 
+            ymax <- 
+            lineages_weeks_uk %>% 
+            group_by(`Start date`) %>% 
+            summarise(total_week = sum(Sequences)) %$% 
+            max(total_week)
+        }
         
         max_date <- lineages_weeks_uk %$% max(`Start date`)
         
@@ -626,6 +705,7 @@ shinyServer(function(input, output, session) {
           } else{
             xmax = max_date + days(-4) 
           }
+          print(max_date - days(10))
           
           vui_voc_plot <- 
             vui_voc_plot +
@@ -637,10 +717,23 @@ shinyServer(function(input, output, session) {
                      alpha = 0.2)
         }
         
-        vui_voc_plot <- vui_voc_plot + geom_bar(position="stack", stat="identity")    
-        
+        # TODO position_nudge
+        if(input$variant_percentage){
+          vui_voc_plot <- 
+            vui_voc_plot +
+            geom_bar(position="fill", stat="identity") +
+            scale_y_continuous(labels = scales::percent_format())
+        } else {
+          vui_voc_plot <- 
+            vui_voc_plot + 
+            geom_bar(position="stack", stat="identity")
+        }
         vui_voc_plot
-      })
-    })
+      }
+      vui_voc_plot
+    }) %>% debounce(500)
     
+    output$variant_time <- renderPlotly({
+      variant_plot() %>% ggplotly
+    })
 })

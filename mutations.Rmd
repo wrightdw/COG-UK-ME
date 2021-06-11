@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-06-09"
+  dataset_date:     "2021-06-11"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -84,7 +84,6 @@ mutations_uk
 ## Mutation / REF counts
 ```{r mutations_refs}
 #### UK ### 
-# TODO calculate UK counts by summing nation counts
 genes_positions <- 
   mutations_uk %>% 
   distinct(gene, position) # gene / position combinations actually found in mutations
@@ -1117,19 +1116,16 @@ mutations_s_uk_wide
 ```
 ### VUI/VOC/other
 ```{r vui_voc_other}
-vui_voc_other <- 
+# by day
+lineages_days_uk <- 
   consortium_uk %>%
-  filter(!(lineage %in% levels(vui_voc$lineage))) %>% 
-  dplyr::count(epi_date) %>% 
-  mutate(lineage = "Variants: other")
+  dplyr::count(lineage, sample_date, name = "n_day") 
 
+# by week
 lineages_weeks_uk <- 
   consortium_uk %>%
-  filter(lineage %in% levels(vui_voc$lineage)) %>% 
-  dplyr::count(lineage, epi_date) %>% 
-  bind_rows(vui_voc_other) %>% 
-  rename(`Start date` = epi_date, Sequences = n, Variant = lineage)
+  dplyr::count(lineage, epi_date, name = "n_week") 
 
-lineages_weeks_uk %T>% 
-  write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk.rds"))
+lineages_days_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
+lineages_weeks_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
