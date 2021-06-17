@@ -591,18 +591,29 @@ shinyServer(function(input, output, session) {
     variant_plot <- reactive({
       
       if(input$variant_day){
-        
         variants_other_day <- 
           lineages_days_uk_all %>% 
-          filter(!(lineage %in% levels(vui_voc$lineage))) %>% 
+          filter(!(lineage %in% input$variant_vui_voc)) %>% 
           group_by(sample_date) %>% summarise(n_day = sum(n_day)) %>% 
           mutate(lineage = "Variants: other", .before = sample_date) %>% 
           ungroup
         
         lineages_days_uk <- 
           lineages_days_uk_all %>% 
-          filter(lineage %in% levels(vui_voc$lineage)) %>% 
+          filter(lineage %in% input$variant_vui_voc) %>% 
           bind_rows(variants_other_day) %>% 
+          mutate(lineage = recode(lineage, 
+                                  "B.1.1.7" = "B.1.1.7 (Alpha)",
+                                  "B.1.617.2" = "B.1.617.2 (Delta)",
+                                  "B.1.525" = "B.1.525 (Eta)",
+                                  "B.1.617.1" = "B.1.617.1 (Kappa)",
+                                  "P.1" = "P.1 (Gamma)",
+                                  "B.1.351" = "B.1.351 (Beta)",
+                                  "B.1.429" = "B.1.429 (Epsilon)",
+                                  "P.3" = "P.3 (Theta)",
+                                  "P.2" = "P.2 (Zeta)",
+                                  "B.1.526" = "B.1.526 (Iota)"
+                                  )) %>% # WHO Greek variant names
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
         
         vui_voc_plot <- 
@@ -610,7 +621,10 @@ shinyServer(function(input, output, session) {
           filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Variant, y = Sequences, x = `Sample date`) ) +
           theme_classic() +
-          scale_fill_discrete_qualitative(palette = "Dynamic") +
+          scale_fill_discrete_qualitative(palette = "Dynamic", 
+                                          nmax = levels(vui_voc$lineage) %>% length + 1,
+                                          order = match(input$variant_vui_voc, 
+                                                        levels(vui_voc$lineage)) %>% c(levels(vui_voc$lineage) %>% length + 1)) +
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
@@ -618,7 +632,10 @@ shinyServer(function(input, output, session) {
                y = "Sequences"
           ) 
         
-        # Set height of annotation box according to highest weekly total sequences 
+        # display annotation from Sunday on 2nd last epiweek for consistency with weeks plot
+        max_epi_date <- lineages_weeks_uk_all %$% max(epi_date) 
+        
+        # Set height of y-axis and annotation box according to highest weekly total sequences 
         if(input$variant_percentage){
           ymax <- 1
         } else {
@@ -629,9 +646,6 @@ shinyServer(function(input, output, session) {
             summarise(total_week = sum(Sequences)) %$% 
             max(total_week)
         }
-        
-        # display annotation from Sunday on 2nd last epiweek for consistency with weeks plot
-        max_epi_date <- lineages_weeks_uk_all %$% max(epi_date) 
         
         # display annotation if upper slider is in latest 2 weeks
         if (input$variant_range[2] >= max_epi_date - days(7)){
@@ -653,22 +667,35 @@ shinyServer(function(input, output, session) {
         } else {
           vui_voc_plot <- 
             vui_voc_plot + 
-            geom_bar(position="stack", stat="identity", width = 1)
+            geom_bar(position="stack", stat="identity", width = 1) +
+            ylim(0, ymax)
         }
         
         vui_voc_plot
-      } else {
+      } else {  # variants by week
         variants_other_week <- 
           lineages_weeks_uk_all %>% 
-          filter(!(lineage %in% levels(vui_voc$lineage))) %>% 
+          filter(!(lineage %in% input$variant_vui_voc)) %>% 
           group_by(epi_date) %>% summarise(n_week = sum(n_week)) %>% 
           mutate(lineage = "Variants: other", .before = epi_date) %>% 
           ungroup
         
         lineages_weeks_uk <- 
           lineages_weeks_uk_all %>% 
-          filter(lineage %in% levels(vui_voc$lineage)) %>% 
+          filter(lineage %in% input$variant_vui_voc) %>% 
           bind_rows(variants_other_week) %>% 
+          mutate(lineage = recode(lineage, 
+                                  "B.1.1.7" = "B.1.1.7 (Alpha)",
+                                  "B.1.617.2" = "B.1.617.2 (Delta)",
+                                  "B.1.525" = "B.1.525 (Eta)",
+                                  "B.1.617.1" = "B.1.617.1 (Kappa)",
+                                  "P.1" = "P.1 (Gamma)",
+                                  "B.1.351" = "B.1.351 (Beta)",
+                                  "B.1.429" = "B.1.429 (Epsilon)",
+                                  "P.3" = "P.3 (Theta)",
+                                  "P.2" = "P.2 (Zeta)",
+                                  "B.1.526" = "B.1.526 (Iota)"
+          )) %>% # WHO Greek variant names
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
         
         vui_voc_plot <- 
@@ -676,13 +703,18 @@ shinyServer(function(input, output, session) {
           filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Variant, y = Sequences, x = `Start date`) ) +
           theme_classic() +
-          scale_fill_discrete_qualitative(palette = "Dynamic") +
+          scale_fill_discrete_qualitative(palette = "Dynamic", 
+                                          nmax = levels(vui_voc$lineage) %>% length + 1,
+                                          order = match(input$variant_vui_voc, 
+                                                        levels(vui_voc$lineage)) %>% c(levels(vui_voc$lineage) %>% length + 1)) +
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
                y = "Sequences"
           ) 
+
+        max_date <- lineages_weeks_uk %$% max(`Start date`)
         
         # Set height of annotation box according to highest weekly total sequences
         if(input$variant_percentage){
@@ -696,8 +728,6 @@ shinyServer(function(input, output, session) {
             max(total_week)
         }
         
-        max_date <- lineages_weeks_uk %$% max(`Start date`)
-        
         # display annotation if upper slider is in latest 2 weeks
         if (input$variant_range[2] >= max_date - days(7)){
           if(input$variant_range[2] >= max_date ){
@@ -705,7 +735,6 @@ shinyServer(function(input, output, session) {
           } else{
             xmax = max_date + days(-4) 
           }
-          print(max_date - days(10))
           
           vui_voc_plot <- 
             vui_voc_plot +
@@ -726,10 +755,11 @@ shinyServer(function(input, output, session) {
         } else {
           vui_voc_plot <- 
             vui_voc_plot + 
-            geom_bar(position="stack", stat="identity")
+            geom_bar(position="stack", stat="identity") +
+            ylim(0, ymax)
         }
         vui_voc_plot
-      }
+      } # end else by day
       vui_voc_plot
     }) %>% debounce(500)
     
