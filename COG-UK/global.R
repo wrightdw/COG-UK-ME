@@ -5,7 +5,7 @@ library(RColorBrewer)
 
 source("helpers.R")
 
-dataset_date <- ymd("2021-06-13") #TODO derive from directory name
+dataset_date <- ymd("2021-06-17") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -59,7 +59,8 @@ lineages_t3 <-
     "B.1.617.2" = "India. T19R, Δ156-157, R158G, L452R, T478K, D614G, P681R and D950N. WHO label: <strong>Delta</strong>.",
     "B.1.617.3" = "India. T19R, Δ156-158, L452R, E484Q, D614G, P681R and D950N.",
     "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V and D1139H.",
-    "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S."
+    "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S.",
+    "AY.1" = "As B.1.617.2 (Delta), with the addition of K417N."
     ) %>% 
   enframe("lineage", "reason")
 
