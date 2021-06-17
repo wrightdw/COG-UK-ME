@@ -48,7 +48,13 @@ dashboardPage(
             condition =  "input.sidebar_menu == 'vui_voc'",
             hr(),
             prettySwitch("variant_percentage", "Percentage", FALSE, status = "info", fill = TRUE),
-            prettySwitch("variant_day", "By day", FALSE, status = "info", fill = TRUE)
+            prettySwitch("variant_day", "By day", FALSE, status = "info", fill = TRUE),
+            
+            prettyCheckboxGroup("variant_vui_voc", "Variant:",
+                                vui_voc$lineage %>% levels %>% as.list,
+                                selected = c("B.1.1.7", "B.1.617.2"),
+                                shape = "curve",
+                                status = "info")
         ),
         
         conditionalPanel(
@@ -80,7 +86,9 @@ dashboardPage(
             prettyCheckboxGroup("escape", "Escape:",
                                 c("Monoclonal Ab" = "monoclonal",
                                   "Convalescent sera" = "convalescent",
-                                  "Vaccine sera" = "vaccine"))
+                                  "Vaccine sera" = "vaccine"),
+                                shape = "curve",
+                                status = "info")
         )
     ),
     
@@ -192,7 +200,7 @@ dashboardPage(
                                           lineages_days_uk_all %$% max(sample_date)),
                                 step = 1,
                                 ticks = FALSE,
-                                animate = FALSE,
+                                animate = TRUE,
                                 timeFormat = "%d %b %y"
                             ),
                             
