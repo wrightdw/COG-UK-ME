@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-06-11"
+  dataset_date:     "2021-06-18"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -10,6 +10,7 @@ params:
   predictions_tsv:  "Prediction_from_Morten.txt"
   spike_fasta:      "sequence.fasta"
   vui_voc_csv:      "VUI and VOC.csv"
+  remdesivir_dir:   "Remdesivir Mutants" 
 ---
 ```{r libs}
 library(tidyverse)
@@ -415,7 +416,7 @@ deletions <-
 
 deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
 ```
-## Database
+# Spike database
 ```{r database}
 mutations_s_uk <- 
   mutations_uk %>% 
@@ -510,6 +511,65 @@ database %<>%
 
 database %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database.rds"))
 ```
+## nsp12
+```{r nsp12, eval=FALSE, include=TRUE}
+mutations_uk %>% 
+  mutate(across(position, as.character)) %>% 
+  mutate(across(position, as.numeric)) %>% 
+  filter(gene == "orf1ab" & between(position, 4393, 5324)) %>% 
+  mutate(nsp12_variant = str_c(str_sub(variant, 1, 1), position - 4392, str_sub(variant, -1, -1) ) ) %>% 
+  group_by(gene, variant, nsp12_variant) %>% 
+  summarise(sequences = n_distinct(sequence_name)) %>% 
+  ungroup %>%  
+  slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
+```
+
+# Therapeutics
+```{r therapeutics}
+
+rem_data <- 
+  fs::dir_ls(params$remdesivir_dir, glob = "*.csv") %>% # get file names
+  map_dfr(read_csv) 
+
+rem_data %<>% 
+  rename(gene = ORF) %>%
+  rename_with(~str_c(.x, "_nsp12"), c(position, residue, mutation)) %>% 
+  mutate(gene = recode(gene, "orf1b" = "orf1ab"),
+         position = position_nsp12 + 4392, .after = gene) %>% 
+  mutate(variant = str_c(str_sub(mutation_nsp12, 1, 1), position, str_sub(mutation_nsp12, -1, -1) ), .after = position )
+
+mutations_rem_uk <- 
+  mutations_uk %>% 
+  filter(gene == "orf1ab") %>% 
+  mutate(across(position, as.character)) %>%
+  mutate(across(position, as.numeric)) %>%
+  mutate(across(c(variant), fct_drop)) %>% 
+  semi_join(rem_data)
+
+variants_rem_uk <-
+  mutations_rem_uk %>%
+  group_by(position, variant) %>%
+  summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
+
+# Sample dates in last 28 days
+variants_rem_uk_28 <-
+  mutations_rem_uk %>%
+  filter(sample_date >= sample_date_28) %>%
+  dplyr::count(position, variant, name = "UK_28")
+
+rem_data %<>%  
+  mutate(anchor = str_c("<a href='https://", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>%   # hyperlink to citation DOI
+  left_join(variants_rem_uk) %>% 
+  left_join(variants_rem_uk_28) %>% 
+  rename(
+    `numSeqs UK` = UK,
+    `numSeqs UK 28 days` = UK_28) %>% 
+  mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) 
+
+rem_data %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/therapeutics.rds"))
+```
+
+
 # T cell epitopes
 ```{r tcell}
 tcell <- read_csv(params$tcell_csv,
@@ -847,18 +907,6 @@ lapply(escape_t4,  function(x){
         distinct(sequence_name) %T>% {{.} %$% 
         write_lines(sequence_name, paste0(x, ".txt"))}
 })
-```
-## nsp12
-```{r nsp12, eval=FALSE, include=FALSE}
-mutations_uk %>% 
-  mutate(across(position, as.character)) %>% 
-  mutate(across(position, as.numeric)) %>% 
-  filter(gene == "orf1ab" & between(position, 4393, 5324)) %>% 
-  mutate(nsp12_variant = str_c(str_sub(variant, 1, 1), position - 4392, str_sub(variant, -1, -1) ) ) %>% 
-  group_by(gene, variant, nsp12_variant) %>% 
-  summarise(sequences = n_distinct(sequence_name)) %>% 
-  ungroup %>% 
-  slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
 ```
 ## Antigenic
 ### Antigenic mutations by lineage

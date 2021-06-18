@@ -41,6 +41,7 @@ dashboardPage(
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
             menuItem("Spike Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
+            menuItem("Therapeutics", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -550,7 +551,14 @@ dashboardPage(
                                )
                         )
                     )
-            )
+            ), # end tabItem t_cell 
+            
+            tabItem(tabName = "therapeutics",
+                    fluidRow(
+                        box(title = "Therapeutics", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("prescription_bottle_alt"),
+                            DTOutput("table_therapeutics")))
+            ) # end tabItem therapeutics
         ) # end tabItems
     ), # end dashboardBody ##8a7967
     

@@ -39,7 +39,10 @@ lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
     mutate(lineage = !!lineage, variant = !!variant, .before = 1)
 }
 
-# TODO caching
+## Table functions
+# TODO table caching
+# 
+# Mutations
 table_1 <- function(){
   database %>% 
     arrange(desc(`numSeqs UK`)) %>% 
@@ -60,6 +63,7 @@ table_1 <- function(){
            `Date of first detection in UK` = earliest) 
 }
 
+# no longer used
 table_2 <- function(){
   n_uk_lineages_all %>% 
     filter(    
@@ -122,6 +126,7 @@ table_2 <- function(){
     )
 }
 
+# Variants
 table_3 <- function(){
   bind_rows(
     n_uk_lineages_all %>% 
@@ -179,6 +184,7 @@ table_3 <- function(){
     ) 
 }
 
+# T cell table
 table_5 = function(){
   database_tcell_predictions %>% 
     select(mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
@@ -194,6 +200,18 @@ table_5 = function(){
            `WT Percentile Rank Value` = `IC50 WT`,
            `Fold difference` = Fold,
            DOI = doi)
+}
+
+table_therapeutics <- function(){
+  therapeutics %>% 
+    filter(`numSeqs UK` > 0) %>% 
+    select(gene, variant, Protein, resistance, drug, assay, detail, `quantification (fold)`, note, `numSeqs UK`, `numSeqs UK 28 days`, anchor) %>%
+    rename_with(str_to_title, c(gene, resistance, drug, assay, detail, `quantification (fold)`, note)) %>% 
+    rename(`Amino acid replacement` = variant, 
+           `Cumulative sequences in UK` = `numSeqs UK`,
+           `Sequences over 28 days` = `numSeqs UK 28 days`,
+           `Reference` = anchor
+  ) 
 }
 
 shinyServer(function(input, output, session) {
@@ -348,6 +366,7 @@ shinyServer(function(input, output, session) {
       contentType = "text/csv"
     )
     
+    # Variants
     output$table_3 <- renderDT({
       table_3() %>% 
         datatable(filter = "none", escape = FALSE, rownames = FALSE, 
@@ -355,7 +374,11 @@ shinyServer(function(input, output, session) {
         formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
     })
     
+    # Antigenic Mutations
     output$table_4 <- renderDT({
+      database %<>%
+        filter(`numSeqs UK` > 0) # filter zero counts from predicted antibodies not observed in mutations
+      
       if("monoclonal" %in% input$escape){
         database %<>% filter(mab == TRUE)
       }
@@ -394,6 +417,13 @@ shinyServer(function(input, output, session) {
         mutate(Reference = str_c("<a href='", DOI, "'target='_blank'>", Reference,"</a>"), .keep = "unused", .after = `Supporting references`) %>% # hyperlink to citation DOI
         datatable(filter = "top", escape = FALSE, rownames = FALSE,
                     options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
+        
+    })
+    
+    output$table_therapeutics <- renderDT({
+      table_therapeutics() %>% 
+      datatable(filter = "none", escape = FALSE, rownames = FALSE, 
+                options = list(dom = 't', paging = FALSE, scrollX = TRUE)) 
         
     })
     
