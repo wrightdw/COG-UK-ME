@@ -204,7 +204,8 @@ table_5 = function(){
 
 table_therapeutics <- function(){
   therapeutics %>% 
-    filter(`numSeqs UK` > 0) %>% 
+    # filter(`numSeqs UK` > 0) %>% 
+    arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`)) %>% 
     select(gene, variant, Protein, resistance, drug, assay, detail, `quantification (fold)`, note, `numSeqs UK`, `numSeqs UK 28 days`, anchor) %>%
     rename_with(str_to_title, c(gene, resistance, drug, assay, detail, `quantification (fold)`, note)) %>% 
     rename(`Amino acid replacement` = variant, 
@@ -376,8 +377,8 @@ shinyServer(function(input, output, session) {
     
     # Antigenic Mutations
     output$table_4 <- renderDT({
-      database %<>%
-        filter(`numSeqs UK` > 0) # filter zero counts from predicted antibodies not observed in mutations
+      # database %<>%
+      #   filter(`numSeqs UK` > 0) # filter zero counts from predicted antibodies not observed in mutations
       
       if("monoclonal" %in% input$escape){
         database %<>% filter(mab == TRUE)

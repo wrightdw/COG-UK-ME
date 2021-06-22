@@ -186,7 +186,7 @@ dashboardPage(
             
             tabItem("vui_voc", 
                     fluidRow(
-                        box(title = "Variants of concern (VOC) and under investigation (VUI) by week", closable = FALSE, width = 12,
+                        box(title = "Variants of concern (VOC) and under investigation (VUI) and any other variant by weeks and days", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
                             
                             plotlyOutput("variant_time", height = "70vh"),
@@ -555,9 +555,13 @@ dashboardPage(
             
             tabItem(tabName = "therapeutics",
                     fluidRow(
-                        box(title = "Therapeutics", closable = FALSE, width = 12,
+                        box(title = "Amino acid mutations reported to confer resistance to antiviral therapies, detected in the UK data", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("prescription_bottle_alt"),
-                            DTOutput("table_therapeutics")))
+                            DTOutput("table_therapeutics"),
+                            br(),
+                            p("The table lists those mutations in the SARS-CoV-2 genome identified in the UK dataset that have been associated with resistance of the virus to antiviral treatments. There is variation in the detail of the viral assays between the different studies displayed here.")
+                        )
+                    )
             ) # end tabItem therapeutics
         ) # end tabItems
     ), # end dashboardBody ##8a7967
