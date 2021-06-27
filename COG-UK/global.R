@@ -3,9 +3,7 @@ library(lubridate)
 library(magrittr)
 library(RColorBrewer)
 
-source("helpers.R")
-
-dataset_date <- ymd("2021-06-24") #TODO derive from directory name
+dataset_date <- ymd("2021-06-27") #TODO derive from directory name
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -18,6 +16,8 @@ wt <- read_rds(str_c(dataset_date, "/wt.rds")) # spike protein wild type amino a
 lineages_weeks_uk_all <- read_rds(str_c(dataset_date, "/lineages_weeks_uk_all.rds")) # lineage counts by epiweek
 lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds")) # lineage counts by sample date
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
+
+source("helpers.R")
 
 mutations_s_uk <- 
   mutations_uk %>% 

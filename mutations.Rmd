@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-06-24"
+  dataset_date:     "2021-06-27"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -45,7 +45,9 @@ epi_lookup <-
   tibble(
     epi_date = seq(from = ymd("2020-01-26"), to = consortium_uk %$% max(sample_date), by = "week"),
     epi_week = seq(consortium_uk %$% min(epi_week), consortium_uk %$% max(epi_week))
-  )
+  ) 
+# %T>% # lookup table of epi_week and Sunday date
+#   write_rds(str_c("COG-UK/", params$dataset_date, "/epi_lookup.rds"))
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
@@ -1177,3 +1179,114 @@ lineages_weeks_uk <-
 lineages_days_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
 lineages_weeks_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
+# GISAID
+```{r gisaid, eval=FALSE, include=TRUE}
+# GISAID Delta sequences
+gisaid <- 
+  read_csv("6_seqmuts_ale.txt", 
+           col_names = 
+              c("sequence_name",
+              "gisaid_id",
+              "lineage", 
+              "sample_date",
+              "epi_week",
+              "country",
+              "region",
+              "mutations")
+  ) %>% 
+  drop_na(sample_date) %>% # exclude sequences with missing sample date
+  distinct
+
+epi_levels_gisaid <- 
+  min(gisaid$epi_week):max(gisaid$epi_week) %>% as.character
+
+gisaid %<>% 
+  mutate(across(c(epi_week), as_factor)) %>%
+  mutate(epi_week = fct_expand(epi_week, epi_levels_gisaid) %>% fct_inseq) # expand factor levels to include any missing weeks
+
+
+# All genes mutations and deletions
+mutations_gisaid <-
+  gisaid %>% 
+  separate_rows(mutations, sep = '\\|') %>% 
+  filter(mutations != "") %>% # trailing '|' generates empty string
+  separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
+  distinct 
+
+# S gene mutations and deletions
+mutations_s_all_gisaid <- 
+  mutations_gisaid %>% 
+  filter(gene == "S") %>% 
+  mutate(position = parse_number(variant))
+
+# S gene del243-244
+dels_s_gisaid <- 
+  mutations_s_all_gisaid %>% 
+  filter(str_detect(variant, "del") & (position == 243)) %>% 
+  semi_join(mutations_s_all_gisaid %>% # sequences with both del243 and del244
+              filter(str_detect(variant, "del") & (position == 244)),
+            by = c("sequence_name", "gisaid_id", "lineage", 
+                   "sample_date", "epi_week", "country", "region", "gene")) %>% 
+  mutate(variant = "del243-244")
+  
+# defining mutations of delta variant
+defining_delta <- 
+        vui_voc %>% 
+        filter(lineage == "B.1.617.2") %$% 
+        mutation
+
+# S gene mutations minus defining plus del243-244
+mutations_s_gisaid <- 
+  mutations_s_all_gisaid %>% 
+  filter(!str_detect(variant, "del")) %>%  # remove deletions
+  filter(!(variant %in% defining_delta)) %>% # remove Delta defining mutations
+  bind_rows(dels_s_gisaid)  # bind del243-244
+
+mutations_s_gisaid
+#   mutate(across(c(gene, position, variant), as_factor)) %T>% 
+
+```
+# GISAID antigenic
+```{r eval=FALSE, include=TRUE}
+
+sequences_by_week_gisaid <- 
+    gisaid %>% 
+    dplyr::count(epi_week, name = "n_sequences_lineage")
+
+# S gene escape mutations
+escape_mutations <-
+  database %>%
+  filter(!is.na(escape)) %$% 
+  mutation 
+  
+antigenic_mutations_gisaid <- 
+    mutations_s_gisaid %>% 
+    filter(variant %in% escape_mutations | variant == "del243-244") %>% 
+    dplyr::count(variant, epi_week, sort = TRUE) 
+
+antigenic_mutations_gisaid_all <- 
+  inner_join(antigenic_mutations_gisaid, sequences_by_week_gisaid) %>% 
+  mutate(percentage = n / n_sequences_lineage * 100 ) %>% 
+   complete(epi_week, nesting(variant), fill = list(n = 0, n_sequences_lineage = 0, percentage = 0)) %>%
+    mutate(epi_week = epi_week %>% as.character %>% as.integer)
+
+first_occurrence_gisaid <- 
+    antigenic_mutations_gisaid_all %>% 
+    filter(n > 0) %$% 
+    min(epi_week)
+
+antigenic_mutations_gisaid_all %<>%
+  filter(epi_week >= first_occurrence_gisaid) %>%
+  inner_join(epi_lookup) %>% 
+  pivot_wider(names_from = epi_date, values_from = percentage, names_sort = TRUE, values_fill = 0, id_cols = variant) 
+
+png("gisaid_delta.png",width=750, height=1300, units="px", type = "cairo-png")
+antibody_complex_heatmap(antigenic_mutations_gisaid_all)
+dev.off()
+
+antigenic_mutations_gisaid_all
+```
+```{r success}
+message("PIPELINE COMPLETED")
+```
+

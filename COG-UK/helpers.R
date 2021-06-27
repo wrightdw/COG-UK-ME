@@ -8,6 +8,13 @@ library(seriation)
 library(magick)
 library(colorspace)
 
+# Epidemic week / Sunday date conversion
+epi_lookup <-
+  tibble(
+    epi_date = seq(from = ymd("2020-01-26"), to = consortium_uk %$% max(sample_date), by = "week"),
+    epi_week = consortium_uk %$% levels(epi_week) %>% as.integer %>% sort
+  )
+
 # https://slowkow.com/notes/pheatmap-tutorial/#quantile-breaks
 quantile_breaks <- function(xs, n = 10) {
   breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
@@ -112,7 +119,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   heatmap <- Heatmap(
     input,
     name = "Percentage %",
-    column_title = "Epiweeks",
+    column_title = "Sample date",
     column_title_side = "bottom",
     column_title_gp = gpar(fontsize = 20),
     
@@ -124,7 +131,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     cluster_rows = FALSE,
     row_order = order((horz_heat$domain)),
     row_split = (horz_heat$domain),
-    column_names_rot = 0,
+    column_names_rot = 90,
     row_gap = unit(3, "mm"),
     border = TRUE,
     width = ncol(input) * unit(4.5, "mm"),
@@ -142,11 +149,6 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
 antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){
   nation = match.arg(nation)
   
-  # levels_adm1 <- c(Scotland = "UK-SCT",
-  #                  Wales = "UK-WLS", 
-  #                  England = "UK-ENG", 
-  #                  Northern_Ireland = "UK-NIR") # adm1 factor levels from consortium
-  # 
   mutations_s_uk %<>% 
     filter(lineage == !!lineage & !(variant %in% !!defining))
   
@@ -204,11 +206,16 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
     complete(epi_week, nesting(variant), fill = list(n = 0, n_sequences_lineage = 0, percentage = 0)) %>%
     mutate(epi_week = epi_week %>% as.character %>% as.integer)
 
-  first_occurrence <- antigenic_mutations_lineages %>% filter(n > 0) %$% min(epi_week)
+  # remove epiweeks before first occurrence
+  first_occurrence <- 
+    antigenic_mutations_lineages %>% 
+    filter(n > 0) %$% 
+    min(epi_week)
 
   antigenic_mutations_lineages %<>%
     filter(epi_week >= first_occurrence) %>%
-    pivot_wider(names_from = epi_week, values_from = percentage, names_sort = TRUE, values_fill = 0, id_cols = variant) 
+    inner_join(epi_lookup) %>% 
+    pivot_wider(names_from = epi_date, values_from = percentage, names_sort = TRUE, values_fill = 0, id_cols = variant) 
   
   antigenic_mutations_lineages
 }
