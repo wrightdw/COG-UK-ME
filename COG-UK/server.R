@@ -452,7 +452,7 @@ shinyServer(function(input, output, session) {
                ) %>%   # fix variant colour WT first then by frequency
         filter(adm1 == input$nation) 
         
-      variants <- mutation_reference_counts %$% levels(variant) %T>% print
+      variants <- mutation_reference_counts %$% levels(variant)
       
       if(!input$ref){
         mutation_reference_counts %<>% filter(variant != "WT") 
@@ -468,7 +468,7 @@ shinyServer(function(input, output, session) {
         theme_classic() +
         theme(plot.title = element_text(hjust = 0.5)) +
         labs(title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")) +
-        scale_fill_discrete_qualitative(palette = "Pastel 1", 
+        scale_fill_discrete_qualitative(palette = "Set 3", 
                                         nmax = mutation_reference_counts %$% levels(variant) %>% length,
                                         order = colour_order,
                                         rev = FALSE) +
