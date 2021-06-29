@@ -41,7 +41,7 @@ dashboardPage(
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
             menuItem("Spike Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
-            menuItem("Therapeutics", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
+            menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -365,20 +365,21 @@ dashboardPage(
             
             tabItem(tabName = "dashboard",
                     fluidRow(box(
+                        plotlyOutput("mutation_time", height = "80vh"), 
+                        
                         sliderInput(
-                            inputId = "mutation_range", 
-                            label = "Date range:",
-                            min = mutations_uk %$% min(epi_date), 
-                            max = mutations_uk %$% max(epi_date), 
-                            value = c(mutations_uk %$% min(epi_date),
-                                      mutations_uk %$% max(epi_date)),
-                            step = 7,
-                            ticks = FALSE,
-                            animate = TRUE,
-                            timeFormat = "%d %b %y"
+                          inputId = "mutation_range", 
+                          label = "Date range:",
+                          min = mutations_uk %$% min(epi_date), 
+                          max = mutations_uk %$% max(epi_date), 
+                          value = c(mutations_uk %$% min(epi_date),
+                                    mutations_uk %$% max(epi_date)),
+                          step = 7,
+                          ticks = FALSE,
+                          animate = TRUE,
+                          timeFormat = "%d %b %y"
                         ),
                         
-                        plotlyOutput("mutation_time", height = "80vh"), 
                         p("Mutation counts are grouped by week, starting on Sunday.
                               The most recent sequence data (approx. the last two weeks) have low sample numbers
                               so are highlighted with a grey box."),

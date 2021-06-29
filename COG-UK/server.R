@@ -444,27 +444,40 @@ shinyServer(function(input, output, session) {
 
     # Filter mutation data and create plot
     mutation_plot <- reactive({
+      mutation_reference_counts %<>% 
+        filter(gene == input$gene & position == input$position) %>%
+        arrange(desc(n)) %>%
+        mutate(variant = 
+                 variant %>% 
+                 fct_drop %>% 
+                 fct_inorder %>% 
+                 fct_relevel("WT", after = 0)
+               ) %>%   # fix variant colour WT first then by frequency
+        filter(adm1 == input$nation) 
+        
+      variants <- mutation_reference_counts %$% levels(variant) %T>% print
+      
       if(!input$ref){
         mutation_reference_counts %<>% filter(variant != "WT") 
       }
       
+      colour_order = match(mutation_reference_counts %$% fct_drop(variant) %>% levels, variants)
+      
       mutation_reference_plot <- 
         mutation_reference_counts %>% 
-        filter(gene == input$gene & position == input$position) %>%
-        mutate(variant = variant %>% fct_infreq) %>% # fix variant colour by frequency
-        filter(adm1 == input$nation) %>%
         filter(epi_date >= input$mutation_range[1] & epi_date <= input$mutation_range[2]) %>% 
         rename(`Sample date` = epi_date, Sequences = n, Mutation = variant) %>% # display names
         ggplot(aes(fill = Mutation, y = Sequences, x = `Sample date`) ) +
         theme_classic() +
         theme(plot.title = element_text(hjust = 0.5)) +
         labs(title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")) +
-        scale_fill_manual(values = brewer.pal(name = "Set2", n = 8)) +
-        scale_x_date(breaks = date_breaks("1 month"),
+        scale_fill_discrete_qualitative(palette = "Pastel 1", 
+                                        nmax = mutation_reference_counts %$% levels(variant) %>% length,
+                                        order = colour_order,
+                                        rev = FALSE) +
+        scale_x_date(breaks = date_breaks("2 month"),
                      labels = date_format("%b %y"))
-      
-
-      # mutation_reference_plot <- mutation_reference_plot + geom_bar(position="stack", stat="identity")    
+  
       mutation_reference_plot
     }) 
     
@@ -625,8 +638,9 @@ shinyServer(function(input, output, session) {
         variants_other_day <- 
           lineages_days_uk_all %>% 
           filter(!(lineage %in% input$variant_vui_voc)) %>% 
-          group_by(sample_date) %>% summarise(n_day = sum(n_day)) %>% 
-          mutate(lineage = "Variants: other", .before = sample_date) %>% 
+          group_by(sample_date) %>% 
+          summarise(n_day = sum(n_day)) %>% 
+          mutate(lineage = "Variants: other", .before = sample_date) %>% # TODO use fct_other?
           ungroup
         
         lineages_days_uk <- 
