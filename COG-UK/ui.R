@@ -6,7 +6,6 @@ library(shinydashboardPlus)
 library(shinyjs)
 library(formattable)
 library(plotly)
-library(magrittr)
 
 dashboardPage(
     title = "COG-UK/Mutation Explorer",

@@ -1,5 +1,3 @@
-library(tidyverse)
-library(magrittr)
 suppressPackageStartupMessages(library(ComplexHeatmap))
 suppressPackageStartupMessages(library(circlize))
 library(Cairo)
@@ -79,7 +77,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     )))
   )
   
-  domain_palette <- qualitative_hcl(6, palette = "Set3")
+  domain_palette <- qualitative_hcl(6, palette = "Set 3")
   
   # domain
   row_ha2 = rowAnnotation(

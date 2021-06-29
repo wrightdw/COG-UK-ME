@@ -1,12 +1,9 @@
 library(shiny)
-library(tidyverse)
 library(plotly)
-library(RColorBrewer)
 library(scales)
 library(shinyWidgets)
 library(shinyjs)
 library(DT)
-suppressPackageStartupMessages(library(ComplexHeatmap))
 library(ggseqlogo)
 
 lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){

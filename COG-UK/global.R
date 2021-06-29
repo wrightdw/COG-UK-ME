@@ -1,7 +1,6 @@
 library(tidyverse)
 library(lubridate)
 library(magrittr)
-library(RColorBrewer)
 
 dataset_date <- ymd("2021-06-28") #TODO derive from directory name
 
