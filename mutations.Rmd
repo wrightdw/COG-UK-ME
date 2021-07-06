@@ -2,7 +2,7 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-06-27"
+  dataset_date:     "2021-07-06"
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -33,11 +33,12 @@ dir.create(str_c("COG-UK/", params$dataset_date))
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
-  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history),
+  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
          -lineages_version, -country, 
          -received_date, -collection_date, -published_date, -starts_with("scorpio"), 
          -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
          ) %>% # remove unused columns
+  relocate(NUTS1,.after = adm1) %>% 
   type_convert 
 
 # Epidemic week / Sunday date conversion
@@ -55,7 +56,7 @@ sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day p
 consortium_uk %<>% 
   inner_join(epi_lookup) %>% 
   relocate(epi_date, .after = epi_week) %>% 
-  mutate(across(c(epi_week, adm1), as_factor)) %>%
+  mutate(across(c(epi_week, adm1, NUTS1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) # expand factor levels to include any missing weeks
 
 mutations_uk <- 
@@ -1179,7 +1180,7 @@ lineages_weeks_uk <-
 lineages_days_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
 lineages_weeks_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
-# GISAID
+## GISAID
 ```{r gisaid, eval=FALSE, include=TRUE}
 # GISAID Delta sequences
 gisaid <- 
@@ -1246,7 +1247,7 @@ mutations_s_gisaid
 #   mutate(across(c(gene, position, variant), as_factor)) %T>% 
 
 ```
-# GISAID antigenic
+### GISAID antigenic
 ```{r eval=FALSE, include=TRUE}
 
 sequences_by_week_gisaid <- 
@@ -1286,6 +1287,71 @@ dev.off()
 
 antigenic_mutations_gisaid_all
 ```
+## Geo
+```{r geo}
+# TOPOJSON objectid
+# 1 North East (England)
+# 2 "North West (England)"
+# 3 Yorkshire and The Humber
+# 
+# 4 East Midlands (England)
+# 5 West Midlands (England)
+# 6 East of England
+# 
+# 7 London
+# 8 South East (England)
+# 9 South West (England)
+# 
+# 10 Wales
+# 11 Scotland
+# 12 Northern Ireland
+# 
+
+NUTS1 <- c(
+"North_East",               
+"North_West",     
+"Yorkshire_And_The_Humber",
+
+"East_Midlands"            ,
+"West_Midlands"            ,
+"East_Of_England"          ,
+
+"Greater_London"           ,
+"South_East"               ,
+"South_West"               ,
+
+"Wales"        ,
+"Scotland"      ,           
+"Northern_Ireland"         
+) 
+
+NUTS1_objectid <- tibble(NUTS1, objectid = 1:length(NUTS1))
+
+# regional counts for all variants with NUTS1 data
+geo <- 
+  consortium_uk %>% 
+  filter(!is.na(NUTS1)) %>% 
+  count(epi_week, NUTS1, .drop = FALSE) 
+
+geo_variants <- 
+  consortium_uk %>%
+  filter(!is.na(NUTS1)) %>% 
+  filter(lineage %in% (vui_voc %$% levels(lineage))) %>% 
+  mutate(across(lineage, as_factor)) %>%
+  dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE) 
+ 
+geo_all <- 
+  inner_join(geo, geo_variants) %>%
+  mutate(prop = ifelse(n==0, 0, n_week / n)) %>%  # keep zero counts for rendering 
+  select(-n, -n_week) %>% 
+  inner_join(NUTS1_objectid) %T>%
+  write_csv("nuts1.csv")
+
+geo
+geo_variants
+geo_all
+```
+
 ```{r success}
 message("PIPELINE COMPLETED")
 ```
