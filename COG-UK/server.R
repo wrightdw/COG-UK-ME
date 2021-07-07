@@ -184,6 +184,7 @@ table_3 <- function(){
 # T cell table
 table_5 = function(){
   database_tcell_predictions %>% 
+    filter(`numSeqs UK` > 0) %>%
     select(mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
     arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), desc(Fold)) %>%
     mutate(across(c(Epitope, HLA, assay, CD4_CD8), ~fct_relevel(.x, sort))) %>% 
