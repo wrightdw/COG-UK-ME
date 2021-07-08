@@ -2,7 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     "2021-07-07"
+  dataset_date:     FALSE # if false, defaults to today's date, otherwise enter date string
+  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -12,18 +13,46 @@ params:
   vui_voc_csv:      "VUI and VOC.csv"
   remdesivir_dir:   "Remdesivir Mutants" 
 ---
-```{r libs}
-library(tidyverse)
-library(magrittr)
+```{r setup}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(magrittr))
 library(wesanderson)
 library(RColorBrewer)
-library(lubridate)
+suppressPackageStartupMessages(library(lubridate))
 library(fuzzyjoin)
 library(htmltools)
-# also require seqinr
+# also require seqinr - loaded later on to avoid name clash of dplyr count function
 ```
-```{r files}
-consortium_csv <- str_c("cog_global_", params$dataset_date, "_consortium.csv")
+```{r climb}
+
+if(params$latest){ # copy today's files to working directory on CLIMB, stop if process run previously or today's files not available yet
+  
+  # check files exist
+  params$dataset_date <- today()
+  latest_dir <- "/cephfs/covid/bham/results/msa/latest"
+  consortium_csv <- str_c("cog_global_", params$dataset_date, "_consortium.csv")
+  consortium_today_msa <- file.path(latest_dir, "metadata", consortium_csv)
+  
+  if(!file.exists(consortium_csv) && # file not already copied
+     file.exists(consortium_today_msa)){ # MSA file exists
+    
+    # copy consortium and deletions to working directory
+    message("Copying latest consortium and deletions files")
+    file.copy(consortium_today_msa, getwd())
+    file.copy(file.path(latest_dir, "cog", params$deletions_tsv), getwd(), overwrite = TRUE) # deletions file not named by date so overwrite previous
+  } else {
+    stop(consortium_csv) # terminate script
+  }  
+  
+} else {
+  if(!params$dataset_date){
+    params$dataset_date <- today()
+  } else {
+    params$dataset_date %<>% as.Date
+  }
+  
+  consortium_csv <- str_c("cog_global_", params$dataset_date, "_consortium.csv")
+}
 
 dir.create(str_c("COG-UK/", params$dataset_date))
 ```
