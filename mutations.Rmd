@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  dataset_date:     FALSE # if false, defaults to today's date, otherwise enter date string
   latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -45,7 +45,7 @@ if(params$latest){ # copy today's files to working directory on CLIMB, stop if p
   }  
   
 } else {
-  if(!params$dataset_date){
+  if(params$dataset_date == ""){
     params$dataset_date <- today()
   } else {
     params$dataset_date %<>% as.Date
