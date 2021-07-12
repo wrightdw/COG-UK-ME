@@ -1373,7 +1373,7 @@ geo_all <-
   inner_join(geo, geo_variants) %>%
   mutate(across(epi_week, as.character)) %>% 
   mutate(across(epi_week, as.integer)) %>% 
-  # filter(epi_week >= 39) %>% # first week VUIs and VOCs appear
+  filter(epi_week >= 39) %>% # first week VUIs and VOCs appear
   mutate(Proportion = ifelse(n==0, 0, n_week / n)) %>%  # keep zero counts for rendering 
   select(-n) %>%
   inner_join(NUTS1_objectid) %>% 
