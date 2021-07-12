@@ -41,7 +41,7 @@ if(params$latest){ # copy today's files to working directory on CLIMB, stop if p
     file.copy(consortium_today_msa, getwd())
     file.copy(file.path(latest_dir, "cog", params$deletions_tsv), getwd(), overwrite = TRUE) # deletions file not named by date so overwrite previous
   } else {
-    stop(consortium_csv) # terminate script
+    stop(str_c(consortium_today_msa, " does not exist")) # terminate script
   }  
   
 } else {
@@ -1365,15 +1365,19 @@ geo <-
 geo_variants <- 
   consortium_uk %>%
   filter(!is.na(NUTS1)) %>% 
-  filter(lineage %in% (vui_voc %$% levels(lineage))) %>% 
   mutate(across(lineage, as_factor)) %>%
+  mutate(lineage = fct_other(lineage, keep = vui_voc %$% levels(lineage))) %>% 
   dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE) 
- 
+
 geo_all <- 
   inner_join(geo, geo_variants) %>%
-  mutate(prop = ifelse(n==0, 0, n_week / n)) %>%  # keep zero counts for rendering 
-  select(-n, -n_week) %>% 
-  inner_join(NUTS1_objectid) %T>%
+  mutate(across(epi_week, as.character)) %>% 
+  mutate(across(epi_week, as.integer)) %>% 
+  # filter(epi_week >= 39) %>% # first week VUIs and VOCs appear
+  mutate(Proportion = ifelse(n==0, 0, n_week / n)) %>%  # keep zero counts for rendering 
+  select(-n) %>%
+  inner_join(NUTS1_objectid) %>% 
+  rename(Count = n_week) %T>%
   write_csv("nuts1.csv")
 
 geo
