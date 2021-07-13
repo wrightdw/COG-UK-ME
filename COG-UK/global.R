@@ -2,7 +2,11 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 
-dataset_date <- ymd("2021-07-11") #TODO derive from directory name
+# derive date of most recent dataset from directory names, set date string here instead to switch to older dataset
+dataset_date <- 
+  list.dirs() %>% 
+  ymd(quiet = TRUE) %>%  
+  max(na.rm = TRUE)
 
 database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -59,7 +63,7 @@ lineages_t3 <-
     "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V and D1139H.",
     "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S.",
     "AY.1" = "As B.1.617.2 (Delta), with the addition of K417N.",
-    "C.37" = "South America. L452Q, F490S, T859N and T859N. WHO label: <strong>Lambda</strong>."
+    "C.37" = "South America. Δ246-252, G75V, T76I, L452Q, F490S, D614G, and T859N. WHO label: <strong>Lambda</strong>."
     ) %>% 
   enframe("lineage", "reason")
 
