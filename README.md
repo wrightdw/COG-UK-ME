@@ -52,12 +52,10 @@ VUI and VOC.csv
 Create a subdirectory named C0G-UK if not already created
 
 #### Running the pipeline
-The pipeline is run via the shell script run_mutations.sh which may be automated using crontab.
-Log file run_mutations.log
-When the pipeline has completed, the output is in subdirectory COG-UK
+The pipeline is run via the shell script run_mutations.sh which is automated via crontab, with output to log file run_mutations.log
+When the pipeline has completed, the generated files are in a tarball named according to the date of the dataset YYYY-DD-MM.tar.gz
 Automatically generated output may be downloaded from directory /cephfs/covid/bham/climb-covid19-wrightd/COG-UK-Dashboard/COG-UK
-Tranfer the file vui_voc.rds and the sdirectory named according to the date of the dataset e.g. 2021-06-22
-to your local computer.
+Tranfer the tarball to your local computer in the same directory as the Shiny app R files and unpack.
 
 ### Local
 Edit global.R
@@ -65,11 +63,21 @@ Update the date in the line near the top:
 dataset_date <- ymd("2021-06-22")
 Run the Shiny app from RStudio to verify.
 
-Deploy to web server sars2
-SSH into sars2.cvr.gla.ac.uk
+### Web server
+To deploy to web server sars2:
 
+##### Automatic
+There are two shell script files required to deploy the Shiny app automatically. 
+The first update_mutatations.sh must be run from a user account with ssh keys set up to enable ssh access to server bham.covid19.climb.ac.uk
+This script checks for presence of a new tarball for the current day, transfers the file and unpacks.
+The second script stop_start_mutations.sh must be run as root. This script first checks if there is already a directory in place for today in /opt/shiny-server/my-apps/COG-UK/. If a directory for today does not exist, the script then in turn calls the first shell script to transfer today's files using a user account with ssh keys set up. stop_start_mutations.sh then stops the Shiny server, moves the files to /opt/shiny-server/my-apps/COG-UK/ and starts the Shiny server. stop_start_mutations.sh is currently automated via crontab with output to log file stop_start_mutations.log
+
+##### Manual
+SSH into sars2.cvr.gla.ac.uk
 sudo -i
 cd  /opt/shiny-server/my-apps/COG-UK/
 systemctl stop shiny-server.service
 mv /home/userid/COG-UK/* .
 systemctl start shiny-server.service
+
+File global.R automatically picks up the directory of data files named according to the most recent date. Editing of global.R is no longer required.
