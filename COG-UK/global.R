@@ -63,7 +63,8 @@ lineages_t3 <-
     "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V and D1139H.",
     "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S.",
     "AY.1" = "As B.1.617.2 (Delta), with the addition of K417N.",
-    "C.37" = "South America. Δ246-252, G75V, T76I, L452Q, F490S, D614G, and T859N. WHO label: <strong>Lambda</strong>."
+    "C.37" = "South America. Δ246-252, G75V, T76I, L452Q, F490S, D614G, and T859N. WHO label: <strong>Lambda</strong>.",
+    "B.1.621" = "Colombia. T95I, R346K, E484K and P681H."
     ) %>% 
   enframe("lineage", "reason")
 
