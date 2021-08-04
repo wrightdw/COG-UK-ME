@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2021-07-15" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -12,6 +12,7 @@ params:
   spike_fasta:      "sequence.fasta"
   vui_voc_csv:      "VUI and VOC.csv"
   remdesivir_dir:   "Remdesivir Mutants" 
+  isaric_csv:       "isaric_list.csv"
 ---
 ```{r setup}
 suppressPackageStartupMessages(library(tidyverse))
@@ -1373,6 +1374,7 @@ geo_all <-
   inner_join(geo, geo_variants) %>%
   mutate(across(epi_week, as.character)) %>% 
   mutate(across(epi_week, as.integer)) %>% 
+  # filter(epi_week >= 39 & epi_week <= 80) %>% # first week VUIs and VOCs appear
   filter(epi_week >= 39) %>% # first week VUIs and VOCs appear
   mutate(Proportion = ifelse(n==0, 0, n_week / n)) %>%  # keep zero counts for rendering 
   select(-n) %>%
@@ -1383,6 +1385,59 @@ geo_all <-
 geo
 geo_variants
 geo_all
+```
+## ISARIC
+```{r isaric, eval=FALSE, include=TRUE}
+
+isaric_list <- read_csv(params$isaric_csv)
+
+# lineage only - get from consortium
+isaric_list_lineage <- 
+  isaric_list %>% 
+  filter(!is.na(Lineage)) %>% 
+  filter(across(c(Lineage_filter_out, Gene, Mutation), ~is.na(.x)))
+
+# deletions only
+isaric_list_del <- isaric_list %>% filter(str_starts(Mutation, "del"))
+
+# everything else
+isaric_list %<>% setdiff(bind_rows(isaric_list_lineage, isaric_list_del))
+
+# iterate through isaric_list row by row
+isaric_dfr <- 
+  isaric_list %>% 
+  pmap_dfr(function(...){
+    current <- tibble(...) # current row of isaric_list
+    
+    mutations_isaric <- mutations_uk
+    
+    if(!is.na(current$Lineage)){
+      mutations_isaric %<>% filter(lineage == current$Lineage)
+    } else if(!is.na(current$Lineage_filter_out)){
+      mutations_isaric %<>% filter(lineage != current$Lineage_filter_out)
+    }
+    
+    # hard code gene for now
+    mutations_isaric %<>% filter(gene == "S")
+    
+    if(!is.na(current$Mutation)){
+      mutations_isaric %<>% filter(variant == current$Mutation)
+    }
+    
+    mutations_isaric 
+  }
+  
+)
+
+isaric_dfr
+
+# lineage only
+# lineage plus mutation
+# lineage filter out plus mutation
+# any lineage plus mutation
+# 
+# deletions
+
 ```
 
 ```{r success}
