@@ -147,11 +147,20 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
 antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){
   nation = match.arg(nation)
   
-  mutations_s_uk %<>% 
-    filter(lineage == !!lineage & !(variant %in% !!defining))
-  
-  consortium_uk %<>% 
-    filter(lineage == !!lineage)
+  # include B.1.617.2 sublineages
+  if(lineage == "B.1.617.2"){
+    mutations_s_uk %<>% 
+      filter((lineage == !!lineage | str_starts(lineage, "AY\\.")) & !(variant %in% !!defining))
+    
+    consortium_uk %<>% 
+      filter(lineage == !!lineage | str_starts(lineage, "AY\\."))
+  } else {
+    mutations_s_uk %<>% 
+      filter(lineage == !!lineage & !(variant %in% !!defining))
+    
+    consortium_uk %<>% 
+      filter(lineage == !!lineage)
+  }
   
   if(nation != "UK"){
     mutations_s_uk %<>% 

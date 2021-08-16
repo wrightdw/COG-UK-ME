@@ -3,7 +3,7 @@ title:  "COG-UK Mutations"
 output: html_notebook
 params: 
   latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2021-07-15" # if empty, defaults to today's date, otherwise enter date string
+  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -1200,11 +1200,13 @@ mutations_s_uk_wide
 # by day
 lineages_days_uk <- 
   consortium_uk %>%
+  mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>% # convert AY.x sublineages of B.1.617.2 to parent
   dplyr::count(lineage, sample_date, name = "n_day") 
 
 # by week
 lineages_weeks_uk <- 
   consortium_uk %>%
+  mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>% # convert AY.x sublineages of B.1.617.2 to parent
   dplyr::count(lineage, epi_date, name = "n_week") 
 
 lineages_days_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))

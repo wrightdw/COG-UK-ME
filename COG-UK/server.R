@@ -647,7 +647,7 @@ shinyServer(function(input, output, session) {
           bind_rows(variants_other_day) %>% 
           mutate(lineage = recode(lineage, 
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
-                                  "B.1.617.2" = "B.1.617.2 (Delta)",
+                                  "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                   "B.1.525" = "B.1.525 (Eta)",
                                   "B.1.617.1" = "B.1.617.1 (Kappa)",
                                   "P.1" = "P.1 (Gamma)",
@@ -729,7 +729,7 @@ shinyServer(function(input, output, session) {
           bind_rows(variants_other_week) %>% 
           mutate(lineage = recode(lineage, 
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
-                                  "B.1.617.2" = "B.1.617.2 (Delta)",
+                                  "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                   "B.1.525" = "B.1.525 (Eta)",
                                   "B.1.617.1" = "B.1.617.1 (Kappa)",
                                   "P.1" = "P.1 (Gamma)",

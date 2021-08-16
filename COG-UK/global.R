@@ -62,9 +62,23 @@ lineages_t3 <-
     "B.1.617.3" = "India. T19R, Δ156-158, L452R, E484Q, D614G, P681R and D950N.",
     "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V and D1139H.",
     "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S.",
-    "AY.1" = "As B.1.617.2 (Delta), with the addition of K417N.",
+    
     "C.37" = "South America. Δ246-252, G75V, T76I, L452Q, F490S, D614G, and T859N. WHO label: <strong>Lambda</strong>.",
-    "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H."
+    "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H.",
+    
+    "AY.1" = "As B.1.617.2.1, with the addition of K417N. Several European countries. WHO label: <strong>Delta</strong>.",
+    "AY.2" = "Alias of B.1.617.2.2, in USA with K417N. WHO label: <strong>Delta</strong>.",
+    "AY.3" = "Alias of B.1.617.2.3, USA. WHO label: <strong>Delta</strong>.",
+    "AY.3.1" = "Alias of B.1.617.2.3.1, USA. WHO label: <strong>Delta</strong>.",
+    "AY.4" = "Alias of B.1.617.2.4, UK. WHO label: <strong>Delta</strong>.",
+    "AY.5" = "Alias of B.1.617.2.5, UK. WHO label: <strong>Delta</strong>.",
+    "AY.6" = "Alias of B.1.617.2.6, UK. WHO label: <strong>Delta</strong>.",
+    "AY.7" = "Alias of B.1.617.2.7, UK. WHO label: <strong>Delta</strong>.",
+    "AY.8" = "Alias of B.1.617.2.8, UK. WHO label: <strong>Delta</strong>.",
+    "AY.9" = "Alias of B.1.617.2.9, UK. WHO label: <strong>Delta</strong>.",
+    "AY.10" = "Alias of B.1.617.2.10, UK. WHO label: <strong>Delta</strong>.",
+    "AY.11" = "Alias of B.1.617.2.11, UK. WHO label: <strong>Delta</strong>.",
+    "AY.12" = "Alias of B.1.617.2.12, Israel. WHO label: <strong>Delta</strong>."
     ) %>% 
   enframe("lineage", "reason")
 

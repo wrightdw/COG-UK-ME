@@ -350,8 +350,12 @@ dashboardPage(
                                     pickerInput(
                                         inputId = "lineage_antigenic",
                                         label = "Lineage:",
-                                        choices = vui_voc %$% levels(lineage),
-                                        selected = "B.1.1.7"
+                                        choices = (function(){
+                                          picks <- vui_voc %$% levels(lineage)
+                                          names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
+                                          picks
+                                        })(),
+                                        selected = "B.1.617.2"
                                     )
                                 ), 
                                 column(width = 10,                                      
