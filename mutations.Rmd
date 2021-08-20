@@ -1390,20 +1390,22 @@ geo_all
 ```
 ## ISARIC
 ```{r isaric, eval=FALSE, include=TRUE}
+library(jsonlite)
+alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
 
 isaric_list <- read_csv(params$isaric_csv)
 
 # lineage only - get from consortium
-isaric_list_lineage <- 
-  isaric_list %>% 
-  filter(!is.na(Lineage)) %>% 
-  filter(across(c(Lineage_filter_out, Gene, Mutation), ~is.na(.x)))
-
-# deletions only
-isaric_list_del <- isaric_list %>% filter(str_starts(Mutation, "del"))
-
-# everything else
-isaric_list %<>% setdiff(bind_rows(isaric_list_lineage, isaric_list_del))
+# isaric_list_lineage <- 
+#   isaric_list %>% 
+#   filter(!is.na(Lineage)) %>% 
+#   filter(across(c(Lineage_filter_out, Gene, Mutation), ~is.na(.x)))
+# 
+# # deletions only
+# isaric_list_del <- isaric_list %>% filter(str_starts(Mutation, "del"))
+# 
+# # everything else
+# isaric_list %<>% setdiff(bind_rows(isaric_list_lineage, isaric_list_del))
 
 # iterate through isaric_list row by row
 isaric_dfr <- 
@@ -1411,22 +1413,45 @@ isaric_dfr <-
   pmap_dfr(function(...){
     current <- tibble(...) # current row of isaric_list
     
-    mutations_isaric <- mutations_uk
+    output <- tibble()
     
-    if(!is.na(current$Lineage)){
-      mutations_isaric %<>% filter(lineage == current$Lineage)
-    } else if(!is.na(current$Lineage_filter_out)){
-      mutations_isaric %<>% filter(lineage != current$Lineage_filter_out)
+    # if no mutations then search consortium
+    if(is.na(current$Mutation)){
+      if(!is.na(current$Lineage)){
+        print(current$Lineage) # DEBUG
+        
+        # filter sublineages if wildcard
+        if(str_ends(current$Lineage, "\\*")){
+          variant = str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+          
+          print(variant) # DEBUG
+          
+         # look up alias
+         # aliases <- which(alias == "B.1.1.7") %>% names
+         alias = names(alias_key)[match(variant, alias_key)] # TODO partial match?
+         if(is.na(alias)){
+           output <-
+             consortium_uk %<>% 
+             filter(str_starts(lineage, fixed(variant))) # use fixed because dot is regex special character
+         } else {
+            output <- consortium_uk %>% 
+             filter(lineage == variant | str_starts(lineage, fixed(alias)))  
+         }
+        } else { # filter exact lineage
+            output <-
+              consortium_uk %>% 
+              filter(lineage == current$Lineage) %>% 
+              select(sequence_name, sample_date, lineage)
+        }
+      } else { # search mutations or deletions
+        print("NA")
+      }
     }
-    
-    # hard code gene for now
-    mutations_isaric %<>% filter(gene == "S")
-    
-    if(!is.na(current$Mutation)){
-      mutations_isaric %<>% filter(variant == current$Mutation)
+    else{ # mutations/deletions
+      
     }
-    
-    mutations_isaric 
+      
+    output
   }
   
 )
