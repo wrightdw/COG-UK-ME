@@ -25,6 +25,7 @@ library(htmltools)
 # also require seqinr - loaded later on to avoid name clash of dplyr count function
 ```
 ```{r climb}
+Sys.setenv(TZ="Europe/London")
 
 if(params$latest){ # copy today's files to working directory on CLIMB, stop if process run previously or today's files not available yet
   
@@ -1393,6 +1394,20 @@ geo_all
 library(jsonlite)
 alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
 
+alias_key %<>% 
+  keep(~ length(.x) == 1) %>% # drop recombinants
+  purrr::discard(~ .x == "") # drop top level lineages
+
+consortium_full <- 
+  consortium_uk %>% 
+  mutate(lineage_full = lineage, .after = lineage)
+
+for (i in 1:length(alias_key)) {
+  consortium_full <<- 
+    consortium_full %>% 
+    mutate(lineage_full = str_replace(lineage_full, str_c("^", names(alias_key)[i], "(?=\\.)"), str_c(alias_key[[i]])))
+}
+
 isaric_list <- read_csv(params$isaric_csv)
 
 # lineage only - get from consortium
@@ -1408,53 +1423,45 @@ isaric_list <- read_csv(params$isaric_csv)
 # isaric_list %<>% setdiff(bind_rows(isaric_list_lineage, isaric_list_del))
 
 # iterate through isaric_list row by row
-isaric_dfr <- 
-  isaric_list %>% 
-  pmap_dfr(function(...){
+isaric_dfr <-
+  isaric_list %>%
+  pmap_dfr(function(...) {
     current <- tibble(...) # current row of isaric_list
     
     output <- tibble()
     
     # if no mutations then search consortium
-    if(is.na(current$Mutation)){
-      if(!is.na(current$Lineage)){
+    if (is.na(current$Mutation)) {
+      if (!is.na(current$Lineage)) {
         print(current$Lineage) # DEBUG
         
-        # filter sublineages if wildcard
-        if(str_ends(current$Lineage, "\\*")){
+        if (str_ends(current$Lineage, "\\*")) {
+          # filter sublineages if wildcard
           variant = str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
           
-          print(variant) # DEBUG
+          output <-
+            consortium_full %<>%
+            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant))))  # use fixed because dot is regex special character
           
-         # look up alias
-         # aliases <- which(alias == "B.1.1.7") %>% names
-         alias = names(alias_key)[match(variant, alias_key)] # TODO partial match?
-         if(is.na(alias)){
-           output <-
-             consortium_uk %<>% 
-             filter(str_starts(lineage, fixed(variant))) # use fixed because dot is regex special character
-         } else {
-            output <- consortium_uk %>% 
-             filter(lineage == variant | str_starts(lineage, fixed(alias)))  
-         }
-        } else { # filter exact lineage
-            output <-
-              consortium_uk %>% 
-              filter(lineage == current$Lineage) %>% 
-              select(sequence_name, sample_date, lineage)
+        } else {
+          # no wildcard - filter exact lineage
+          output <-
+            consortium_full %>%
+            filter(lineage_full == current$Lineage |
+                     lineage == current$Lineage)
         }
-      } else { # search mutations or deletions
+      } else {
+        # search mutations or deletions
         print("NA")
       }
     }
-    else{ # mutations/deletions
+    else{
+      # mutations/deletions
       
     }
-      
+    
     output
-  }
-  
-)
+  })
 
 isaric_dfr
 
@@ -1462,7 +1469,7 @@ isaric_dfr
 # lineage plus mutation
 # lineage filter out plus mutation
 # any lineage plus mutation
-# 
+#
 # deletions
 
 ```
