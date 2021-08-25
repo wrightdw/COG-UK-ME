@@ -1390,7 +1390,8 @@ geo_variants
 geo_all
 ```
 ## ISARIC
-```{r isaric, eval=FALSE, include=TRUE}
+### Alias
+```{r isaric_alias, eval=FALSE, include=TRUE}
 library(jsonlite)
 alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
 
@@ -1398,29 +1399,29 @@ alias_key %<>%
   keep(~ length(.x) == 1) %>% # drop recombinants
   purrr::discard(~ .x == "") # drop top level lineages
 
+# TODO mutate full lineage in initial consortium read instead
 consortium_full <- 
   consortium_uk %>% 
+  mutate(lineage_full = lineage, .after = lineage)
+
+mutations_full <- 
+  mutations_uk %>% 
   mutate(lineage_full = lineage, .after = lineage)
 
 for (i in 1:length(alias_key)) {
   consortium_full <<- 
     consortium_full %>% 
     mutate(lineage_full = str_replace(lineage_full, str_c("^", names(alias_key)[i], "(?=\\.)"), str_c(alias_key[[i]])))
+  
+  mutations_full <<- 
+    mutations_full %>% 
+    mutate(lineage_full = str_replace(lineage_full, str_c("^", names(alias_key)[i], "(?=\\.)"), str_c(alias_key[[i]])))
 }
+```
+### Filter
+```{r isaric, eval=FALSE, include=TRUE}
 
 isaric_list <- read_csv(params$isaric_csv)
-
-# lineage only - get from consortium
-# isaric_list_lineage <- 
-#   isaric_list %>% 
-#   filter(!is.na(Lineage)) %>% 
-#   filter(across(c(Lineage_filter_out, Gene, Mutation), ~is.na(.x)))
-# 
-# # deletions only
-# isaric_list_del <- isaric_list %>% filter(str_starts(Mutation, "del"))
-# 
-# # everything else
-# isaric_list %<>% setdiff(bind_rows(isaric_list_lineage, isaric_list_del))
 
 # iterate through isaric_list row by row
 isaric_dfr <-
@@ -1430,48 +1431,76 @@ isaric_dfr <-
     
     output <- tibble()
     
-    # if no mutations then search consortium
-    if (is.na(current$Mutation)) {
+    # TODO look up deletions in consortium
+    if (is.na(current$Mutation)) { # if no mutations then search consortium 
       if (!is.na(current$Lineage)) {
-        print(current$Lineage) # DEBUG
         
-        if (str_ends(current$Lineage, "\\*")) {
-          # filter sublineages if wildcard
-          variant = str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+        # filter by lineage and wildcard
+        if (str_ends(current$Lineage, "\\*")) { # filter sublineages if wildcard
+          variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
           
           output <-
-            consortium_full %<>%
-            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant))))  # use fixed because dot is regex special character
+            consortium_full %>%
+            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant)))) %>%   # use fixed because dot is regex special character
+            select(sequence_name, sample_date, lineage)
           
-        } else {
-          # no wildcard - filter exact lineage
+        } else { # no wildcard - filter exact lineage
           output <-
             consortium_full %>%
             filter(lineage_full == current$Lineage |
-                     lineage == current$Lineage)
+                     lineage == current$Lineage) %>% 
+            select(sequence_name, sample_date, lineage)
         }
-      } else {
-        # search mutations or deletions
-        print("NA")
-      }
-    }
-    else{
-      # mutations/deletions
-      
+        
+        if(!is.na(current$Lineage_filter_out)){
+          filters <- str_split(current$Lineage_filter_out, "\\|")
+          # TODO
+        }
+        
+      } 
+    } else { # filter mutations
+     gene_mutation <- str_split(current$Mutation, ":") %>% unlist # split gene:mutation 
+     
+      if(!str_starts(gene_mutation[2], "del")){
+
+        output <- mutations_full
+
+        if(!is.na(current$Lineage)){
+          if (str_ends(current$Lineage, "\\*")) { # filter sublineages if wildcard
+            variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+
+            output %<>%
+              filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant))))  # use fixed because dot is regex special character
+
+          } else { # no wildcard - filter exact lineage
+            output %<>%
+              filter(lineage_full == current$Lineage |
+                       lineage == current$Lineage)
+          }
+        }
+
+        if(!is.na(current$Lineage_filter_out)){ # TODO wildcards?
+          lineage_filters <- str_split(current$Lineage_filter_out, fixed("|")) %>% unlist
+          output %<>% 
+            filter(!lineage %in% lineage_filters) %>% 
+            filter(!lineage_full %in% lineage_filters)
+        }
+        
+        if(str_ends(gene_mutation[2], "X")){ # mutation wildcard
+          output %<>% filter(gene == gene_mutation[1] & position == parse_number(gene_mutation[2]))
+        } else { # exact match of mutation
+          output %<>% filter(gene == gene_mutation[1] & variant == gene_mutation[2])
+        }
+        
+        output %<>% select(sequence_name, sample_date, lineage, gene, variant)
+     }
+     
     }
     
     output
-  })
+  }) %>% distinct
 
 isaric_dfr
-
-# lineage only
-# lineage plus mutation
-# lineage filter out plus mutation
-# any lineage plus mutation
-#
-# deletions
-
 ```
 
 ```{r success}
