@@ -500,13 +500,13 @@ shinyServer(function(input, output, session) {
           if(input$nation == "UK"){
             ymax <-
               consortium_uk %>%
-              count(epi_date) %$%
+              dplyr::count(epi_date) %$%
               max(n)
           } else {
             ymax <-
               consortium_uk %>%
               filter(adm1 == input$nation) %>% 
-              count(epi_date) %$%
+              dplyr::count(epi_date) %$%
               max(n)
           }
         }
