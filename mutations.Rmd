@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2021-08-30" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -22,6 +22,7 @@ library(RColorBrewer)
 suppressPackageStartupMessages(library(lubridate))
 library(fuzzyjoin)
 library(htmltools)
+library(jsonlite)
 # also require seqinr - loaded later on to avoid name clash of dplyr count function
 ```
 ```{r climb}
@@ -60,7 +61,8 @@ dir.create(str_c("COG-UK/", params$dataset_date))
 ```
 
 ## Consortium
-```{r consortium_read}
+### Read
+```{r consortium_read, include=FALSE}
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
@@ -90,9 +92,35 @@ consortium_uk %<>%
   mutate(across(c(epi_week, adm1, NUTS1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) # expand factor levels to include any missing weeks
 
+consortium_uk
+```
+### Alias
+```{r consortium_alias, include=FALSE}
+# reconstruct lineage full names from alias JSON
+alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
+
+alias_key %<>% 
+  keep(~ length(.x) == 1) %>% # drop recombinants
+  purrr::discard(~ .x == "") # drop top level lineages
+
+# copy lineage column
+consortium_uk %<>% 
+  mutate(lineage_full = lineage, .after = lineage)
+
+# overwrite aliases with full lineage names
+for (i in 1:length(alias_key)) {
+  consortium_uk <<- 
+    consortium_uk %>% 
+    mutate(lineage_full = str_replace(lineage_full, str_c("^", names(alias_key)[i], "(?=\\.)"), str_c(alias_key[[i]])))
+}
+
+consortium_uk
+```
+### Write
+```{r consortium_write}
 mutations_uk <- 
   consortium_uk %>% 
-  select(sequence_name, sample_date, epi_week, epi_date, lineage, adm1, mutations) %>% 
+  select(sequence_name, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, mutations) %>% 
   distinct # get rid of identical variant calls
 
 consortium_uk %<>% 
@@ -102,7 +130,6 @@ consortium_uk %<>%
 
 consortium_uk
 ```
-
 ## Mutations
 ```{r mutations_consortium}
 mutations_uk %<>%    
@@ -1391,7 +1418,7 @@ geo_all
 ```
 ## ISARIC
 ### Alias
-```{r isaric_alias, eval=FALSE, include=TRUE}
+```{r isaric_alias, eval=FALSE, include=FALSE}
 library(jsonlite)
 alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
 
@@ -1431,7 +1458,6 @@ isaric_dfr <-
     
     output <- tibble()
     
-    # TODO look up deletions in consortium
     if (is.na(current$Mutation)) { # if no mutations then search consortium 
       if (!is.na(current$Lineage)) {
         
@@ -1440,61 +1466,87 @@ isaric_dfr <-
           variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
           
           output <-
-            consortium_full %>%
+            consortium_uk %>%
             filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant)))) %>%   # use fixed because dot is regex special character
-            select(sequence_name, sample_date, lineage)
+            select(sequence_name, sample_date, lineage, lineage_full)
           
         } else { # no wildcard - filter exact lineage
           output <-
-            consortium_full %>%
+            consortium_uk %>%
             filter(lineage_full == current$Lineage |
                      lineage == current$Lineage) %>% 
-            select(sequence_name, sample_date, lineage)
+            select(sequence_name, sample_date, lineage, lineage_full)
         }
         
         if(!is.na(current$Lineage_filter_out)){
           filters <- str_split(current$Lineage_filter_out, "\\|")
-          # TODO
+          # TODO (no examples at present)
         }
-        
       } 
-    } else { # filter mutations
-     gene_mutation <- str_split(current$Mutation, ":") %>% unlist # split gene:mutation 
-     
-      if(!str_starts(gene_mutation[2], "del")){
+    } else { # filter deletion/insertion/mutation
+     gene_mutation <- str_split(current$Mutation, ":") %>% unlist # split gene:mutation
 
-        output <- mutations_full
+      if(str_starts(gene_mutation[2], "del|ins")){ # deletion or insertion - look up consortium
+        output <- consortium_uk
+      } else{ # mutation
+        output <- mutations_uk
+      }
 
-        if(!is.na(current$Lineage)){
-          if (str_ends(current$Lineage, "\\*")) { # filter sublineages if wildcard
-            variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+      # filter by lineage
+      if(!is.na(current$Lineage)){
+        if (str_ends(current$Lineage, fixed("*"))) { # filter sublineages if wildcard
+          variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
 
-            output %<>%
-              filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant))))  # use fixed because dot is regex special character
-
-          } else { # no wildcard - filter exact lineage
-            output %<>%
-              filter(lineage_full == current$Lineage |
-                       lineage == current$Lineage)
-          }
+          output %<>%
+            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant))))
+        } else { # no wildcard - filter exact lineage
+          output %<>%
+            filter(#lineage_full == current$Lineage |
+                     lineage == current$Lineage)
         }
+      }
 
-        if(!is.na(current$Lineage_filter_out)){ # TODO wildcards?
+      # filter out lineage
+      if(!is.na(current$Lineage_filter_out)){
+
+        # single wildcard - not implemented for multiple
+        if(str_ends(current$Lineage_filter_out, fixed("*")) && !str_detect(current$Lineage_filter_out, fixed("|")) ) {
+
+          variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+
+          output %<>%
+            filter(if_all(c(lineage, lineage_full), ~ !str_starts(.x, fixed(variant))))
+        } else { # filter multiple exact matches
           lineage_filters <- str_split(current$Lineage_filter_out, fixed("|")) %>% unlist
-          output %<>% 
-            filter(!lineage %in% lineage_filters) %>% 
-            filter(!lineage_full %in% lineage_filters)
+          
+          print(lineage_filters)
+          print(current$Mutation)
+
+          output %<>%
+            filter(!lineage %in% lineage_filters) #%>%
+            #filter(!lineage_full %in% lineage_filters)
         }
-        
-        if(str_ends(gene_mutation[2], "X")){ # mutation wildcard
-          output %<>% filter(gene == gene_mutation[1] & position == parse_number(gene_mutation[2]))
-        } else { # exact match of mutation
-          output %<>% filter(gene == gene_mutation[1] & variant == gene_mutation[2])
-        }
-        
-        output %<>% select(sequence_name, sample_date, lineage, gene, variant)
+      }
+
+      if(str_starts(gene_mutation[2], "del")){ # deletion - look up consortium
+
+        output <- tibble() # TODO
+
+        } else if(str_starts(gene_mutation[2], "ins")){ # insertion - look up consortium
+
+          output <- tibble() # TODO
+
+        } else { # mutation - look up mutations
+          
+          if(str_ends(gene_mutation[2], "X")){ # mutation wildcard
+            output %<>% filter(gene == gene_mutation[1] & position == parse_number(gene_mutation[2]))
+          } else { # exact match of mutation
+            output %<>% filter(gene == gene_mutation[1] & variant == gene_mutation[2])
+          }
+
+        output %<>% select(sequence_name, sample_date, lineage, lineage_full, gene, variant)
      }
-     
+
     }
     
     output
