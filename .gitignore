@@ -24,3 +24,4 @@ mutations.R
 *.zip
 6_seqmuts_ale.txt
 NUTS_Level_1_(January_2018)_Boundaries/
+cog.insertions.tsv

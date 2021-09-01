@@ -13,6 +13,7 @@ params:
   vui_voc_csv:      "VUI and VOC.csv"
   remdesivir_dir:   "Remdesivir Mutants" 
   isaric_csv:       "isaric_list.csv"
+  insertions_tsv:   "cog.insertions.tsv"
 ---
 ```{r setup}
 suppressPackageStartupMessages(library(tidyverse))
@@ -477,6 +478,13 @@ deletions <-
 
 deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
 ```
+# Insertions
+```{r}
+insertions <- 
+  read_tsv(params$insertions_tsv) %>% 
+  separate_rows(samples, sep = '\\|')
+```
+
 # Spike database
 ```{r database}
 mutations_s_uk <- 
@@ -1447,6 +1455,8 @@ for (i in 1:length(alias_key)) {
 ```
 ### Filter
 ```{r isaric, eval=FALSE, include=TRUE}
+# source("COG-UK/out_frame_del.R")
+# source("COG-UK/wuhan_ref_aa.R")
 
 isaric_list <- read_csv(params$isaric_csv)
 
@@ -1512,16 +1522,13 @@ isaric_dfr <-
         # single wildcard - not implemented for multiple
         if(str_ends(current$Lineage_filter_out, fixed("*")) && !str_detect(current$Lineage_filter_out, fixed("|")) ) {
 
-          variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+          variant <- str_sub(current$Lineage_filter_out, 1, nchar(current$Lineage_filter_out) - 1)
 
           output %<>%
-            filter(if_all(c(lineage, lineage_full), ~ !str_starts(.x, fixed(variant))))
+            filter(if_all(c(lineage, lineage_full), ~ !str_starts(.x, fixed(variant)))) 
         } else { # filter multiple exact matches
           lineage_filters <- str_split(current$Lineage_filter_out, fixed("|")) %>% unlist
           
-          print(lineage_filters)
-          print(current$Mutation)
-
           output %<>%
             filter(!lineage %in% lineage_filters) #%>%
             #filter(!lineage_full %in% lineage_filters)
@@ -1530,13 +1537,29 @@ isaric_dfr <-
 
       if(str_starts(gene_mutation[2], "del")){ # deletion - look up consortium
 
-        output <- tibble() # TODO
-
-        } else if(str_starts(gene_mutation[2], "ins")){ # insertion - look up consortium
-
-          output <- tibble() # TODO
-
-        } else { # mutation - look up mutations
+        # del_22289_6 is del243-244
+        # S:del241-243 is del_22283_9
+        # S:del242-244 is del_22286_9
+        
+        if(gene_mutation[2] == "del241-243"){
+          del_samples <- deletions %>% filter(ref_start == 22283 & length == 9) %$% samples
+        } else if (gene_mutation[2] == "del242-244"){
+          del_samples <- deletions %>% filter(ref_start == 22286 & length == 9) %$% samples
+        } else {
+          del_samples <- character(0)
+        }
+        
+        output %<>% 
+          filter(sequence_name %in% del_samples) %>%             
+          select(sequence_name, sample_date, lineage, lineage_full)
+        
+      } else if(str_starts(gene_mutation[2], "ins")){ # insertion - look up consortium
+        ins_samples <- insertions %>% filter(ref_start >= 21563 & ref_start < 25384) %$%  samples # Spike coordinates 21563 to 25384
+       
+        output %<>% 
+          filter(sequence_name %in% ins_samples) %>%             
+          select(sequence_name, sample_date, lineage, lineage_full)
+      } else { # mutation - look up mutations
           
           if(str_ends(gene_mutation[2], "X")){ # mutation wildcard
             output %<>% filter(gene == gene_mutation[1] & position == parse_number(gene_mutation[2]))
