@@ -45,7 +45,6 @@ lineages_t3 <-
     "B.1.1.7" = "UK. L18F, Δ69-70, Δ144, N501Y, A570D, P681H, T716I, S982A and D1118H. WHO label: <strong>Alpha</strong>.", 
     "B.1.351" = 
       "South Africa. D80A, D215G, Δ242-244, K417N, E484K, N501Y and A701V. WHO label: <strong>Beta</strong>.", 
-    "P.1" = " Japan ex Brazil. L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I. WHO label: <strong>Gamma</strong>.",
     "A.23.1" = "UK. R102I, F157L, V367F, E484K, Q613H and P681R.",
     "B.1.525" = "UK ex West Africa. Q52R, A67V, Δ69-70, Δ144, E484K, Q677H and F888L. WHO label: <strong>Eta</strong>.",
     "B.1.1.318" = "UK ex West Africa. T95I, Δ144, E484K, P681H and D796H.", 
@@ -64,7 +63,7 @@ lineages_t3 <-
     "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S.",
     
     "C.37" = "South America. Δ246-252, G75V, T76I, L452Q, F490S, D614G, and T859N. WHO label: <strong>Lambda</strong>.",
-    "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H.",
+    "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H. WHO label: <strong>Mu</strong>.",
     
     "AY.1" = "As B.1.617.2.1, with the addition of K417N. Several European countries. WHO label: <strong>Delta</strong>.",
     "AY.2" = "Alias of B.1.617.2.2, in USA with K417N. WHO label: <strong>Delta</strong>.",
@@ -78,7 +77,11 @@ lineages_t3 <-
     "AY.9" = "Alias of B.1.617.2.9, UK. WHO label: <strong>Delta</strong>.",
     "AY.10" = "Alias of B.1.617.2.10, UK. WHO label: <strong>Delta</strong>.",
     "AY.11" = "Alias of B.1.617.2.11, UK. WHO label: <strong>Delta</strong>.",
-    "AY.12" = "Alias of B.1.617.2.12, Israel. WHO label: <strong>Delta</strong>."
+    "AY.12" = "Alias of B.1.617.2.12, Israel. WHO label: <strong>Delta</strong>.",
+    
+    "P.1" = " Japan ex Brazil. L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I. WHO label: <strong>Gamma</strong>.",
+    "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
+NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>."
     ) %>% 
   enframe("lineage", "reason")
 
