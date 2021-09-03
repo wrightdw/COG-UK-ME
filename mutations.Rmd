@@ -1572,11 +1572,23 @@ isaric_dfr <-
 
     }
     
-    output
-  }) %>% distinct
+    output %>% mutate(query_id = current$ID)
+  })# %>% distinct
 
 isaric_dfr
 ```
+### Collapse
+```{r isaric_collapse}
+
+isaric_collapse <- 
+  isaric_dfr %>% 
+  group_by(sequence_name, sample_date, lineage) %>% 
+  summarise(mutations = toString(variant), query_id = toString(query_id), .groups = "drop") %>% 
+  arrange(desc(sample_date), lineage, sequence_name)
+
+isaric_collapse
+```
+
 
 ```{r success}
 message("PIPELINE COMPLETED")
