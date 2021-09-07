@@ -3,7 +3,7 @@ title:  "COG-UK Mutations"
 output: html_notebook
 params: 
   latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2021-08-30" # if empty, defaults to today's date, otherwise enter date string
+  dataset_date:     "2021-09-07" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -43,7 +43,10 @@ if(params$latest){ # copy today's files to working directory on CLIMB, stop if p
     # copy consortium and deletions to working directory
     message("Copying latest consortium and deletions files")
     file.copy(consortium_today_msa, getwd())
-    file.copy(file.path(latest_dir, "cog", params$deletions_tsv), getwd(), overwrite = TRUE) # deletions file not named by date so overwrite previous
+    
+    # deletions and insertions files not named by date so overwrite previous
+    file.copy(file.path(latest_dir, "cog", params$deletions_tsv), getwd(), overwrite = TRUE) 
+    file.copy(file.path(latest_dir, "cog", params$insertions_tsv), getwd(), overwrite = TRUE) 
   } else {
     stop(str_c(consortium_today_msa, " does not exist")) # terminate script
   }  
@@ -1454,7 +1457,7 @@ for (i in 1:length(alias_key)) {
 }
 ```
 ### Filter
-```{r isaric, eval=FALSE, include=TRUE}
+```{r isaric}
 # source("COG-UK/out_frame_del.R")
 # source("COG-UK/wuhan_ref_aa.R")
 
@@ -1473,11 +1476,11 @@ isaric_dfr <-
         
         # filter by lineage and wildcard
         if (str_ends(current$Lineage, "\\*")) { # filter sublineages if wildcard
-          variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+          lineage_prefix <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
           
           output <-
             consortium_uk %>%
-            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant)))) %>%   # use fixed because dot is regex special character
+            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(lineage_prefix)))) %>%   # use fixed because dot is regex special character
             select(sequence_name, sample_date, lineage, lineage_full)
           
         } else { # no wildcard - filter exact lineage
@@ -1489,7 +1492,7 @@ isaric_dfr <-
         }
         
         if(!is.na(current$Lineage_filter_out)){
-          filters <- str_split(current$Lineage_filter_out, "\\|")
+          filters <- str_split(current$Lineage_filter_out, fixed("|"))
           # TODO (no examples at present)
         }
       } 
@@ -1505,10 +1508,10 @@ isaric_dfr <-
       # filter by lineage
       if(!is.na(current$Lineage)){
         if (str_ends(current$Lineage, fixed("*"))) { # filter sublineages if wildcard
-          variant <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
+          lineage_prefix <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
 
           output %<>%
-            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(variant))))
+            filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(lineage_prefix))))
         } else { # no wildcard - filter exact lineage
           output %<>%
             filter(#lineage_full == current$Lineage |
@@ -1518,21 +1521,27 @@ isaric_dfr <-
 
       # filter out lineage
       if(!is.na(current$Lineage_filter_out)){
+        excludes <- 
+          current$Lineage_filter_out %>% 
+          str_split(fixed("|")) %>% 
+          unlist
+        
+        walk(excludes, function(x){
+          if(str_ends(x, fixed("*"))){ # if wildcard
+            lineage_prefix <- str_sub(x, 1, nchar(x) - 1)
 
-        # single wildcard - not implemented for multiple
-        if(str_ends(current$Lineage_filter_out, fixed("*")) && !str_detect(current$Lineage_filter_out, fixed("|")) ) {
+            output <<-
+              output %>%
+              filter(if_all(c(lineage, lineage_full), ~ !str_starts(.x, fixed(lineage_prefix))))
+                        print(nrow(output))
 
-          variant <- str_sub(current$Lineage_filter_out, 1, nchar(current$Lineage_filter_out) - 1)
-
-          output %<>%
-            filter(if_all(c(lineage, lineage_full), ~ !str_starts(.x, fixed(variant)))) 
-        } else { # filter multiple exact matches
-          lineage_filters <- str_split(current$Lineage_filter_out, fixed("|")) %>% unlist
-          
-          output %<>%
-            filter(!lineage %in% lineage_filters) #%>%
-            #filter(!lineage_full %in% lineage_filters)
-        }
+          } else { # else exact lineage
+            output <<-
+              output %>%
+              filter(if_all(c(lineage, lineage_full), ~ .x != x))
+          }
+        })
+        
       }
 
       if(str_starts(gene_mutation[2], "del")){ # deletion - look up consortium
@@ -1588,9 +1597,7 @@ isaric_collapse <-
 
 isaric_collapse
 ```
-
-
+## Done
 ```{r success}
 message("PIPELINE COMPLETED")
 ```
-
