@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2021-09-07" # if empty, defaults to today's date, otherwise enter date string
+  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -12,7 +12,7 @@ params:
   spike_fasta:      "sequence.fasta"
   vui_voc_csv:      "VUI and VOC.csv"
   remdesivir_dir:   "Remdesivir Mutants" 
-  isaric_csv:       "isaric_list.csv"
+  isaric_csv:       "Isaric_list.csv"
   insertions_tsv:   "cog.insertions.tsv"
 ---
 ```{r setup}
@@ -23,7 +23,7 @@ library(RColorBrewer)
 suppressPackageStartupMessages(library(lubridate))
 library(fuzzyjoin)
 library(htmltools)
-library(jsonlite)
+suppressPackageStartupMessages(library(jsonlite))
 # also require seqinr - loaded later on to avoid name clash of dplyr count function
 ```
 ```{r climb}
@@ -48,7 +48,7 @@ if(params$latest){ # copy today's files to working directory on CLIMB, stop if p
     file.copy(file.path(latest_dir, "cog", params$deletions_tsv), getwd(), overwrite = TRUE) 
     file.copy(file.path(latest_dir, "cog", params$insertions_tsv), getwd(), overwrite = TRUE) 
   } else {
-    stop(str_c(consortium_today_msa, " does not exist")) # terminate script
+    stop(str_c(consortium_today_msa, " does not exist or already copied")) # terminate script
   }  
   
 } else {
@@ -67,6 +67,7 @@ dir.create(str_c("COG-UK/", params$dataset_date))
 ## Consortium
 ### Read
 ```{r consortium_read, include=FALSE}
+message("Reading ", consortium_csv)
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
@@ -100,6 +101,7 @@ consortium_uk
 ```
 ### Alias
 ```{r consortium_alias, include=FALSE}
+message("Looking up PANGO designation lineage alias key on GitHub")
 # reconstruct lineage full names from alias JSON
 alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
 
@@ -127,6 +129,7 @@ mutations_uk <-
   select(sequence_name, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, mutations) %>% 
   distinct # get rid of identical variant calls
 
+message("Writing consortium_uk.rds")
 consortium_uk %<>% 
   select(-mutations) %>% 
   distinct %T>% # remove duplicates
@@ -479,6 +482,7 @@ deletions <-
   read_tsv(params$deletions_tsv) %>% 
   separate_rows(samples, sep = '\\|')
 
+message("Writing deletions.rds")
 deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
 ```
 # Insertions
@@ -486,6 +490,9 @@ deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds")
 insertions <- 
   read_tsv(params$insertions_tsv) %>% 
   separate_rows(samples, sep = '\\|')
+
+message("Writing insertions.rds")
+insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 ```
 
 # Spike database
@@ -1533,7 +1540,6 @@ isaric_dfr <-
             output <<-
               output %>%
               filter(if_all(c(lineage, lineage_full), ~ !str_starts(.x, fixed(lineage_prefix))))
-                        print(nrow(output))
 
           } else { # else exact lineage
             output <<-
@@ -1544,30 +1550,39 @@ isaric_dfr <-
         
       }
 
-      if(str_starts(gene_mutation[2], "del")){ # deletion - look up consortium
+      if(str_starts(gene_mutation[2], "del")){ # deletion - look up consortium 
+        #TODO calculate genome coordinates from aa positions
+        #TODO in frame only?
+        #TODO gene name
+        
+        dels <-
+          deletions %>% 
+          filter(between(ref_start, 22283, 22294)) %>% 
+          mutate(gene = "S", variant = str_c("del_", ref_start, "_", length)) %>% 
+          select(-ref_start, -length)
 
         # del_22289_6 is del243-244
         # S:del241-243 is del_22283_9
         # S:del242-244 is del_22286_9
-        
-        if(gene_mutation[2] == "del241-243"){
-          del_samples <- deletions %>% filter(ref_start == 22283 & length == 9) %$% samples
-        } else if (gene_mutation[2] == "del242-244"){
-          del_samples <- deletions %>% filter(ref_start == 22286 & length == 9) %$% samples
-        } else {
-          del_samples <- character(0)
-        }
+        # 22283, 22286, 22289 and 22292 ( to 22294 ?)
         
         output %<>% 
-          filter(sequence_name %in% del_samples) %>%             
-          select(sequence_name, sample_date, lineage, lineage_full)
-        
+          select(sequence_name, sample_date, lineage, lineage_full) %>% 
+          inner_join(dels, by = c("sequence_name" = "samples"))
       } else if(str_starts(gene_mutation[2], "ins")){ # insertion - look up consortium
-        ins_samples <- insertions %>% filter(ref_start >= 21563 & ref_start < 25384) %$%  samples # Spike coordinates 21563 to 25384
-       
+        # Spike genomic coordinates 21563..25384 
+        # TODO in frame only
+        
+        ins_samples <- 
+          insertions %>% 
+          # filter(str_length(insertion) %% 3 == 0) %>% 
+          filter(ref_start >= 21563 & ref_start < 25384) %>%  # Spike coordinates 21563 to 25384 
+          mutate(gene = "S", variant = str_c("ins_", ref_start, "_", insertion)) %>% 
+          select(-ref_start, -insertion)
+
         output %<>% 
-          filter(sequence_name %in% ins_samples) %>%             
-          select(sequence_name, sample_date, lineage, lineage_full)
+          select(sequence_name, sample_date, lineage, lineage_full) %>% 
+          inner_join(ins_samples, by = c("sequence_name" = "samples"))
       } else { # mutation - look up mutations
           
           if(str_ends(gene_mutation[2], "X")){ # mutation wildcard
@@ -1595,7 +1610,7 @@ isaric_collapse <-
   summarise(mutations = toString(variant), query_id = toString(query_id), .groups = "drop") %>% 
   arrange(desc(sample_date), lineage, sequence_name)
 
-isaric_collapse
+isaric_collapse %T>% write_tsv(str_c("isaric_", params$dataset_date, "_cumulative.tsv"))
 ```
 ## Done
 ```{r success}
