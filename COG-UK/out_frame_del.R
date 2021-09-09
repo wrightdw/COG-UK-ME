@@ -4,7 +4,7 @@
 # only desinged to work with deletions of length multiple of 3
 out_frame_del <- function(ref_nt = NA, del_S = NA, del_length = NA) {
   
-  del_E <- del_S + del_length + 1
+  del_E <- del_S + del_length - 1
   
   # copy the refstrain and then insert the deletion in the climb coordinates
   del_nt <- ref_nt
