@@ -71,7 +71,7 @@ message("Reading ", consortium_csv)
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
-  select(-cog_id, -gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
+  select(-gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
          -lineages_version, -country, 
          -received_date, -collection_date, -published_date, -starts_with("scorpio"), 
          -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
@@ -126,7 +126,7 @@ consortium_uk
 ```{r consortium_write}
 mutations_uk <- 
   consortium_uk %>% 
-  select(sequence_name, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, mutations) %>% 
+  select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, mutations) %>% 
   distinct # get rid of identical variant calls
 
 message("Writing consortium_uk.rds")
@@ -1482,7 +1482,7 @@ isaric_dfr <-
       if (!is.na(current$Lineage)) {
         
         # filter by lineage and wildcard
-        if (str_ends(current$Lineage, "\\*")) { # filter sublineages if wildcard
+        if (str_ends(current$Lineage, fixed("*"))) { # filter sublineages if wildcard
           lineage_prefix <- str_sub(current$Lineage, 1, nchar(current$Lineage) - 1)
           
           output <-
@@ -1521,8 +1521,7 @@ isaric_dfr <-
             filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(lineage_prefix))))
         } else { # no wildcard - filter exact lineage
           output %<>%
-            filter(#lineage_full == current$Lineage |
-                     lineage == current$Lineage)
+            filter(lineage == current$Lineage)
         }
       }
 
@@ -1569,7 +1568,7 @@ isaric_dfr <-
         output %<>% 
           select(sequence_name, sample_date, lineage, lineage_full) %>% 
           inner_join(dels, by = c("sequence_name" = "samples"))
-      } else if(str_starts(gene_mutation[2], "ins")){ # insertion - look up consortium
+      } else if(gene_mutation[1] == "S" & str_starts(gene_mutation[2], "ins")){ # insertion - look up consortium
         # Spike genomic coordinates 21563..25384 
         # TODO in frame only
         
@@ -1577,8 +1576,8 @@ isaric_dfr <-
           insertions %>% 
           # filter(str_length(insertion) %% 3 == 0) %>% 
           filter(ref_start >= 21563 & ref_start < 25384) %>%  # Spike coordinates 21563 to 25384 
-          mutate(gene = "S", variant = str_c("ins_", ref_start, "_", insertion)) %>% 
-          select(-ref_start, -insertion)
+          filter(!str_detect(insertion, "N")) %>% 
+          mutate(gene = "S", variant = str_c("ins_", ref_start, "_", insertion), .keep = "unused") 
 
         output %<>% 
           select(sequence_name, sample_date, lineage, lineage_full) %>% 
@@ -1606,8 +1605,9 @@ isaric_dfr
 
 isaric_collapse <- 
   isaric_dfr %>% 
+  mutate(gene_variant = str_c(gene, ":", variant), .keep = "unused") %>% 
   group_by(sequence_name, sample_date, lineage) %>% 
-  summarise(mutations = toString(variant), query_id = toString(query_id), .groups = "drop") %>% 
+  summarise(mutations = toString(str_c(gene_variant)), query_id = toString(query_id), .groups = "drop") %>% 
   arrange(desc(sample_date), lineage, sequence_name)
 
 isaric_collapse %T>% write_tsv(str_c("isaric_", params$dataset_date, "_cumulative.tsv"))
