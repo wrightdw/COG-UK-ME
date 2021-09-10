@@ -1488,14 +1488,14 @@ isaric_dfr <-
           output <-
             consortium_uk %>%
             filter(if_any(c(lineage, lineage_full), ~ str_starts(.x, fixed(lineage_prefix)))) %>%   # use fixed because dot is regex special character
-            select(sequence_name, sample_date, lineage, lineage_full)
+            select(sequence_name, cog_id, sample_date, lineage, lineage_full)
           
         } else { # no wildcard - filter exact lineage
           output <-
             consortium_uk %>%
             filter(lineage_full == current$Lineage |
                      lineage == current$Lineage) %>% 
-            select(sequence_name, sample_date, lineage, lineage_full)
+            select(sequence_name, cog_id, sample_date, lineage, lineage_full)
         }
         
         if(!is.na(current$Lineage_filter_out)){
@@ -1566,7 +1566,7 @@ isaric_dfr <-
         # 22283, 22286, 22289 and 22292 ( to 22294 ?)
         
         output %<>% 
-          select(sequence_name, sample_date, lineage, lineage_full) %>% 
+          select(sequence_name, cog_id, sample_date, lineage, lineage_full) %>% 
           inner_join(dels, by = c("sequence_name" = "samples"))
       } else if(gene_mutation[1] == "S" & str_starts(gene_mutation[2], "ins")){ # insertion - look up consortium
         # Spike genomic coordinates 21563..25384 
@@ -1576,11 +1576,11 @@ isaric_dfr <-
           insertions %>% 
           # filter(str_length(insertion) %% 3 == 0) %>% 
           filter(ref_start >= 21563 & ref_start < 25384) %>%  # Spike coordinates 21563 to 25384 
-          filter(!str_detect(insertion, "N")) %>% 
+          filter(!str_detect(insertion, "N")) %>% # exclude any insertions with uncalled nucleotides
           mutate(gene = "S", variant = str_c("ins_", ref_start, "_", insertion), .keep = "unused") 
 
         output %<>% 
-          select(sequence_name, sample_date, lineage, lineage_full) %>% 
+          select(sequence_name, cog_id, sample_date, lineage, lineage_full) %>% 
           inner_join(ins_samples, by = c("sequence_name" = "samples"))
       } else { # mutation - look up mutations
           
@@ -1590,7 +1590,7 @@ isaric_dfr <-
             output %<>% filter(gene == gene_mutation[1] & variant == gene_mutation[2])
           }
 
-        output %<>% select(sequence_name, sample_date, lineage, lineage_full, gene, variant)
+        output %<>% select(sequence_name, cog_id, sample_date, lineage, lineage_full, gene, variant)
      }
 
     }
@@ -1606,9 +1606,9 @@ isaric_dfr
 isaric_collapse <- 
   isaric_dfr %>% 
   mutate(gene_variant = str_c(gene, ":", variant), .keep = "unused") %>% 
-  group_by(sequence_name, sample_date, lineage) %>% 
+  group_by(cog_id, sample_date, lineage) %>% 
   summarise(mutations = toString(str_c(gene_variant)), query_id = toString(query_id), .groups = "drop") %>% 
-  arrange(desc(sample_date), lineage, sequence_name)
+  arrange(desc(sample_date), lineage, cog_id)
 
 isaric_collapse %T>% write_tsv(str_c("isaric_", params$dataset_date, "_cumulative.tsv"))
 ```
