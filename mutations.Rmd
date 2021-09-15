@@ -1246,12 +1246,14 @@ mutations_s_uk_wide
 # by day
 lineages_days_uk <- 
   consortium_uk %>%
+  # filter(adm1 == "Scotland") %>% 
   mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>% # convert AY.x sublineages of B.1.617.2 to parent
   dplyr::count(lineage, sample_date, name = "n_day") 
 
 # by week
 lineages_weeks_uk <- 
   consortium_uk %>%
+  # filter(adm1 == "Scotland") %>% 
   mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>% # convert AY.x sublineages of B.1.617.2 to parent
   dplyr::count(lineage, epi_date, name = "n_week") 
 
@@ -1600,17 +1602,57 @@ isaric_dfr <-
 
 isaric_dfr
 ```
+### Compare
+```{r isaric_compare}
+# list isaric TSV files
+isaric_files <- list.files(pattern = "isaric_.*_cumulative\\.tsv") 
+  
+# extract dates from filenames  
+isaric_dates <-
+  isaric_files %>% 
+  str_extract("\\d{4}-\\d{2}-\\d{2}") %>% 
+  parse_date
+
+# get most recent date
+isaric_previous <- isaric_dates[isaric_dates < params$dataset_date]
+if(length(isaric_previous > 0)){ # previous datasets exist
+  isaric_recent <- 
+    isaric_previous %>% 
+    max %>% 
+    grep(isaric_files) %>% 
+    isaric_files[.] %>% 
+    read_tsv() %>% 
+    separate_rows(query_id, sep = ",") %>% 
+    mutate(query_id = as.numeric(query_id)) 
+}
+
+isaric_latest <- 
+  anti_join(isaric_dfr, isaric_recent, by = c("cog_id", "query_id"))
+
+isaric_latest
+```
+
 ### Collapse
 ```{r isaric_collapse}
 
-isaric_collapse <- 
-  isaric_dfr %>% 
+collapse_isaric <- function(isaric_hits){
+  isaric_hits %>% 
   mutate(gene_variant = str_c(gene, ":", variant), .keep = "unused") %>% 
   group_by(cog_id, sample_date, lineage) %>% 
   summarise(mutations = toString(str_c(gene_variant)), query_id = toString(query_id), .groups = "drop") %>% 
   arrange(desc(sample_date), lineage, cog_id)
+}
+
+isaric_dfr_collapse <- 
+  isaric_dfr %>% 
+  collapse_isaric
+
+isaric_latest_collapse <- 
+  isaric_latest %>% 
+  collapse_isaric
 
 isaric_collapse %T>% write_tsv(str_c("isaric_", params$dataset_date, "_cumulative.tsv"))
+isaric_latest %T>% write_tsv(str_c("isaric_", params$dataset_date, "_latest.tsv"))
 ```
 ## Done
 ```{r success}
