@@ -19,6 +19,7 @@ wt <- read_rds(str_c(dataset_date, "/wt.rds")) # spike protein wild type amino a
 lineages_weeks_uk_all <- read_rds(str_c(dataset_date, "/lineages_weeks_uk_all.rds")) # lineage counts by epiweek
 lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds")) # lineage counts by sample date
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
+insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
 
 source("helpers.R")
 
