@@ -1470,6 +1470,7 @@ for (i in 1:length(alias_key)) {
 # source("COG-UK/out_frame_del.R")
 # source("COG-UK/wuhan_ref_aa.R")
 
+message("Reading ISARIC list file ", params$isaric_csv)
 isaric_list <- read_csv(params$isaric_csv)
 
 # iterate through isaric_list row by row
@@ -1615,26 +1616,28 @@ isaric_dates <-
 
 # get most recent date
 isaric_previous <- isaric_dates[isaric_dates < params$dataset_date]
+isaric_latest <- NULL
 if(length(isaric_previous > 0)){ # previous datasets exist
+  message("Reading most recent ISARIC cumulative file")
   isaric_recent <- 
     isaric_previous %>% 
     max %>% 
     grep(isaric_files) %>% 
     isaric_files[.] %>% 
+    print %>%
     read_tsv() %>% 
     separate_rows(query_id, sep = ",") %>% 
     mutate(query_id = as.numeric(query_id)) 
+  
+  isaric_latest <- 
+    anti_join(isaric_dfr, isaric_recent, by = c("cog_id", "query_id"))
 }
-
-isaric_latest <- 
-  anti_join(isaric_dfr, isaric_recent, by = c("cog_id", "query_id"))
 
 isaric_latest
 ```
 
 ### Collapse
 ```{r isaric_collapse}
-
 collapse_isaric <- function(isaric_hits){
   isaric_hits %>% 
   mutate(gene_variant = str_c(gene, ":", variant), .keep = "unused") %>% 
@@ -1643,16 +1646,21 @@ collapse_isaric <- function(isaric_hits){
   arrange(desc(sample_date), lineage, cog_id)
 }
 
+if(!is.null(isaric_latest)){
+  isaric_latest_collapse <- 
+    isaric_latest %>% 
+    collapse_isaric %T>% 
+    write_tsv(str_c("isaric_", params$dataset_date, "_latest.tsv") %T>% message("Writing ", .))
+  
+  isaric_latest_collapse
+}
+
 isaric_dfr_collapse <- 
   isaric_dfr %>% 
-  collapse_isaric
+  collapse_isaric %T>% 
+  write_tsv(str_c("isaric_", params$dataset_date, "_cumulative.tsv") %T>% message("Writing ", .))
 
-isaric_latest_collapse <- 
-  isaric_latest %>% 
-  collapse_isaric
-
-isaric_collapse %T>% write_tsv(str_c("isaric_", params$dataset_date, "_cumulative.tsv"))
-isaric_latest %T>% write_tsv(str_c("isaric_", params$dataset_date, "_latest.tsv"))
+isaric_dfr_collapse
 ```
 ## Done
 ```{r success}
