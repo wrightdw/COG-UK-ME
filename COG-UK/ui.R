@@ -38,6 +38,7 @@ dashboardPage(
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
+            menuItem("T Cell Functional Mutations", tabName = "t_cell_func", icon = icon("disease")),
             menuItem("Spike Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
@@ -566,7 +567,20 @@ dashboardPage(
                             p("The table lists those mutations in the SARS-CoV-2 genome identified in the UK dataset that have been associated with resistance of the virus to antiviral treatments. There is variation in the detail of the viral assays between the different studies displayed here.")
                         )
                     )
+            ), # end tabItem therapeutics
+            
+            tabItem(tabName = "t_cell_func",
+                    fluidRow(
+                        box(title = "Amino acid mutations in epitopes that change/reduce T cell recognition, detected in UK data", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("prescription_bottle_alt"),
+                            DTOutput("functional")
+                            # br(),
+                            # p("The table lists those mutations in the SARS-CoV-2 genome identified in the UK dataset that have been associated with resistance of the virus to antiviral treatments. There is variation in the detail of the viral assays between the different studies displayed here.")
+                        )
+                    )
             ) # end tabItem therapeutics
+            
+            
         ) # end tabItems
     ), # end dashboardBody ##8a7967
     

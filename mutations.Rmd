@@ -14,7 +14,9 @@ params:
   remdesivir_dir:   "Remdesivir Mutants" 
   isaric_csv:       "Isaric_list.csv"
   insertions_tsv:   "cog.insertions.tsv"
+  functional_csv:   "fuctional t cells_mut_lit_210705_final.csv"
 ---
+# Setup
 ```{r setup}
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(magrittr))
@@ -64,8 +66,8 @@ if(params$latest){ # copy today's files to working directory on CLIMB, stop if p
 dir.create(str_c("COG-UK/", params$dataset_date))
 ```
 
-## Consortium
-### Read
+# Consortium
+## Read
 ```{r consortium_read, include=FALSE}
 message("Reading ", consortium_csv)
 consortium_uk <- 
@@ -89,7 +91,6 @@ epi_lookup <-
 #   write_rds(str_c("COG-UK/", params$dataset_date, "/epi_lookup.rds"))
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
-sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 
 consortium_uk %<>% 
   inner_join(epi_lookup) %>% 
@@ -99,7 +100,12 @@ consortium_uk %<>%
 
 consortium_uk
 ```
-### Alias
+## 28 days
+```{r consortium_constants, include=FALSE}
+sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
+message("28 days date: ", sample_date_28)
+```
+## Alias
 ```{r consortium_alias, include=FALSE}
 message("Looking up PANGO designation lineage alias key on GitHub")
 # reconstruct lineage full names from alias JSON
@@ -122,7 +128,7 @@ for (i in 1:length(alias_key)) {
 
 consortium_uk
 ```
-### Write
+## Write
 ```{r consortium_write}
 mutations_uk <- 
   consortium_uk %>% 
@@ -137,7 +143,7 @@ consortium_uk %<>%
 
 consortium_uk
 ```
-## Mutations
+# Mutations
 ```{r mutations_consortium}
 mutations_uk %<>%    
   separate_rows(mutations, sep = '\\|') %>% 
@@ -206,7 +212,7 @@ mutation_reference_counts <-
 
 mutation_reference_counts
 ```
-### Total sequences per epidemic week
+## Total sequences per epidemic week
 ```{r consortium_counts, eval=FALSE, include=FALSE}
 n_uk <- 
   consortium_uk %>% 
@@ -475,7 +481,6 @@ mutations %>% filter(country == "UK"
 
 
 ```
-
 # Deletions
 ```{r deletions}
 deletions <- 
@@ -708,6 +713,48 @@ database_tcell_predictions <-
 
 database_tcell_predictions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
 ```
+# T cell functional
+```{r functional}
+functional <- 
+  read_csv(params$functional_csv) %>% 
+  mutate (gene = recode(Protein, 
+                        "Spike" = "S", 
+                        "Nucleocapsid" = "N",
+                        "Membrane" = "M",
+                        "Envelope" = "E"), .before = 1) %>% 
+  rename(variant = s)
+
+mutations_func_uk <- 
+  mutations_uk %>% 
+  mutate(across(position, as.character)) %>%
+  mutate(across(position, as.numeric)) %>%
+  mutate(across(c(variant), fct_drop)) %>% 
+  semi_join(functional)
+
+variants_func_uk <-
+  mutations_func_uk %>%
+  group_by(gene, position, variant) %>%
+  summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
+
+# Sample dates in last 28 days
+variants_func_uk_28 <-
+  mutations_func_uk %>%
+  filter(sample_date >= sample_date_28) %>%
+  dplyr::count(gene, position, variant, name = "UK_28")
+
+functional %<>%  
+  mutate(anchor = str_c("<a href='https://", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>%   # hyperlink to citation DOI
+  left_join(variants_func_uk) %>% 
+  left_join(variants_func_uk_28) %>% 
+  rename(
+    `numSeqs UK` = UK,
+    `numSeqs UK 28 days` = UK_28) %>% 
+  mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) 
+
+
+functional %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/functional.rds"))
+```
+
 ```{r eval=FALSE, include=FALSE}
 consortium_v <- 
   consortium_uk %>% 

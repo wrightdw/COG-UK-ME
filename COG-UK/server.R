@@ -426,6 +426,10 @@ shinyServer(function(input, output, session) {
         
     })
     
+    output$functional <- renderDT({
+      functional
+    })
+    
     # always display wild type on percentage chart
     observeEvent(input$percentage, {
       if(input$percentage){
