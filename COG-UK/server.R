@@ -425,19 +425,19 @@ shinyServer(function(input, output, session) {
         
     })
     
-    output$functional <- renderDT({
-      functional %>% 
-        arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`)) %>% 
-        select(gene, variant, Epitope, `CD4/CD8`, `HLA type`, `funtional observation`, `numSeqs UK`, `numSeqs UK 28 days`, anchor) %>%
-        rename_with(str_to_title, c(gene)) %>%
-        rename(`Amino acid replacement` = variant,
-               `Cumulative sequences in UK` = `numSeqs UK`,
-               `Sequences over 28 days` = `numSeqs UK 28 days`,
-               `Reference` = anchor
-        ) %>% 
-        datatable(filter = "none", escape = FALSE, rownames = FALSE, 
-                options = list(dom = 't', paging = FALSE, scrollX = TRUE)) 
-    })
+    # output$functional <- renderDT({
+    #   functional %>% 
+    #     arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`)) %>% 
+    #     select(gene, variant, Epitope, `CD4/CD8`, `HLA type`, `funtional observation`, `numSeqs UK`, `numSeqs UK 28 days`, anchor) %>%
+    #     rename_with(str_to_title, c(gene)) %>%
+    #     rename(`Amino acid replacement` = variant,
+    #            `Cumulative sequences in UK` = `numSeqs UK`,
+    #            `Sequences over 28 days` = `numSeqs UK 28 days`,
+    #            `Reference` = anchor
+    #     ) %>% 
+    #     datatable(filter = "none", escape = FALSE, rownames = FALSE, 
+    #             options = list(dom = 't', paging = FALSE, scrollX = TRUE)) 
+    # })
     
     # always display wild type on percentage chart
     observeEvent(input$percentage, {

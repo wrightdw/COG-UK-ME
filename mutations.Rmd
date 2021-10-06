@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2021-10-05" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -500,48 +500,48 @@ message("Writing insertions.rds")
 insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 ```
 
-# Spike database
+# Mutation database
 ```{r database}
-mutations_s_uk <- 
-  mutations_uk %>% 
-  filter(gene == "S") %>% 
-  select(-gene) %>% 
-  mutate(across(c(variant, position), fct_drop))
+# mutations_s_uk <- 
+#   mutations_uk %>% 
+#   filter(gene == "S") %>% 
+#   select(-gene) %>% 
+#   mutate(across(c(variant, position), fct_drop)) # drop unused (non-spike) mutations from factor leves
 
 lineage_distinct <- 
-  mutations_s_uk %>% 
-  group_by(position, variant) %>% 
+  mutations_uk %>% 
+  group_by(gene, position, variant) %>% 
   summarise(n_lineages = n_distinct(lineage), .groups = "drop") 
 
 lineages <- 
-  mutations_s_uk %>% 
-  distinct(position, variant, lineage) %>% 
-  group_by(position, variant) %>% 
-  arrange(position, variant, lineage, .by_group = TRUE) %>% 
+  mutations_uk %>% 
+  distinct(gene, position, variant, lineage) %>% 
+  group_by(gene, position, variant) %>% 
+  arrange(gene, position, variant, lineage, .by_group = TRUE) %>% 
   summarise(lineages = toString(lineage), .groups = "drop")
 
 ## UK and nations
 # All sample dates
 variants_uk <-
-  mutations_s_uk %>% 
-  group_by(position, variant) %>% 
+  mutations_uk %>% 
+  group_by(gene, position, variant) %>% 
   summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
 
 variants_nations <- 
-  mutations_s_uk %>% 
-  dplyr::count(position, variant, adm1) %>% 
+  mutations_uk %>% 
+  dplyr::count(gene, position, variant, adm1) %>% 
   pivot_wider(names_from = adm1, values_from = n)
 
 # Sample dates in last 28 days
 variants_uk_28 <- 
-  mutations_s_uk %>% 
+  mutations_uk %>% 
   filter(sample_date >= sample_date_28) %>% 
-  dplyr::count(position, variant, name = "UK_28")
+  dplyr::count(gene, position, variant, name = "UK_28")
 
 variants_nations_28 <-
-  mutations_s_uk %>% 
+  mutations_uk %>% 
     filter(sample_date >= sample_date_28) %>% 
-    dplyr::count(position, variant, adm1) %>% 
+    dplyr::count(gene, position, variant, adm1) %>% 
     pivot_wider(names_from = adm1, values_from = n) %>% 
     rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
 
@@ -558,9 +558,10 @@ database <-
             vaccine_sera = vaccine_sera %>% any,
             support = support %>% unique %>% toString,
             domain = domain %>% unique %>% toString, 
-            .groups = "drop")
+            .groups = "drop") %>% 
+  mutate(gene = factor("S"), .before = position)
 
-join_cols <- c("mutation" = "variant", "position" = "position")
+join_cols <- c("mutation" = "variant", "position" = "position", "gene" = "gene")
 
 database %<>% 
   full_join(lineage_distinct, by = join_cols) %>% 
@@ -587,10 +588,10 @@ database %<>%
     `numSeqs Wales 28 days` = Wales_28, 
     `numSeqs NI 28 days` = Northern_Ireland_28) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) %>% 
-  mutate(across(c(position, mutation), as.character)) %>% 
+  mutate(across(c(gene, position, mutation), as.character)) %>% 
   mutate(across(position, as.integer)) %>% 
-  arrange(position, mutation) %>% 
-  mutate(across(c(support, domain, mutation), as_factor)) %>% 
+  arrange(gene, position, mutation) %>% 
+  mutate(across(c(support, domain, gene, mutation), as_factor)) %>% 
   mutate(support = fct_relevel(support, "lower", "medium", "high"))
 
 database %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database.rds"))
@@ -696,7 +697,9 @@ container_html <- function(summary_var){
 }
 
 database_tcell <-
-  database %>%
+  database %>% 
+  filter(gene == "S") %>% 
+  select(-gene) %>% 
   select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
   # filter(`numSeqs UK` > 0) %>% # filter zero counts from predicted antibodies not observed in mutations
   fuzzy_inner_join(

@@ -20,7 +20,7 @@ lineages_weeks_uk_all <- read_rds(str_c(dataset_date, "/lineages_weeks_uk_all.rd
 lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds")) # lineage counts by sample date
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
-functional <- str_c(dataset_date, "/functional.rds") %>% read_rds # T cell functional mutations
+# functional <- str_c(dataset_date, "/functional.rds") %>% read_rds # T cell functional mutations
 
 source("helpers.R")
 
@@ -28,7 +28,7 @@ mutations_s_uk <-
   mutations_uk %>% 
   filter(gene == "S") %>% 
   select(-gene) %>% 
-  mutate(across(c(variant, position), fct_drop))
+  mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
 
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 
