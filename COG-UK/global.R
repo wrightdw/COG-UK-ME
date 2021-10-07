@@ -8,7 +8,7 @@ dataset_date <-
   ymd(quiet = TRUE) %>%  
   max(na.rm = TRUE)
 
-database <- str_c(dataset_date, "/database.rds") %>% read_rds # spike database
+database_genome <- str_c(dataset_date, "/database.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 mutations_uk <- str_c(dataset_date, "/mutations_uk.rds") %>% read_rds # TODO drop unused columns
 mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds") %>% read_rds # precomputed mutation counts 
@@ -23,6 +23,11 @@ insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (g
 # functional <- str_c(dataset_date, "/functional.rds") %>% read_rds # T cell functional mutations
 
 source("helpers.R")
+
+database <- 
+  database_genome %>% 
+  filter(gene == "S") %>% 
+  select(-gene)
 
 mutations_s_uk <- 
   mutations_uk %>% 

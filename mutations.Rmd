@@ -506,7 +506,7 @@ insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds
 #   mutations_uk %>% 
 #   filter(gene == "S") %>% 
 #   select(-gene) %>% 
-#   mutate(across(c(variant, position), fct_drop)) # drop unused (non-spike) mutations from factor leves
+#   mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
 
 lineage_distinct <- 
   mutations_uk %>% 
@@ -731,12 +731,14 @@ functional <-
 functional_spike <- 
   functional %>% 
   filter(gene == "S") %>% 
+  select(-gene) %>% 
   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
   mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_")) %>% 
   select(-gene, -Protein)
 
 database_functional <-
   database %>%
+  
   select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
   inner_join(functional_spike, by = c("mutation" = "variant"))
 
