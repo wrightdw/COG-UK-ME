@@ -24,8 +24,11 @@ out_frame_del <- function(ref_nt = NA, del_S = NA, del_length = NA) {
   codon_first <- stringr::str_sub(ref_nt_ext, 1, 3)
   codon_last <- stringr::str_sub(ref_nt_ext, -3, -1)
   
+  # translate the full extract across affected codons
   ref_aa_ext <- bioseq::seq_translate(bioseq::dna(ref_nt_ext))
   ref_aa_ext <- as.character(ref_aa_ext)
+  ref_aa_first <- stringr::str_sub(ref_aa_ext, 1, 1)
+  ref_aa_last <- stringr::str_sub(ref_aa_ext, -1, -1)
   
   # for del sequence, remove gaps before translating
   del_nt_ext <- stringr::str_sub(del_nt,
@@ -37,13 +40,12 @@ out_frame_del <- function(ref_nt = NA, del_S = NA, del_length = NA) {
   
   ## Decision
   decision = F
-  # if the del aa matches one but not both of the terminal aa, make decision
-  if (del_aa == stringr::str_sub(ref_aa_ext, 1, 1) &
-      del_aa != stringr::str_sub(ref_aa_ext, -1, -1)) {
-    decision <- 1
-  } else if (del_aa != stringr::str_sub(ref_aa_ext, 1, 1) &
-             del_aa == stringr::str_sub(ref_aa_ext, -1, -1)) {
-    decision <- 2
+  # if the del aa matches the 1st aa but not the last aa (-1), decision = 1
+  if (del_aa == ref_aa_first & del_aa != ref_aa_last) {
+    decision <- 'late'
+    # if the del aa matches the last aa (-1) but not the 1st, decision = 2
+  } else if (del_aa != ref_aa_first & del_aa == ref_aa_last) {
+    decision <- 'early'
   } 
   
   # if tied, move to hamming distance between codons - full codon first
@@ -53,21 +55,21 @@ out_frame_del <- function(ref_nt = NA, del_S = NA, del_length = NA) {
     
     # favour smaller distance
     if (hamming_first < hamming_last) {
-      decision <- 1
+      decision <- 'late'
     } else if (hamming_first > hamming_last) {
-      decision <- 2
+      decision <- 'early'
     }
   }
   
-  # if tied move to hamming distance between codons - [[1]][2]
+  # if tied move to hamming distance between second pos - [[1]][2]
   if (decision == F) {
     hamming_first <- sum(strsplit(codon_first,  "")[[1]][2] != strsplit(del_codon,  "")[[1]][2])
     hamming_last <- sum(strsplit(codon_last,  "")[[1]][2] != strsplit(del_codon,  "")[[1]][2])
     
     if (hamming_first < hamming_last) {
-      decision <- 1
+      decision <- 'late'
     } else if (hamming_first > hamming_last) {
-      decision <- 2
+      decision <- 'early'
     }
   }
   
@@ -77,28 +79,38 @@ out_frame_del <- function(ref_nt = NA, del_S = NA, del_length = NA) {
     hamming_last <- sum(strsplit(codon_last,  "")[[1]][1] != strsplit(del_codon,  "")[[1]][1])
     
     if (hamming_first < hamming_last) {
-      decision <- 1
+      decision <- 'late'
     } else if (hamming_first > hamming_last) {
-      decision <- 2
+      decision <- 'early'
     }
   }
   
   ambiguous <- F
   if (decision == F) {
-    decision <- 1
+    decision <- 'early'
     ambiguous <- T
     cat('Warning - ambiguous deletion\n')
   }
   
   # generate output based on decision
-  if (del_length == 3 & decision == 1) {
-    output <- paste0('del', codon_n_last)
-  } else if (del_length > 3 & decision == 1) {
-    output <- paste0('del', codon_n_first + 1, '-', codon_n_last)
-  } else if (del_length == 3 & decision == 2) {
+  if (del_length == 3 & decision == 'early') {
     output <- paste0('del', codon_n_first)
-  } else if (del_length > 3 & decision == 2) {
-    output <- paste0('del', codon_n_first, '-', codon_n_last -1)
+  } else if (del_length > 3 & decision == 'early') {
+    output <- paste0('del', codon_n_first, '-', codon_n_last - 1)
+  } else if (del_length == 3 & decision == 'late') {
+    output <- paste0('del', codon_n_last)
+  } else if (del_length > 3 & decision == 'late') {
+    output <- paste0('del', codon_n_first + 1, '-', codon_n_last)
+  }
+  
+  # Is a substitution required in addition to deletion
+  # check if del matches aa not called in deletion
+  if (decision == 'early' & del_aa != ref_aa_last) {
+    subst <- paste0(ref_aa_last, codon_n_last, del_aa)
+    output <- c(output, subst)
+  } else if (decision == 'late' & del_aa != ref_aa_first) {
+    subst <- paste0(ref_aa_first, codon_n_first, del_aa)
+    output <- c(output, subst) # comment out line to get old output
   }
   
   if (ambiguous == T) {
@@ -108,4 +120,3 @@ out_frame_del <- function(ref_nt = NA, del_S = NA, del_length = NA) {
   output
   
 }
-
