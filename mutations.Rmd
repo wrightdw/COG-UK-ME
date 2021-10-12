@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2021-10-05" # if empty, defaults to today's date, otherwise enter date string
+  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -500,7 +500,7 @@ message("Writing insertions.rds")
 insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 ```
 
-# Mutation database
+# Database
 ```{r database}
 # mutations_s_uk <- 
 #   mutations_uk %>% 
@@ -717,7 +717,7 @@ database_tcell_predictions <-
 database_tcell_predictions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
 ```
 ## Functional
-```{r functional}
+```{r functional, eval=FALSE, include=FALSE}
 functional <- 
   read_csv(params$functional_csv) %>% 
   mutate (gene = recode(Protein, 

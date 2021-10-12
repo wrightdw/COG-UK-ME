@@ -38,8 +38,8 @@ dashboardPage(
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
-            menuItem("T Cell Functional Mutations", tabName = "t_cell_func", icon = icon("disease")),
-            menuItem("Spike Mutation Counts", tabName = "report", icon = icon("virus")),
+            # menuItem("T Cell Functional Mutations", tabName = "t_cell_func", icon = icon("disease")),
+            menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
@@ -281,7 +281,7 @@ dashboardPage(
             
             tabItem(tabName = "report",
                     fluidRow(
-                        box(title = "Spike amino acid replacements detected in the UK data: frequency, nations and date of first detection", closable = FALSE, width = 12,
+                        box(title = "Amino acid replacements detected in the UK data: frequency, nations and date of first detection", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),   
                             
                             p("Individual amino acid replacements detected in UK genomes are shown (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),

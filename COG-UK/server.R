@@ -41,16 +41,17 @@ lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
 # 
 # Mutations
 table_1 <- function(){
-  database %>% 
+  database_genome %>% 
     arrange(desc(`numSeqs UK`)) %>% 
     filter(`numSeqs UK` >= 5) %>% 
     mutate(mutation = mutation %>% fct_drop %>% fct_inorder) %>% 
-    select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
+    select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
     mutate(`Cumulative sequences in UK (%)` = `numSeqs UK` / total_sequences,
            .after = `numSeqs UK`) %>%
     mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
            .after = `numSeqs UK 28 days`) %>%
-    rename(`Amino acid replacement` = mutation, 
+    rename(Gene = gene,
+           `Amino acid replacement` = mutation, 
            `Cumulative sequences in UK` = `numSeqs UK`, 
            `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
            `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
@@ -562,6 +563,7 @@ shinyServer(function(input, output, session) {
         mutation
       
       antigenic_mutations <- antigenic_mutations_lineages(nation = input$nation_antigenic, lineage = input$lineage_antigenic, defining = defining)
+      
       if(is.null(antigenic_mutations)){
         values$antigenic <- NULL
         values$antigenic_title <- str_c(input$lineage_antigenic, " (", input$nation_antigenic %>% str_replace_all("_", " "), ")", ": no antigenic mutations")
