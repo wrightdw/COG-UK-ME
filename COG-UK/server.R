@@ -6,14 +6,30 @@ library(shinyjs)
 library(DT)
 library(ggseqlogo)
 
-lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
+lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = FALSE){
+  
   mutations_s_uk_lv <- 
     mutations_s_uk %>%
-    filter(variant == !!variant) %>%
     when(
       use_regex ~filter(., lineage == !!lineage | str_detect(lineage, sublineage_regex(!!lineage))),
       ~filter(., lineage == !!lineage)
     ) 
+    
+  if(is.null(variant2)){
+    mutations_s_uk_lv %<>%  
+      filter(variant == !!variant) 
+  } else {
+    mutations_s_uk_lv1 <-  
+      mutations_s_uk_lv %>% 
+      filter(variant == !!variant) %>% select(-variant, -position)
+    
+    mutations_s_uk_lv2 <-  
+      mutations_s_uk_lv %>% 
+      filter(variant == !!variant2) %>% select(-variant, -position)
+    
+    mutations_s_uk_lv <- 
+      intersect(mutations_s_uk_lv1, mutations_s_uk_lv2)
+  }
   
   mutations_s_uk_lv_28 <- 
     mutations_s_uk_lv %>%
@@ -33,7 +49,12 @@ lineage_plus_variant <- function(lineage, variant, use_regex = FALSE){
                   mutate(adm1 = "UK"))
   ) %>%
     pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>%
-    mutate(lineage = !!lineage, variant = !!variant, .before = 1)
+    mutate(lineage = !!lineage, variant = !!variant, .before = 1) %>% 
+    when(
+      is.null(variant2) ~mutate(., variant = !!variant),
+      ~mutate(., variant = str_c(!!variant, " + ", !!variant2))
+    ) 
+  
 }
 
 ## Table functions
@@ -143,10 +164,14 @@ table_3 <- function(){
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
       mutate(reason = "As B.1.1.7, with the addition of E484K."),
     
-    lineage_plus_variant("B.1.1.7", "S494P") %>% # for non-key mutations
+    lineage_plus_variant(lineage = "B.1.1.7", variant = "S494P") %>% # for non-key mutations
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>%
       mutate(reason = "As B.1.1.7, with the addition of S494P."),
     
+    lineage_plus_variant(lineage = "AY.4", variant = "A222V", variant2 = "Y145H") %>% # for non-key double mutations
+      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>%
+      mutate(reason = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of A222V and Y145H."),
+
     n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.324.1") %>%
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%

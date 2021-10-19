@@ -214,7 +214,7 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
     complete(epi_week, nesting(variant), fill = list(n = 0, n_sequences_lineage = 0, percentage = 0)) %>%
     mutate(epi_week = epi_week %>% as.character %>% as.integer)
 
-  # Temporary fix - exclude misassigned Delta sequences in April 2020
+  # Temporary fix - exclude duplicate Delta sequences with incorrect dates in April 2020
   if(lineage == "B.1.617.2"){
     antigenic_mutations_lineages %<>% filter(!epi_week %in% c(16, 17))
   }
