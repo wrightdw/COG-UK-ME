@@ -169,7 +169,7 @@ table_3 <- function(){
       mutate(reason = "As B.1.1.7, with the addition of S494P."),
     
     lineage_plus_variant(lineage = "AY.4", variant = "A222V", variant2 = "Y145H") %>% # for non-key double mutations
-      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>%
+      mutate(lineage = 'AY.4.2', .keep = "unused") %>%
       mutate(reason = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of A222V and Y145H."),
 
     n_uk_lineages_all %>%
