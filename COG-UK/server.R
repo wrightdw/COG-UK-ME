@@ -211,10 +211,11 @@ table_3 <- function(){
 table_5 = function(){
   database_tcell_predictions %>% 
     filter(`numSeqs UK` > 0) %>%
-    select(mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
+    select(gene, mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
     arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`), desc(Fold)) %>%
     mutate(across(c(Epitope, HLA, assay, CD4_CD8), ~fct_relevel(.x, sort))) %>% 
-    rename(`Amino acid replacement` = mutation,
+    rename(`Gene` = gene,
+           `Amino acid replacement` = mutation,
            `Cumulative sequences in UK` = `numSeqs UK`,
            `Sequences over 28 days` = `numSeqs UK 28 days`,
            `Assay` = assay,

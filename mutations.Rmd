@@ -3,7 +3,7 @@ title:  "COG-UK Mutations"
 output: html_notebook
 params: 
   latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
+  dataset_date:     "2021-10-22" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -14,7 +14,7 @@ params:
   remdesivir_dir:   "Remdesivir Mutants" 
   isaric_csv:       "Isaric_list.csv"
   insertions_tsv:   "cog.insertions.tsv"
-  functional_csv:   "fuctional t cells_mut_lit_210705_final.csv"
+  functional_csv:   "tcell_functional_mutations.csv"
 ---
 # Setup
 ```{r setup}
@@ -98,6 +98,13 @@ consortium_uk %<>%
   mutate(across(c(epi_week, adm1, NUTS1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) # expand factor levels to include any missing weeks
 
+ # Temporary fix - exclude duplicate Delta sequences with incorrect dates in April 2020
+dodgy_delta <- 
+  consortium_uk %>% 
+  filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
+
+consortium_uk %<>% anti_join(dodgy_delta)
+
 consortium_uk
 ```
 ## 28 days
@@ -153,6 +160,11 @@ mutations_uk %<>%
   mutate(position = parse_number(variant)) %>% 
   mutate(across(c(gene, position, variant), as_factor)) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
+
+# exclude duplicate delta variants with incorrect dates in April 2020
+dodgy_delta_mutations <- 
+  mutations_uk %>% 
+  filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
 
 mutations_uk
 ```
@@ -501,7 +513,7 @@ insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds
 ```
 
 # Database
-```{r database}
+```{r database_genome}
 # mutations_s_uk <- 
 #   mutations_uk %>% 
 #   filter(gene == "S") %>% 
@@ -545,9 +557,9 @@ variants_nations_28 <-
     pivot_wider(names_from = adm1, values_from = n) %>% 
     rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
 
-database <- 
+database_genome <- 
   read_csv(params$spike_csv, col_types = cols(.default = col_character())) %>%
-  type_convert %>% 
+  type_convert %>%
   mutate(across(c(mutation, position), as_factor)) %>% 
   mutate(anchor = str_c("<a href='", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>% # hyperlink to citation DOI
   group_by(position, mutation) %>% 
@@ -563,7 +575,7 @@ database <-
 
 join_cols <- c("mutation" = "variant", "position" = "position", "gene" = "gene")
 
-database %<>% 
+database_genome %<>% 
   full_join(lineage_distinct, by = join_cols) %>% 
   full_join(lineages, by = join_cols) %>% 
   full_join(variants_uk,  by = join_cols) %>% 
@@ -571,7 +583,7 @@ database %<>%
   full_join(variants_uk_28,  by = join_cols) %>% 
   full_join(variants_nations_28,  by = join_cols) 
 
-database %<>%
+database_genome %<>%
   rename(
     `# Global Lineages associated with` = n_lineages, 
     `Global Lineages` = lineages, 
@@ -594,7 +606,7 @@ database %<>%
   mutate(across(c(support, domain, gene, mutation), as_factor)) %>% 
   mutate(support = fct_relevel(support, "lower", "medium", "high"))
 
-database %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database.rds"))
+database_genome %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_genome.rds"))
 ```
 ## nsp12
 ```{r nsp12, eval=FALSE, include=TRUE}
@@ -664,91 +676,169 @@ tcell <- read_csv(params$tcell_csv,
                           `Supporting references` = col_integer()
                   ))
 
-predictions <- read_tsv(params$predictions_tsv) 
+predictions <- read_tsv(params$predictions_tsv)
 
 predictions %<>%
   rename(
-    position = X1, 
-    mutation = X2, 
-    Epitope = X3, 
-    `Start position` = X5, 
-    `End position` = X6, 
+    position = X1,
+    mutation = X2,
+    Epitope = X3,
+    `Start position` = X5,
+    `End position` = X6,
     CD4_CD8 = X7,
-    HLA_prediction = X8) %>% 
-  select(-(starts_with("X")))
+    HLA_prediction = X8) %>%
+  select(-(starts_with("X"))) %>%
+  mutate(gene = "S", .before = 1)
 
 tcell %<>%
+  # mutate (gene = recode(ORF,
+  #                       "Spike" = "S",
+  #                       "Nucleocapsid" = "N",
+  #                       "Membrane" = "M",
+  #                       "Envelope" = "E"),
+  #         .before = 1,
+  #         .keep = "unused") %>%
   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
-  mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))
+  mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_")) # %>%
 
 nested_html <- function(summary_var){
-  summary_var %>% 
-    unique %>% 
-    map(function(i) div(i, class = "nested-row")) %>% 
-    div(class = "nested-container") %>% 
+  summary_var %>%
+    unique %>%
+    map(function(i) div(i, class = "nested-row")) %>%
+    div(class = "nested-container") %>%
     as.character()
 }
 
 container_html <- function(summary_var){
-  summary_var %>% 
-    map(function(i) div(HTML(i), class = "cell-row")) %>% 
-    div(class = "cell-container") %>% 
+  summary_var %>%
+    map(function(i) div(HTML(i), class = "cell-row")) %>%
+    div(class = "cell-container") %>%
     as.character()
 }
 
 database_tcell <-
-  database %>% 
-  filter(gene == "S") %>% 
-  select(-gene) %>% 
-  select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+  database_genome %>%
+  filter(gene == "S") %>%
+  # select(-gene) %>%
+  select(gene,
+         position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>%
   # filter(`numSeqs UK` > 0) %>% # filter zero counts from predicted antibodies not observed in mutations
   fuzzy_inner_join(
     tcell,
-    by = c("position" = "Start position",
-           "position" = "End position"),
-    match_fun = list(`>=`, `<=`))
+    by = c(
+      # "gene" = "gene",
+      "position" = "Start position",
+      "position" = "End position"),
+    match_fun = list(
+      # `==`,
+      `>=`, `<=`))
 
-database_tcell_predictions <- 
-  database_tcell %>% 
-  left_join(predictions) %>% 
-  select(-HLA_prediction) %>% 
-  mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) 
+database_tcell_predictions <-
+  database_tcell %>%
+  left_join(predictions) %>%
+  select(-HLA_prediction) %>%
+  mutate(across(c(gene, mutation, Epitope, CD4_CD8, HLA, assay), as_factor))
 
-database_tcell_predictions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
+database_tcell_predictions
+
+
+
+# tcell <- read_csv(params$tcell_csv,
+#                   col_types = cols(
+#                           `Start position` = col_integer(),
+#                           `End position` = col_integer(),
+#                           `Supporting references` = col_integer()
+#                   ))
+# 
+# predictions <- read_tsv(params$predictions_tsv) 
+# 
+# predictions %<>%
+#   rename(
+#     position = X1, 
+#     mutation = X2, 
+#     Epitope = X3, 
+#     `Start position` = X5, 
+#     `End position` = X6, 
+#     CD4_CD8 = X7,
+#     HLA_prediction = X8) %>% 
+#   select(-(starts_with("X")))
+# 
+# tcell %<>%
+#   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
+#   mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))
+# 
+# nested_html <- function(summary_var){
+#   summary_var %>% 
+#     unique %>% 
+#     map(function(i) div(i, class = "nested-row")) %>% 
+#     div(class = "nested-container") %>% 
+#     as.character()
+# }
+# 
+# container_html <- function(summary_var){
+#   summary_var %>% 
+#     map(function(i) div(HTML(i), class = "cell-row")) %>% 
+#     div(class = "cell-container") %>% 
+#     as.character()
+# }
+# 
+# database_tcell <-
+#   database_genome %>% 
+#   filter(gene == "S") %>% 
+#   select(-gene) %>% 
+#   select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+#   # filter(`numSeqs UK` > 0) %>% # filter zero counts from predicted antibodies not observed in mutations
+#   fuzzy_inner_join(
+#     tcell,
+#     by = c("position" = "Start position",
+#            "position" = "End position"),
+#     match_fun = list(`>=`, `<=`))
+# 
+# database_tcell_predictions <- 
+#   database_tcell %>% 
+#   left_join(predictions) %>% 
+#   select(-HLA_prediction) %>% 
+#   mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) 
+# 
+# database_tcell_predictions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
+
 ```
 ## Functional
-```{r functional, eval=FALSE, include=FALSE}
+```{r functional}
 functional <- 
-  read_csv(params$functional_csv) %>% 
-  mutate (gene = recode(Protein, 
+  read_csv(params$functional_csv) 
+
+functional %<>% 
+  mutate (gene = recode(ORF, 
                         "Spike" = "S", 
                         "Nucleocapsid" = "N",
                         "Membrane" = "M",
-                        "Envelope" = "E"), .before = 1) %>% 
-  rename(variant = s, HLA = `HLA type`) 
-  
-
-functional_spike <- 
-  functional %>% 
-  filter(gene == "S") %>% 
-  select(-gene) %>% 
+                        "Envelope" = "E"), 
+          .before = 1,
+          .keep = "unused") %>% 
   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
-  mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_")) %>% 
-  select(-gene, -Protein)
+  mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))  
 
-database_functional <-
-  database %>%
-  
-  select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
-  inner_join(functional_spike, by = c("mutation" = "variant"))
+# functional_spike <- 
+#   functional %>% 
+  # filter(gene == "S") %>% 
+  # select(-gene) %>%
+
+database_genome_functional <-
+  database_genome %>%
+  select(gene, position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
+  inner_join(functional)
 
 database_functional_predictions <-
-  database_functional %>% 
-  left_join(predictions) #%>% 
-  # select(-HLA_prediction) %>%
-  # mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) 
+  database_genome_functional %>% 
+  left_join(predictions) %>% 
+  select(-HLA_prediction) %>% 
+  mutate(across(c(gene, mutation, Epitope, CD4_CD8, HLA, assay), as_factor))
 
 database_functional_predictions
+
+bind_rows(database_tcell_predictions, database_functional_predictions) %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
+
 
 # mutations_func_uk <- 
 #   mutations_uk %>% 
@@ -816,12 +906,12 @@ mutations_s_uk %>%
 
 ### Table 1
 ```{r table_1}
-database %>% 
+database_genome %>% 
   slice_max(`numSeqs UK`, n = 15) %>% 
   select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
 ```{r appendix, eval=FALSE, include=FALSE}
-database %>% 
+database_genome %>% 
   filter(`numSeqs UK` >= 5) %>% 
   arrange(desc(`numSeqs UK`)) %>% 
   select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %T>% write_csv("appendix.csv")
@@ -1017,7 +1107,7 @@ consortium_uk %>%
 escape <- 
   read_csv("list_escape_2.csv", col_names = "mutation")
 
-database %>% 
+database_genome %>% 
   right_join(escape) %>% 
   select(mutation, `numSeqs UK`:`numSeqs Wales 28 days`) %T>% 
   write_csv("escape_counts.csv")
@@ -1083,7 +1173,7 @@ horz_heat <-
   antigenic_mutations_lineages() %>% 
   filter(lineage == "B.1.1.7" & variant != "N501Y") %>% 
   select(-lineage) %>% 
-  inner_join(database %>% 
+  inner_join(database_genome %>% 
                select(position, mutation, mab, plasma, vaccine_sera, support, domain) %>% 
                add_row(position = 243, mutation = "del243-244", mab = TRUE, plasma = NA, vaccine_sera = NA, support = "lower", domain = "NTD"), 
              by = c("variant" = "mutation")) %>%   
@@ -1410,7 +1500,7 @@ sequences_by_week_gisaid <-
 
 # S gene escape mutations
 escape_mutations <-
-  database %>%
+  database_genome %>%
   filter(!is.na(escape)) %$% 
   mutation 
   

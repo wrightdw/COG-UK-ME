@@ -8,7 +8,7 @@ dataset_date <-
   ymd(quiet = TRUE) %>%  
   max(na.rm = TRUE)
 
-database_genome <- str_c(dataset_date, "/database.rds") %>% read_rds # mutation database
+database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 mutations_uk <- str_c(dataset_date, "/mutations_uk.rds") %>% read_rds # TODO drop unused columns
 mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds") %>% read_rds # precomputed mutation counts 
