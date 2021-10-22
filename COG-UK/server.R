@@ -170,7 +170,7 @@ table_3 <- function(){
     
     lineage_plus_variant(lineage = "AY.4", variant = "A222V", variant2 = "Y145H") %>% # for non-key double mutations
       mutate(lineage = 'AY.4.2', .keep = "unused") %>%
-      mutate(reason = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of A222V and Y145H."),
+      mutate(reason = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. <strong>Note</strong>: Lineage is temporarily undercounted due to sequencing aftefact"),
 
     n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.324.1") %>%
