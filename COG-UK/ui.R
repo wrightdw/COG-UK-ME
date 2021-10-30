@@ -55,7 +55,12 @@ dashboardPage(
                                 vui_voc$lineage %>% levels %>% as.list,
                                 selected = c("B.1.1.7", "B.1.617.2"),
                                 shape = "curve",
-                                status = "info")
+                                status = "info"),
+            
+            prettyRadioButtons(inputId = "variant_delta",  label = "Delta sublineage",
+                               choices = c("Click me !", "AY.4", "AY.4.2"),
+                               outline = TRUE,
+                               plain = TRUE, icon = icon("thumbs-up"))
         ),
         
         conditionalPanel(
