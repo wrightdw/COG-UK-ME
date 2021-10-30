@@ -56,11 +56,13 @@ dashboardPage(
                                 selected = c("B.1.1.7", "B.1.617.2"),
                                 shape = "curve",
                                 status = "info"),
-            
-            prettyRadioButtons(inputId = "variant_delta",  label = "Delta sublineage",
-                               choices = c("Click me !", "AY.4", "AY.4.2"),
-                               outline = TRUE,
-                               plain = TRUE, icon = icon("thumbs-up"))
+            conditionalPanel(
+                condition = "input.variant_vui_voc.includes('B.1.617.2')",
+                prettyRadioButtons(inputId = "variant_delta",  label = "Delta sublineage",
+                                   choices = c("B.1.617.2", "AY.4", "AY.4.2"),
+                                   shape = "round",
+                                   status = "info")
+            )
         ),
         
         conditionalPanel(

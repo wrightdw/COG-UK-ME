@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2021-10-29" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -1407,22 +1407,34 @@ mutations_s_uk_wide
 ```
 ### VUI/VOC/other
 ```{r vui_voc_other}
-# by day
-lineages_days_uk <- 
-  consortium_uk %>%
-  # filter(adm1 == "Scotland") %>% 
-  mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>% # convert AY.x sublineages of B.1.617.2 to parent
-  dplyr::count(lineage, sample_date, name = "n_day") 
+# sequences with B.617.2.x, AY.4.x and AY.4.2.x converted to parent lineage (N.B. contains duplicate sequences for Delta!)
+consortium_uk_delta_parent <-
+  bind_rows(
+    # convert AY.x sublineages  to parent B.1.617.2
+    consortium_uk %>%
+      mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)), 
+  
+    # filter AY.4 and sublineages then convert AY.4.x sublineages to parent AY.4 
+    consortium_uk %>% 
+      filter(lineage == "AY.4" | str_starts(lineage, fixed("AY.4."))) %>% 
+      mutate(lineage = "AY.4"),
+  
+    # filter AY.4.2 and sublineages then convert any AY.4.2 sublineages to parent AY.4.2
+    consortium_uk %>% 
+      filter(lineage == "AY.4.2" | str_starts(lineage, fixed("AY.4.2."))) %>% 
+      mutate(lineage = "AY.4.2")
+  ) 
+
+# count sequences by day
+lineages_days_uk_all <- 
+  consortium_uk_delta_parent %>% dplyr::count(lineage, sample_date, name = "n_day") 
 
 # by week
-lineages_weeks_uk <- 
-  consortium_uk %>%
-  # filter(adm1 == "Scotland") %>% 
-  mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>% # convert AY.x sublineages of B.1.617.2 to parent
-  dplyr::count(lineage, epi_date, name = "n_week") 
+lineages_weeks_uk_all <- 
+ consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, name = "n_week") 
 
-lineages_days_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
-lineages_weeks_uk %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
+lineages_days_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
+lineages_weeks_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
 ## GISAID
 ```{r gisaid, eval=FALSE, include=TRUE}

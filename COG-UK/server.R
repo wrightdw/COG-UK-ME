@@ -673,10 +673,21 @@ shinyServer(function(input, output, session) {
     
     variant_plot <- reactive({
       
+      selected_variants <- input$variant_vui_voc
+      vui_voc_lineages <- levels(vui_voc$lineage)
+      if( "B.1.617.2" %in% input$variant_vui_voc && input$variant_delta != "B.1.617.2"){
+        selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
+        vui_voc_lineages <- replace(vui_voc_lineages, vui_voc_lineages == "B.1.617.2", input$variant_delta)
+      }
+      
+      # DEBUG
+      print(selected_variants)
+      print(vui_voc_lineages)
+      
       if(input$variant_day){
         variants_other_day <- 
           lineages_days_uk_all %>% 
-          filter(!(lineage %in% input$variant_vui_voc)) %>% 
+          filter(!(lineage %in% selected_variants)) %>% 
           group_by(sample_date) %>% 
           summarise(n_day = sum(n_day)) %>% 
           mutate(lineage = "Variants: other", .before = sample_date) %>% # TODO use fct_other?
@@ -684,7 +695,7 @@ shinyServer(function(input, output, session) {
         
         lineages_days_uk <- 
           lineages_days_uk_all %>% 
-          filter(lineage %in% input$variant_vui_voc) %>% 
+          filter(lineage %in% selected_variants) %>% 
           bind_rows(variants_other_day) %>% 
           mutate(lineage = recode(lineage, 
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
@@ -707,8 +718,11 @@ shinyServer(function(input, output, session) {
           theme_classic() +
           scale_fill_discrete_qualitative(palette = "Dynamic", 
                                           nmax = levels(vui_voc$lineage) %>% length + 1,
-                                          order = match(input$variant_vui_voc, 
-                                                        levels(vui_voc$lineage)) %>% c(levels(vui_voc$lineage) %>% length + 1)) +
+                                          
+                                          # fix variant/colour combos plus extra colour for Other
+                                          order = match(selected_variants, 
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length + 1) %T>% print # DEBUG
+                                          ) +
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
@@ -759,14 +773,14 @@ shinyServer(function(input, output, session) {
       } else {  # variants by week
         variants_other_week <- 
           lineages_weeks_uk_all %>% 
-          filter(!(lineage %in% input$variant_vui_voc)) %>% 
+          filter(!(lineage %in% selected_variants)) %>% 
           group_by(epi_date) %>% summarise(n_week = sum(n_week)) %>% 
           mutate(lineage = "Variants: other", .before = epi_date) %>% 
           ungroup
         
         lineages_weeks_uk <- 
           lineages_weeks_uk_all %>% 
-          filter(lineage %in% input$variant_vui_voc) %>% 
+          filter(lineage %in% selected_variants) %>% 
           bind_rows(variants_other_week) %>% 
           mutate(lineage = recode(lineage, 
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
