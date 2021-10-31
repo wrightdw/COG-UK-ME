@@ -680,36 +680,46 @@ shinyServer(function(input, output, session) {
         vui_voc_lineages <- replace(vui_voc_lineages, vui_voc_lineages == "B.1.617.2", input$variant_delta)
       }
       
-      # DEBUG
-      print(selected_variants)
-      print(vui_voc_lineages)
-      
       if(input$variant_day){
+        
+        if( "B.1.617.2" %in% input$variant_vui_voc){
+          # remove unselected Deltas so they aren't counted in Other
+          delta_options <- c("B.1.617.2", "AY.4", "AY.4.2")
+          delta_options <- delta_options[delta_options != input$variant_delta]
+          lineages_days_uk_all %<>% filter(!(lineage %in% delta_options)) 
+          
+          # TODO other Deltas / Other
+        } 
+        
         variants_other_day <- 
           lineages_days_uk_all %>% 
           filter(!(lineage %in% selected_variants)) %>% 
           group_by(sample_date) %>% 
           summarise(n_day = sum(n_day)) %>% 
-          mutate(lineage = "Variants: other", .before = sample_date) %>% # TODO use fct_other?
+          mutate(lineage = "Other", .before = sample_date) %>% 
           ungroup
         
         lineages_days_uk <- 
           lineages_days_uk_all %>% 
           filter(lineage %in% selected_variants) %>% 
           bind_rows(variants_other_day) %>% 
-          mutate(lineage = recode(lineage, 
+          mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
+                                  "AV.1" = "AV.1", 
+                                  "B.1.1.318" = "B.1.1.318",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
-                                  "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
+                                  "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.525" = "B.1.525 (Eta)",
                                   "B.1.617.1" = "B.1.617.1 (Kappa)",
+                                  "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
+                                  "AY.4" = "AY.4/AY4.x (Delta)",
+                                  "AY.4.2" = "AY.4.2 (Delta)",
+                                  "B.1.617.3" = "B.1.617.3",
                                   "P.1" = "P.1 (Gamma)",
-                                  "B.1.351" = "B.1.351 (Beta)",
-                                  "B.1.429" = "B.1.429 (Epsilon)",
-                                  "P.3" = "P.3 (Theta)",
                                   "P.2" = "P.2 (Zeta)",
-                                  "B.1.526" = "B.1.526 (Iota)"
-                                  )) %>% # WHO Greek variant names
-          rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
+                                  "P.3" = "P.3 (Theta)",
+                                  "Other" = "Other"
+                                  )) %>% 
+          rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day) 
         
         vui_voc_plot <- 
           lineages_days_uk %>%
@@ -721,7 +731,7 @@ shinyServer(function(input, output, session) {
                                           
                                           # fix variant/colour combos plus extra colour for Other
                                           order = match(selected_variants, 
-                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length + 1) %T>% print # DEBUG
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length + 1)
                                           ) +
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
@@ -775,25 +785,29 @@ shinyServer(function(input, output, session) {
           lineages_weeks_uk_all %>% 
           filter(!(lineage %in% selected_variants)) %>% 
           group_by(epi_date) %>% summarise(n_week = sum(n_week)) %>% 
-          mutate(lineage = "Variants: other", .before = epi_date) %>% 
+          mutate(lineage = "Other", .before = epi_date) %>% 
           ungroup
         
         lineages_weeks_uk <- 
           lineages_weeks_uk_all %>% 
           filter(lineage %in% selected_variants) %>% 
           bind_rows(variants_other_week) %>% 
-          mutate(lineage = recode(lineage, 
-                                  "B.1.1.7" = "B.1.1.7 (Alpha)",
-                                  "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
-                                  "B.1.525" = "B.1.525 (Eta)",
-                                  "B.1.617.1" = "B.1.617.1 (Kappa)",
-                                  "P.1" = "P.1 (Gamma)",
-                                  "B.1.351" = "B.1.351 (Beta)",
-                                  "B.1.429" = "B.1.429 (Epsilon)",
-                                  "P.3" = "P.3 (Theta)",
-                                  "P.2" = "P.2 (Zeta)",
-                                  "B.1.526" = "B.1.526 (Iota)"
-          )) %>% # WHO Greek variant names
+          mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
+                                         "AV.1" = "AV.1", 
+                                         "B.1.1.318" = "B.1.1.318",
+                                         "B.1.1.7" = "B.1.1.7 (Alpha)",
+                                         "B.1.351" = "B.1.351 (Beta)",
+                                         "B.1.525" = "B.1.525 (Eta)",
+                                         "B.1.617.1" = "B.1.617.1 (Kappa)",
+                                         "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
+                                         "AY.4" = "AY.4/AY4.x (Delta)",
+                                         "AY.4.2" = "AY.4.2 (Delta)",
+                                         "B.1.617.3" = "B.1.617.3",
+                                         "P.1" = "P.1 (Gamma)",
+                                         "P.2" = "P.2 (Zeta)",
+                                         "P.3" = "P.3 (Theta)",
+                                         "Other" = "Other"
+          )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
         
         vui_voc_plot <- 

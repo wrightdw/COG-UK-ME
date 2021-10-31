@@ -1422,12 +1422,19 @@ consortium_uk_delta_parent <-
     # filter AY.4.2 and sublineages then convert any AY.4.2 sublineages to parent AY.4.2
     consortium_uk %>% 
       filter(lineage == "AY.4.2" | str_starts(lineage, fixed("AY.4.2."))) %>% 
-      mutate(lineage = "AY.4.2")
+      mutate(lineage = "AY.4.2"),
+    
+    # TODO Delta non-AY.4 and non-AY.4.2 categories
+    consortium_uk %>% filter(str_starts(lineage_full, "B.1.617.2") & !str_starts(lineage, "AY.4")) %>% 
+      mutate(lineage = "Delta_minus_AY.4"),
+    
+    consortium_uk %>% filter(str_starts(lineage_full, "B.1.617.2") & !str_starts(lineage, "AY.4.2")) %>% 
+      mutate(lineage = "Delta_minus_AY.4.2")
   ) 
 
 # count sequences by day
 lineages_days_uk_all <- 
-  consortium_uk_delta_parent %>% dplyr::count(lineage, sample_date, name = "n_day") 
+  consortium_uk_delta_parent %>% dplyr::count(lineage, sample_date, name = "n_day")
 
 # by week
 lineages_weeks_uk_all <- 
