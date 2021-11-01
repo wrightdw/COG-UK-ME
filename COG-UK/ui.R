@@ -42,6 +42,7 @@ dashboardPage(
             menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
+            # menuItem("Ronopreve", tabName = "ronopreve", icon = icon("shield-virus")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -410,8 +411,7 @@ dashboardPage(
                         status = "info", collapsible = FALSE, icon = icon("table"), 
                         p('The table lists those mutations in the spike gene identified in the UK dataset that have been
                                          associated with weaker neutralisation of the virus by convalescent plasma from people who
-                                         have been infected with SARS-CoV-2, and/or some mAbs that may be given to patients with
-                                         COVID-19 (referred to below as "escape").'),
+                                         have been infected with SARS-CoV-2, and/or monoclonal antibodies (mAbs) that recognise the SARS-CoV-2 spike protein (referred to below as "escape").'),
                         p(strong("There is no evidence at the time of writing for this impacting on the efficacy of current
                                          vaccines or the immune response to natural SARS-CoV-2 infection.")),
                         
@@ -575,6 +575,16 @@ dashboardPage(
                         )
                     )
             ), # end tabItem therapeutics
+            
+            # tabItem(tabName = "ronopreve",
+            #         fluidRow(
+            #             box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the the of therapeutical antibody cocktail, Ronopreve.", closable = FALSE, width = 12,
+            #                 status = "info", collapsible = FALSE, icon = icon("shield-virus"),
+            #                 br(),
+            #                 p("The figure shows the prevalence of spike amino acid substitutions that have been investigated as potentially affecting the strength of binding of monoclonal antibodies X and Y.")
+            #             )
+            #         )
+            # ), # end tabItem ronopreve
             
             tabItem(tabName = "t_cell_func",
                     fluidRow(
