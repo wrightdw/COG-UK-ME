@@ -1424,11 +1424,16 @@ consortium_uk_delta_parent <-
       filter(lineage == "AY.4.2" | str_starts(lineage, fixed("AY.4.2."))) %>% 
       mutate(lineage = "AY.4.2"),
     
-    # TODO Delta non-AY.4 and non-AY.4.2 categories
-    consortium_uk %>% filter(str_starts(lineage_full, "B.1.617.2") & !str_starts(lineage, "AY.4")) %>% 
+    # Delta non-AY.4
+    consortium_uk %>% filter(( lineage == "B.1.617.2" | str_starts(lineage_full, fixed("B.1.617.2.")))
+                             & lineage != "AY.4" 
+                             & !str_starts(lineage, fixed("AY.4."))) %>% 
       mutate(lineage = "Delta_minus_AY.4"),
     
-    consortium_uk %>% filter(str_starts(lineage_full, "B.1.617.2") & !str_starts(lineage, "AY.4.2")) %>% 
+    # Delta non-AY.4.2
+    consortium_uk %>% filter(( lineage == "B.1.617.2" | str_starts(lineage_full, fixed("B.1.617.2.")))
+                             & lineage != "AY.4.2" 
+                             & !str_starts(lineage, fixed("AY.4.2."))) %>% 
       mutate(lineage = "Delta_minus_AY.4.2")
   ) 
 

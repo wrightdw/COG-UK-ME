@@ -686,9 +686,24 @@ shinyServer(function(input, output, session) {
           # remove unselected Deltas so they aren't counted in Other
           delta_options <- c("B.1.617.2", "AY.4", "AY.4.2")
           delta_options <- delta_options[delta_options != input$variant_delta]
-          lineages_days_uk_all %<>% filter(!(lineage %in% delta_options)) 
+          lineages_days_uk_all %<>% 
+            filter(!(lineage %in% delta_options)) 
           
-          # TODO other Deltas / Other
+          # filter out Delta minus counts
+          if(input$variant_delta == "AY.4"){
+            lineages_days_uk_all %<>% 
+              filter(lineage != "Delta_minus_AY.4.2")
+          } else if(input$variant_delta == "AY.4.2"){
+            lineages_days_uk_all %<>% 
+              filter(lineage != "Delta_minus_AY.4")
+          } else {
+            lineages_days_uk_all %<>% 
+              filter(!str_starts(lineage, fixed("Delta_minus_")))
+          }
+        } else { # Delta not selected, count only B.1.617.2 in Other
+          lineages_days_uk_all %<>% 
+            filter(!str_starts(lineage, fixed("AY.")))
+            filter(!str_starts(lineage, fixed("Delta_minus_"))) %T>% View 
         } 
         
         variants_other_day <- 
@@ -781,6 +796,33 @@ shinyServer(function(input, output, session) {
         
         vui_voc_plot
       } else {  # variants by week
+        
+        if( "B.1.617.2" %in% input$variant_vui_voc){
+          # remove unselected Deltas so they aren't counted in Other
+          delta_options <- c("B.1.617.2", "AY.4", "AY.4.2")
+          delta_options <- delta_options[delta_options != input$variant_delta] # remove option selected by user
+          lineages_weeks_uk_all %<>% 
+            filter(!(lineage %in% delta_options)) 
+          
+          # filter out Delta minus counts
+          if(input$variant_delta == "AY.4"){
+            lineages_weeks_uk_all %<>% 
+              filter(lineage != "Delta_minus_AY.4.2")
+          } else if(input$variant_delta == "AY.4.2"){
+            lineages_weeks_uk_all %<>% 
+              filter(lineage != "Delta_minus_AY.4")
+          } else { # B.1.617.2
+            lineages_weeks_uk_all %<>% 
+              filter(!str_starts(lineage, fixed("Delta_minus_")))
+          }
+        } else { # Delta not selected, count only B.1.617.2 in Other
+          lineages_weeks_uk_all %<>% 
+            filter(!str_starts(lineage, fixed("AY."))) %>% 
+            filter(!str_starts(lineage, fixed("Delta_minus_")))
+        }
+        
+        lineages_weeks_uk_all %>% View 
+        
         variants_other_week <- 
           lineages_weeks_uk_all %>% 
           filter(!(lineage %in% selected_variants)) %>% 
