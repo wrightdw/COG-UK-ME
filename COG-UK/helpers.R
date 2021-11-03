@@ -197,6 +197,7 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   antigenic_mutations <- 
     mutations_s_uk %>% 
     filter(variant %in% escape_mutations) %>% 
+    filter(sequence_name != "England/NEWC-2729532/2021") %>% # remove Delta outlier from January 2021
     dplyr::count(variant, epi_week, sort = TRUE) %>% 
     bind_rows(del_22289_6)
   
@@ -214,10 +215,12 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
     complete(epi_week, nesting(variant), fill = list(n = 0, n_sequences_lineage = 0, percentage = 0)) %>%
     mutate(epi_week = epi_week %>% as.character %>% as.integer)
 
-  # Temporary fix - exclude duplicate Delta sequences with incorrect dates in April 2020
+  # Temporary fixes - exclude duplicate Delta sequences with incorrect dates in April 2020
   if(lineage == "B.1.617.2"){
-    antigenic_mutations_lineages %<>% filter(!epi_week %in% c(16, 17))
+    antigenic_mutations_lineages %<>% 
+      filter(!epi_week %in% c(16, 17))
   }
+  
   
   # remove epiweeks before first occurrence
   first_occurrence <- 

@@ -20,9 +20,8 @@ lineages_weeks_uk_all <- read_rds(str_c(dataset_date, "/lineages_weeks_uk_all.rd
 lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds")) # lineage counts by sample date
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
-# functional <- str_c(dataset_date, "/functional.rds") %>% read_rds # T cell functional mutations
-mab_data <- str_c(dataset_date, "/mab_data.rds") %>% read_rds # fold differences and 'phenotype' for upset matrix
-mab <- str_c(dataset_date, "/mab.rds") %>% read_rds # ronopreve-relevant profiles and frequency in population
+# mab_data <- str_c(dataset_date, "/mab_data.rds") %>% read_rds # fold differences and 'phenotype' for upset matrix
+# mab <- str_c(dataset_date, "/mab.rds") %>% read_rds # ronopreve-relevant profiles and frequency in population
 
 source("helpers.R")
 

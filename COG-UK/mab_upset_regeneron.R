@@ -10,7 +10,7 @@ library(magrittr)
 mutations_uk <- readRDS("mutations_uk.rds")
 
 ## Read in mab data which has mutations assoc. fold differences
-mab_data <- readRDS('data_auxiliary/mab_data.rds')
+# mab_data <- readRDS('data_auxiliary/mab_data.rds')
 
 # use mutations df to get to viruses df
 mutations_uk <- mutations_uk %>% filter(gene == 'S')
