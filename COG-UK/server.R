@@ -241,6 +241,8 @@ table_therapeutics <- function(){
   ) 
 }
 
+# source("mab_upset_regeneron.R")
+
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderDataTable({
@@ -695,9 +697,13 @@ shinyServer(function(input, output, session) {
           if(input$variant_delta == "AY.4"){
             lineages_days_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4.2")
+            
+            selected_variants %<>% append("Delta_minus_AY.4") # don't include in Other
           } else if(input$variant_delta == "AY.4.2"){
             lineages_days_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4")
+            
+            selected_variants %<>% append("Delta_minus_AY.4.2") # don't include in Other
           } else {
             lineages_days_uk_all %<>% 
               filter(!str_starts(lineage, fixed("Delta_minus_")))
@@ -705,7 +711,7 @@ shinyServer(function(input, output, session) {
         } else { # Delta not selected, count only B.1.617.2 in Other
           lineages_days_uk_all %<>% 
             filter(!str_starts(lineage, fixed("AY.")))
-            filter(!str_starts(lineage, fixed("Delta_minus_"))) %T>% View 
+            filter(!str_starts(lineage, fixed("Delta_minus_")))
         } 
         
         variants_other_day <- 
@@ -720,6 +726,9 @@ shinyServer(function(input, output, session) {
           lineages_days_uk_all %>% 
           filter(lineage %in% selected_variants) %>% 
           bind_rows(variants_other_day) %>% 
+          mutate(lineage = recode(lineage,
+                                  "Delta_minus_AY.4.2" = "Other Delta",
+                                  "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                   "AV.1" = "AV.1", 
                                   "B.1.1.318" = "B.1.1.318",
@@ -730,13 +739,17 @@ shinyServer(function(input, output, session) {
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                   "AY.4" = "AY.4/AY4.x (Delta)",
                                   "AY.4.2" = "AY.4.2 (Delta)",
+                                  "Other Delta" = "Other Delta",
                                   "B.1.617.3" = "B.1.617.3",
                                   "P.1" = "P.1 (Gamma)",
                                   "P.2" = "P.2 (Zeta)",
                                   "P.3" = "P.3 (Theta)",
                                   "Other" = "Other"
                                   )) %>% 
-          rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day) 
+          rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
+        
+        selected_variants %>% print
+        vui_voc_lineages %>% print()
         
         vui_voc_plot <- 
           lineages_days_uk %>%
@@ -744,11 +757,11 @@ shinyServer(function(input, output, session) {
           ggplot(aes(fill = Variant, y = Sequences, x = `Sample date`) ) +
           theme_classic() +
           scale_fill_discrete_qualitative(palette = "Dynamic", 
-                                          nmax = levels(vui_voc$lineage) %>% length + 1,
+                                          nmax = vui_voc_lineages %>% length + 1, # extra colour for Other
                                           
                                           # fix variant/colour combos plus extra colour for Other
                                           order = match(selected_variants, 
-                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length + 1)
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length + 1) %T>% print
                                           ) +
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
@@ -822,8 +835,6 @@ shinyServer(function(input, output, session) {
             filter(!str_starts(lineage, fixed("AY."))) %>% 
             filter(!str_starts(lineage, fixed("Delta_minus_")))
         }
-        
-        lineages_weeks_uk_all %>% View 
         
         variants_other_week <- 
           lineages_weeks_uk_all %>% 
@@ -925,28 +936,28 @@ shinyServer(function(input, output, session) {
     
     ########### Ronopreve plot
     ## Use brewer pal to get some colours - upset() matrix has max of 4
-    cas_pal <- brewer.pal(6, name = "Blues")[c(3, 4)]
-    imd_pal <- brewer.pal(6, name = "Oranges")[c(3, 4)]
+    # cas_pal <- brewer.pal(6, name = "Blues")[c(3, 4)]
+    # imd_pal <- brewer.pal(6, name = "Oranges")[c(3, 4)]
     
     ### Make upset plot
     # mb.ratio sets ration in heights of upper histogram & upset plot but problem with
     # overlap of x-axis of historgram when used
-    output$plot_ronopreve <- upset(mab, keep.order = TRUE, nsets = 13, nintersects = 20,
-                                   mb.ratio = c(0.35, 0.65), group.by = 'sets',
-                text.scale = 1.4, 
-                point.size = 2.1, 
-                line.size = 1,
-                mainbar.y.label = 'Combination count',
-                sets.x.label = 'Mutation count',
-                
-                set.metadata = list(data = metadata,
-                                    plots = list(
-                                      list(type = "matrix_rows",
-                                           column = "pheno",
-                                           colors = c(Cas_1 = cas_pal[1],
-                                                      Cas_2 = cas_pal[2],
-                                                      Imd_1 = imd_pal[1],
-                                                      Imd_2 = imd_pal[2]),
-                                           alpha = 1))))
+    # output$plot_ronopreve <- upset(mab, keep.order = TRUE, nsets = 13, nintersects = 20,
+    #                                mb.ratio = c(0.35, 0.65), group.by = 'sets',
+    #             text.scale = 1.4, 
+    #             point.size = 2.1, 
+    #             line.size = 1,
+    #             mainbar.y.label = 'Combination count',
+    #             sets.x.label = 'Mutation count',
+    #             
+    #             set.metadata = list(data = metadata,
+    #                                 plots = list(
+    #                                   list(type = "matrix_rows",
+    #                                        column = "pheno",
+    #                                        colors = c(Cas_1 = cas_pal[1],
+    #                                                   Cas_2 = cas_pal[2],
+    #                                                   Imd_1 = imd_pal[1],
+    #                                                   Imd_2 = imd_pal[2]),
+    #                                        alpha = 1)))) %>% renderPlot
     
 })
