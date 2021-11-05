@@ -678,7 +678,10 @@ shinyServer(function(input, output, session) {
     variant_plot <- reactive({
       
       selected_variants <- input$variant_vui_voc
-      vui_voc_lineages <- levels(vui_voc$lineage) %>% append("Other Delta", after = 9) %>% append("Other")
+      vui_voc_lineages <- 
+        levels(vui_voc$lineage) %>% 
+        append("Other Delta", after = 9) %>% 
+        append("Other") %T>% print
       
       if( "B.1.617.2" %in% input$variant_vui_voc && input$variant_delta != "B.1.617.2"){
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
@@ -691,6 +694,7 @@ shinyServer(function(input, output, session) {
           # remove unselected Deltas so they aren't counted in Other
           delta_options <- c("B.1.617.2", "AY.4", "AY.4.2")
           delta_options <- delta_options[delta_options != input$variant_delta]
+          
           lineages_days_uk_all %<>% 
             filter(!(lineage %in% delta_options)) 
           
@@ -757,13 +761,15 @@ shinyServer(function(input, output, session) {
           filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Variant, y = Sequences, x = `Sample date`) ) +
           theme_classic() +
+          
           scale_fill_discrete_qualitative(palette = "Dynamic", 
                                           nmax = vui_voc_lineages %>% length , # extra colour for Other
                                           
                                           # fix variant/colour combos plus extra colour for Other
                                           order = match(selected_variants, 
-                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length ) # append extra index for 
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length)
                                           ) +
+          
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
@@ -816,7 +822,8 @@ shinyServer(function(input, output, session) {
         if( "B.1.617.2" %in% input$variant_vui_voc){
           # remove unselected Deltas so they aren't counted in Other
           delta_options <- c("B.1.617.2", "AY.4", "AY.4.2")
-          delta_options <- delta_options[delta_options != input$variant_delta] # remove option selected by user
+          delta_options <- delta_options[delta_options != input$variant_delta]
+          
           lineages_weeks_uk_all %<>% 
             filter(!(lineage %in% delta_options)) 
           
@@ -824,10 +831,14 @@ shinyServer(function(input, output, session) {
           if(input$variant_delta == "AY.4"){
             lineages_weeks_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4.2")
+            
+            selected_variants %<>% append("Delta_minus_AY.4") # don't include in Other
           } else if(input$variant_delta == "AY.4.2"){
             lineages_weeks_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4")
-          } else { # B.1.617.2
+            
+            selected_variants %<>% append("Delta_minus_AY.4.2") # don't include in Other
+          } else {
             lineages_weeks_uk_all %<>% 
               filter(!str_starts(lineage, fixed("Delta_minus_")))
           }
@@ -835,19 +846,24 @@ shinyServer(function(input, output, session) {
           lineages_weeks_uk_all %<>% 
             filter(!str_starts(lineage, fixed("AY."))) %>% 
             filter(!str_starts(lineage, fixed("Delta_minus_")))
-        }
+        } 
         
         variants_other_week <- 
           lineages_weeks_uk_all %>% 
           filter(!(lineage %in% selected_variants)) %>% 
-          group_by(epi_date) %>% summarise(n_week = sum(n_week)) %>% 
+          group_by(epi_date) %>% 
+          summarise(n_week = sum(n_week)) %>% 
           mutate(lineage = "Other", .before = epi_date) %>% 
           ungroup
+        
         
         lineages_weeks_uk <- 
           lineages_weeks_uk_all %>% 
           filter(lineage %in% selected_variants) %>% 
           bind_rows(variants_other_week) %>% 
+          mutate(lineage = recode(lineage,
+                                  "Delta_minus_AY.4.2" = "Other Delta",
+                                  "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                          "AV.1" = "AV.1", 
                                          "B.1.1.318" = "B.1.1.318",
@@ -862,25 +878,36 @@ shinyServer(function(input, output, session) {
                                          "P.1" = "P.1 (Gamma)",
                                          "P.2" = "P.2 (Zeta)",
                                          "P.3" = "P.3 (Theta)",
+                                         "Other Delta" = "Other Delta",
                                          "Other" = "Other"
           )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
+        
+        selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
+        selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
         
         vui_voc_plot <- 
           lineages_weeks_uk %>%
           filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Variant, y = Sequences, x = `Start date`) ) +
           theme_classic() +
+          
           scale_fill_discrete_qualitative(palette = "Dynamic", 
-                                          nmax = levels(vui_voc$lineage) %>% length + 1,
-                                          order = match(input$variant_vui_voc, 
-                                                        levels(vui_voc$lineage)) %>% c(levels(vui_voc$lineage) %>% length + 1)) +
+                                          nmax = vui_voc_lineages %>% length , # extra colour for Other
+                                          
+                                          # fix variant/colour combos plus extra colour for Other
+                                          order = match(selected_variants, 
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length) %T>% print
+          ) +
+          
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
                y = "Sequences"
           ) 
+        
+          
 
         max_date <- lineages_weeks_uk %$% max(`Start date`)
         
