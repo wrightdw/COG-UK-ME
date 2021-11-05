@@ -678,7 +678,8 @@ shinyServer(function(input, output, session) {
     variant_plot <- reactive({
       
       selected_variants <- input$variant_vui_voc
-      vui_voc_lineages <- levels(vui_voc$lineage)
+      vui_voc_lineages <- levels(vui_voc$lineage) %>% append("Other Delta", after = 9) %>% append("Other")
+      
       if( "B.1.617.2" %in% input$variant_vui_voc && input$variant_delta != "B.1.617.2"){
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
         vui_voc_lineages <- replace(vui_voc_lineages, vui_voc_lineages == "B.1.617.2", input$variant_delta)
@@ -710,7 +711,7 @@ shinyServer(function(input, output, session) {
           }
         } else { # Delta not selected, count only B.1.617.2 in Other
           lineages_days_uk_all %<>% 
-            filter(!str_starts(lineage, fixed("AY.")))
+            filter(!str_starts(lineage, fixed("AY."))) %>% 
             filter(!str_starts(lineage, fixed("Delta_minus_")))
         } 
         
@@ -739,17 +740,17 @@ shinyServer(function(input, output, session) {
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                   "AY.4" = "AY.4/AY4.x (Delta)",
                                   "AY.4.2" = "AY.4.2 (Delta)",
-                                  "Other Delta" = "Other Delta",
                                   "B.1.617.3" = "B.1.617.3",
                                   "P.1" = "P.1 (Gamma)",
                                   "P.2" = "P.2 (Zeta)",
                                   "P.3" = "P.3 (Theta)",
+                                  "Other Delta" = "Other Delta",
                                   "Other" = "Other"
                                   )) %>% 
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
         
-        selected_variants %>% print
-        vui_voc_lineages %>% print()
+        selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
+        selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
         
         vui_voc_plot <- 
           lineages_days_uk %>%
@@ -757,11 +758,11 @@ shinyServer(function(input, output, session) {
           ggplot(aes(fill = Variant, y = Sequences, x = `Sample date`) ) +
           theme_classic() +
           scale_fill_discrete_qualitative(palette = "Dynamic", 
-                                          nmax = vui_voc_lineages %>% length + 1, # extra colour for Other
+                                          nmax = vui_voc_lineages %>% length , # extra colour for Other
                                           
                                           # fix variant/colour combos plus extra colour for Other
                                           order = match(selected_variants, 
-                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length + 1) %T>% print
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length ) # append extra index for 
                                           ) +
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
