@@ -1850,8 +1850,9 @@ isaric_dfr_collapse <-
 
 isaric_dfr_collapse
 ```
-## Ronopreve
-```{r ronopreve}
+
+## Ronapreve
+```{r ronapreve}
 ## Read in mab data which has mutations assoc. fold differences
 mab_data <- readRDS('mab_data.rds')
 
@@ -1859,11 +1860,8 @@ mab_data <- readRDS('mab_data.rds')
 mutations_uk_spike <- mutations_uk %>% filter(gene == 'S')
 mutations_uk_spike <- mutations_uk %>%
   mutate(epi_week = as.numeric(as.character(epi_week)))
-mutations_uk_spike <- mutations_uk_spike[,c('sequence_name', 'sample_date', 'epi_week',
-                                'epi_date', 'lineage', 'adm1', 'gene',
-                                'variant')]
-viruses <- dplyr::summarise(group_by(mutations_uk_spike, sequence_name, sample_date, epi_week,
-                                     epi_date, lineage, adm1),
+mutations_uk_spike <- mutations_uk_spike[,c('sequence_name', 'epi_week', 'variant')]
+viruses <- dplyr::summarise(group_by(mutations_uk_spike, sequence_name, epi_week),
                             mutations = paste0(variant, collapse = ';'))
 
 # create mab which evaluates presence/absence of each mutation in 'mab_data'
@@ -1876,36 +1874,37 @@ for(i in 1:nrow(mab_data)) {
   names(mab)[ncol(mab)] <- curr_mutation
 }
 
-# edit 'mab_data' so that it can be read into plot
-mab_data
+# edit a copy of 'mab_data' so that it can be read into plot
+mab_metadata <- mab_data
 names(mab_data)[1] <- 'sets'
 
 # create a variable that summarises phenotype
 # phenotype dictates colour of row assoc. mutation
 # shows mab with greater effect and indication of effect size
-mab_data$pheno <- NA
+mab_metadata$pheno <- NA
 display_threshold <- 100
-for (i in 1:nrow(mab_data)) {
-  if (mab_data$Cas[i] > mab_data$Imd[i]) {
-    mab_data$pheno[i] <- 'Cas_1'
+for (i in 1:nrow(mab_metadata)) {
+  if (mab_metadata$Cas[i] > mab_metadata$Imd[i]) {
+    mab_metadata$pheno[i] <- 'Cas_1'
     
-    if (mab_data$Cas[i] >= display_threshold) {
-      mab_data$pheno[i] <- 'Cas_2'
+    if (mab_metadata$Cas[i] >= display_threshold) {
+      mab_metadata$pheno[i] <- 'Cas_2'
     }
     
-  } else if (mab_data$Cas[i] < mab_data$Imd[i]) {
-    mab_data$pheno[i] <- 'Imd_1'
+  } else if (mab_metadata$Cas[i] < mab_metadata$Imd[i]) {
+    mab_metadata$pheno[i] <- 'Imd_1'
     
-    if (mab_data$Imd[i] >= display_threshold) {
-      mab_data$pheno[i] <- 'Imd_2'
+    if (mab_metadata$Imd[i] >= display_threshold) {
+      mab_metadata$pheno[i] <- 'Imd_2'
     }
     
   }
 }
 
 # save mab metadata and mab
-write_rds(mab_data, str_c("COG-UK/", params$dataset_date, "/mab_data.rds"))
+write_rds(mab_metadata, str_c("COG-UK/", params$dataset_date, "/mab_metadata.rds"))
 write_rds(mab, str_c("COG-UK/", params$dataset_date, "/mab.rds"))
+
 ```
 
 ## Done
