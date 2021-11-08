@@ -5,7 +5,7 @@ library(shinyWidgets)
 library(shinyjs)
 library(DT)
 library(ggseqlogo)
-library(UpSetR)
+# library(UpSetR)
 library(RColorBrewer)
 
 lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = FALSE){
@@ -681,7 +681,7 @@ shinyServer(function(input, output, session) {
       vui_voc_lineages <- 
         levels(vui_voc$lineage) %>% 
         append("Other Delta", after = 9) %>% 
-        append("Other") %T>% print
+        append("Other")
       
       if( "B.1.617.2" %in% input$variant_vui_voc && input$variant_delta != "B.1.617.2"){
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
@@ -897,7 +897,7 @@ shinyServer(function(input, output, session) {
                                           
                                           # fix variant/colour combos plus extra colour for Other
                                           order = match(selected_variants, 
-                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length) %T>% print
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length)
           ) +
           
           scale_x_date(breaks = date_breaks("1 month"),
