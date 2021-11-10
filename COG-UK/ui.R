@@ -578,11 +578,11 @@ dashboardPage(
             
             tabItem(tabName = "ronapreve",
                     fluidRow(
-                        box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the the of therapeutical antibody cocktail, Ronapreve.", closable = FALSE, width = 12,
+                        box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the therapeutical antibody cocktail, Ronapreve.", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("pills"),
-                            plotOutput("ronapreve_plot"),
+                            plotOutput("ronapreve_plot", height = "70vh"),
                             br(),
-                            p("The figure shows the prevalence of spike amino acid substitutions that have been investigated as potentially affecting the strength of binding of monoclonal antibodies X and Y.")
+                            p("Upset plot showing the frequency of mutations affecting Ronapreve constituent monoclonal antibodies and their combinations in cumulative UK SARS-CoV-2 genome sequence data. Spike amino acid substitutions known to affect either casirivimab or imdevimab mAbs were considered. The upper histogram shows the number of sequences per combination whereas the bottom right histogram shows the number of sequences with each specific substitution. Rows are coloured according to the mAb to which the greatest fold-decrease in binding was recorded (blue = casirivimab, orange = imdevimab), with a lighter shade indicating a fold-decrease of less than 100 and darker shade indicating 100 or greater.")
                         )
                     )
             ), # end tabItem ronapreve
