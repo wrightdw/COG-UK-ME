@@ -962,7 +962,10 @@ shinyServer(function(input, output, session) {
       variant_plot() %>% ggplotly
     })
     
-    ########### Ronopreve plot
+    ########### Ronapreve plot
+    
+    
+    
     ## Use brewer pal to get some colours - upset() matrix has max of 4
     # cas_pal <- brewer.pal(6, name = "Blues")[c(3, 4)]
     # imd_pal <- brewer.pal(6, name = "Oranges")[c(3, 4)]
@@ -987,5 +990,7 @@ shinyServer(function(input, output, session) {
     #                                                   Imd_1 = imd_pal[1],
     #                                                   Imd_2 = imd_pal[2]),
     #                                        alpha = 1)))) %>% renderPlot
+    
+    output$ronapreve_plot <- renderPlot(ronapreve_upset)
     
 })

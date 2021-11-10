@@ -23,6 +23,7 @@ therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral d
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
 # mab_data <- str_c(dataset_date, "/mab_data.rds") %>% read_rds # fold differences and 'phenotype' for upset matrix
 # mab <- str_c(dataset_date, "/mab.rds") %>% read_rds # ronopreve-relevant profiles and frequency in population
+ronapreve_upset <- str_c(dataset_date, "/ronapreve_upset.rds") %>% read_rds
 
 source("helpers.R")
 

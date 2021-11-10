@@ -42,7 +42,7 @@ dashboardPage(
             menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
-            # menuItem("Ronopreve", tabName = "ronopreve", icon = icon("shield-virus")),
+            menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -576,15 +576,16 @@ dashboardPage(
                     )
             ), # end tabItem therapeutics
             
-            # tabItem(tabName = "ronopreve",
-            #         fluidRow(
-            #             box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the the of therapeutical antibody cocktail, Ronopreve.", closable = FALSE, width = 12,
-            #                 status = "info", collapsible = FALSE, icon = icon("shield-virus"),
-            #                 br(),
-            #                 p("The figure shows the prevalence of spike amino acid substitutions that have been investigated as potentially affecting the strength of binding of monoclonal antibodies X and Y.")
-            #             )
-            #         )
-            # ), # end tabItem ronopreve
+            tabItem(tabName = "ronapreve",
+                    fluidRow(
+                        box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the the of therapeutical antibody cocktail, Ronapreve.", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("pills"),
+                            plotOutput("ronapreve_plot"),
+                            br(),
+                            p("The figure shows the prevalence of spike amino acid substitutions that have been investigated as potentially affecting the strength of binding of monoclonal antibodies X and Y.")
+                        )
+                    )
+            ), # end tabItem ronapreve
             
             tabItem(tabName = "t_cell_func",
                     fluidRow(

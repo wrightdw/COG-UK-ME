@@ -3,7 +3,7 @@ title:  "COG-UK Mutations"
 output: html_notebook
 params: 
   latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2021-11-08" # if empty, defaults to today's date, otherwise enter date string
+  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -27,6 +27,7 @@ library(fuzzyjoin)
 library(htmltools)
 suppressPackageStartupMessages(library(jsonlite))
 # also require seqinr - loaded later on to avoid name clash of dplyr count function
+library(UpSetR)
 ```
 ```{r climb}
 Sys.setenv(TZ="Europe/London")
@@ -1858,9 +1859,12 @@ mab_data <- readRDS('mab_data.rds')
 
 # use mutations df to get to viruses df
 mutations_uk_spike <- mutations_uk %>% filter(gene == 'S')
+
 mutations_uk_spike <- mutations_uk %>%
   mutate(epi_week = as.numeric(as.character(epi_week)))
+
 mutations_uk_spike <- mutations_uk_spike[,c('sequence_name', 'epi_week', 'variant')]
+
 viruses <- dplyr::summarise(group_by(mutations_uk_spike, sequence_name, epi_week),
                             mutations = paste0(variant, collapse = ';'))
 
@@ -1901,10 +1905,17 @@ for (i in 1:nrow(mab_metadata)) {
   }
 }
 
-# save mab metadata and mab
-write_rds(mab_metadata, str_c("COG-UK/", params$dataset_date, "/mab_metadata.rds"))
-write_rds(mab, str_c("COG-UK/", params$dataset_date, "/mab.rds"))
 
+# save mab metadata and mab
+# write_rds(mab_metadata, str_c("COG-UK/", params$dataset_date, "/mab_metadata.rds"))
+# write_rds(mab, str_c("COG-UK/", params$dataset_date, "/mab.rds"))
+
+```
+### Plot
+```{r ronopreve_plot}
+source("COG-UK/mab_upset_regeneron.R")
+ronopreve_upset %>% save(str_c("COG-UK/", params$dataset_date, "/ronapreve_upset.rds")) 
+ronapreve_upset
 ```
 
 ## Done
