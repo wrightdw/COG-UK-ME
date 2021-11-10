@@ -24,6 +24,7 @@ insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (g
 # mab_data <- str_c(dataset_date, "/mab_data.rds") %>% read_rds # fold differences and 'phenotype' for upset matrix
 # mab <- str_c(dataset_date, "/mab.rds") %>% read_rds # ronopreve-relevant profiles and frequency in population
 ronapreve_upset <- str_c(dataset_date, "/ronapreve_upset.rds") %>% read_rds
+ronapreve_upset_28 <- str_c(dataset_date, "/ronapreve_upset_28.rds") %>% read_rds
 
 source("helpers.R")
 

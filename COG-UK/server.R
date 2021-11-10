@@ -241,8 +241,6 @@ table_therapeutics <- function(){
   ) 
 }
 
-# source("mab_upset_regeneron.R")
-
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderDataTable({
@@ -963,34 +961,14 @@ shinyServer(function(input, output, session) {
     })
     
     ########### Ronapreve plot
-    
-    
-    
-    ## Use brewer pal to get some colours - upset() matrix has max of 4
-    # cas_pal <- brewer.pal(6, name = "Blues")[c(3, 4)]
-    # imd_pal <- brewer.pal(6, name = "Oranges")[c(3, 4)]
-    
-    ### Make upset plot
-    # mb.ratio sets ration in heights of upper histogram & upset plot but problem with
-    # overlap of x-axis of historgram when used
-    # output$plot_ronopreve <- upset(mab, keep.order = TRUE, nsets = 13, nintersects = 20,
-    #                                mb.ratio = c(0.35, 0.65), group.by = 'sets',
-    #             text.scale = 1.4, 
-    #             point.size = 2.1, 
-    #             line.size = 1,
-    #             mainbar.y.label = 'Combination count',
-    #             sets.x.label = 'Mutation count',
-    #             
-    #             set.metadata = list(data = metadata,
-    #                                 plots = list(
-    #                                   list(type = "matrix_rows",
-    #                                        column = "pheno",
-    #                                        colors = c(Cas_1 = cas_pal[1],
-    #                                                   Cas_2 = cas_pal[2],
-    #                                                   Imd_1 = imd_pal[1],
-    #                                                   Imd_2 = imd_pal[2]),
-    #                                        alpha = 1)))) %>% renderPlot
-    
-    output$ronapreve_plot <- renderPlot(ronapreve_upset)
-    
+    # always display wild type on percentage chart
+    observeEvent(input$ronapreve_28, {
+      if(input$ronapreve_28){
+        output$title_ronapreve <- renderText("28 days to latest UK sequence date")
+        output$ronapreve_plot <- renderPlot(ronapreve_upset_28)
+      } else {
+        output$title_ronapreve <- renderText("All time")
+        output$ronapreve_plot <- renderPlot(ronapreve_upset)
+      }
+    })
 })
