@@ -700,12 +700,16 @@ shinyServer(function(input, output, session) {
             lineages_days_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4.2")
             
-            selected_variants %<>% append("Delta_minus_AY.4") # don't include in Other
+            # add Other Delta after AY.4 in colour ordering
+            ay_index <- match("AY.4", selected_variants) 
+            selected_variants %<>% append("Delta_minus_AY.4", after = ay_index) # don't include in Other
           } else if(input$variant_delta == "AY.4.2"){
             lineages_days_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4")
             
-            selected_variants %<>% append("Delta_minus_AY.4.2") # don't include in Other
+            # add Other Delta after AY.4.2 in colour ordering
+            ay_index <- match("AY.4.2", selected_variants) 
+            selected_variants %<>% append("Delta_minus_AY.4.2", after = ay_index) # don't include in Other
           } else {
             lineages_days_uk_all %<>% 
               filter(!str_starts(lineage, fixed("Delta_minus_")))
@@ -739,13 +743,13 @@ shinyServer(function(input, output, session) {
                                   "B.1.525" = "B.1.525 (Eta)",
                                   "B.1.617.1" = "B.1.617.1 (Kappa)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
+                                  "Other Delta" = "Other Delta",
                                   "AY.4" = "AY.4/AY4.x (Delta)",
                                   "AY.4.2" = "AY.4.2 (Delta)",
                                   "B.1.617.3" = "B.1.617.3",
                                   "P.1" = "P.1 (Gamma)",
                                   "P.2" = "P.2 (Zeta)",
                                   "P.3" = "P.3 (Theta)",
-                                  "Other Delta" = "Other Delta",
                                   "Other" = "Other"
                                   )) %>% 
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
@@ -829,12 +833,16 @@ shinyServer(function(input, output, session) {
             lineages_weeks_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4.2")
             
-            selected_variants %<>% append("Delta_minus_AY.4") # don't include in Other
+            # add Other Delta after AY.4 in colour ordering
+            ay_index <- match("AY.4", selected_variants) 
+            selected_variants %<>% append("Delta_minus_AY.4", after = ay_index) # don't include in Other
           } else if(input$variant_delta == "AY.4.2"){
             lineages_weeks_uk_all %<>% 
               filter(lineage != "Delta_minus_AY.4")
             
-            selected_variants %<>% append("Delta_minus_AY.4.2") # don't include in Other
+            # add Other Delta after AY.4.2 in colour ordering
+            ay_index <- match("AY.4.2", selected_variants) 
+            selected_variants %<>% append("Delta_minus_AY.4.2", after = ay_index) # don't include in Other
           } else {
             lineages_weeks_uk_all %<>% 
               filter(!str_starts(lineage, fixed("Delta_minus_")))
@@ -869,19 +877,21 @@ shinyServer(function(input, output, session) {
                                          "B.1.525" = "B.1.525 (Eta)",
                                          "B.1.617.1" = "B.1.617.1 (Kappa)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
+                                         "Other Delta" = "Other Delta",
                                          "AY.4" = "AY.4/AY4.x (Delta)",
                                          "AY.4.2" = "AY.4.2 (Delta)",
                                          "B.1.617.3" = "B.1.617.3",
                                          "P.1" = "P.1 (Gamma)",
                                          "P.2" = "P.2 (Zeta)",
                                          "P.3" = "P.3 (Theta)",
-                                         "Other Delta" = "Other Delta",
                                          "Other" = "Other"
           )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
         
         selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
+        
+        
         
         vui_voc_plot <- 
           lineages_weeks_uk %>%
@@ -894,7 +904,7 @@ shinyServer(function(input, output, session) {
                                           
                                           # fix variant/colour combos plus extra colour for Other
                                           order = match(selected_variants, 
-                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length)
+                                                        vui_voc_lineages) %>% c(vui_voc_lineages %>% length) 
           ) +
           
           scale_x_date(breaks = date_breaks("1 month"),

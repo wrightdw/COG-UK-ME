@@ -53,7 +53,11 @@ dashboardPage(
             prettySwitch("variant_day", "By day", FALSE, status = "info", fill = TRUE),
             
             prettyCheckboxGroup("variant_vui_voc", "Variant:",
+                                
+                                
                                 vui_voc$lineage %>% levels %>% as.list,
+                                
+                                
                                 selected = c("B.1.1.7", "B.1.617.2"),
                                 shape = "curve",
                                 status = "info"),
@@ -62,7 +66,8 @@ dashboardPage(
                 prettyRadioButtons(inputId = "variant_delta",  label = "Delta sublineage",
                                    choices = c("B.1.617.2", "AY.4", "AY.4.2"),
                                    shape = "round",
-                                   status = "info")
+                                   status = "info",
+                                   selected = "AY.4.2")
             )
         ),
         
