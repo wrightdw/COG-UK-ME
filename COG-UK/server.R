@@ -5,7 +5,6 @@ library(shinyWidgets)
 library(shinyjs)
 library(DT)
 library(ggseqlogo)
-# library(UpSetR)
 library(RColorBrewer)
 
 lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = FALSE){
