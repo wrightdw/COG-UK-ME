@@ -324,9 +324,18 @@ dashboardPage(
                                     column(
                                         width = 4, 
                                         selectizeInput(
+                                            inputId = "dataset_gene", 
+                                            label = "Gene:",
+                                            choices = database_genome$gene %>% levels, 
+                                            selected = "S",
+                                            options = list(dropdownParent = 'body')# prevent dropdown opening behind footer
+                                        ),
+                                        
+                                        selectizeInput(
                                             inputId = "dataset", 
-                                            label = "Choose amino acid replacement:",
-                                            choices = database$mutation, 
+                                            label = "Amino acid replacement (type to search):",
+                                            choices = NULL, 
+                                            size = 10,
                                             options = list(dropdownParent = 'body') # prevent dropdown opening behind footer
                                         ),
                                         downloadButton("downloadData", "Download", class = "btn-info"))

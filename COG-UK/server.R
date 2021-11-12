@@ -254,7 +254,8 @@ shinyServer(function(input, output, session) {
     ## Mutations
     # Reactive value to generate downloadable table for selected table 1 mutation metadata
     datasetInput <- reactive({
-      mutations_s_uk %>% 
+      mutations_uk %>% 
+        filter(gene == input$dataset_gene) %>% 
         filter(variant == input$dataset) %>% 
         filter(sample_date >= sample_date_28) %>% 
         select(sequence_name, sample_date, epi_week, epi_date, lineage) %>% 
@@ -327,7 +328,7 @@ shinyServer(function(input, output, session) {
     # Downloadable CSV of selected mutation metadata
     output$downloadData <- downloadHandler(
       filename = function() {
-        str_c(input$dataset, "_UK_28_days_", dataset_date, ".csv")
+        str_c(input$dataset_gene, "_", input$dataset, "_UK_28_days_", dataset_date, ".csv")
       },
       content = function(file) {
         write_csv(datasetInput(), file)
@@ -629,6 +630,15 @@ shinyServer(function(input, output, session) {
                           distinct(position) %>%
                           arrange(position))
     })
+    
+    observeEvent(input$dataset_gene, {
+      updateSelectizeInput(session, 
+                           "dataset",
+                           choices = database_genome %>% 
+                             filter(gene == input$dataset_gene) %>% 
+                             distinct(mutation))
+    })
+    
     
     observeEvent(input$dataset,{
       toggleState("downloadData", input$dataset != "")
