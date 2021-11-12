@@ -974,10 +974,18 @@ shinyServer(function(input, output, session) {
     observeEvent(input$ronapreve_28, {
       if(input$ronapreve_28){
         output$title_ronapreve <- renderText("28 days to latest UK sequence date")
-        output$ronapreve_plot <- renderPlot(ronapreve_upset_28)
+        output$ronapreve_plot <- renderImage({
+          list(src = str_c(dataset_date, "/Ronapreve_28.png"),
+               alt = "Ronapreve plot 28 days"
+          )
+        }, deleteFile = FALSE)
       } else {
         output$title_ronapreve <- renderText("All time")
-        output$ronapreve_plot <- renderPlot(ronapreve_upset)
+        output$ronapreve_plot <- renderImage({
+          list(src = str_c(dataset_date, "/Ronapreve.png"),
+               alt = "Ronapreve plot all time"
+          )
+        }, deleteFile = FALSE)
       }
     })
 })

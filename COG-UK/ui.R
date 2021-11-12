@@ -42,7 +42,7 @@ dashboardPage(
             menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
-            # menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
+            menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -103,14 +103,13 @@ dashboardPage(
                                   "Vaccine sera" = "vaccine"),
                                 shape = "curve",
                                 status = "info")
+        ),
+
+        conditionalPanel(
+            condition =  "input.sidebar_menu == 'ronapreve'",
+            hr(),
+            prettySwitch("ronapreve_28", "Latest 28 days", FALSE, status = "info", fill = TRUE)
         )
-        # ,
-        # 
-        # conditionalPanel(
-        #     condition =  "input.sidebar_menu == 'ronapreve'",
-        #     hr(),
-        #     prettySwitch("ronapreve_28", "Latest 28 days", FALSE, status = "info", fill = TRUE)
-        # )
     ),
     
     body = dashboardBody(
@@ -588,18 +587,18 @@ dashboardPage(
                     )
             ), # end tabItem therapeutics
             
-            # tabItem(tabName = "ronapreve",
-            #         fluidRow(
-            #             box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the the of therapeutical antibody cocktail, Ronapreve.", closable = FALSE, width = 12,
-            #                 status = "info", collapsible = FALSE, icon = icon("pills"),
-            #                 h4(textOutput("title_ronapreve", inline = TRUE), class = "text-center"),
-            #                 plotOutput("ronapreve_plot"),
-            #                 br(),
-            #                 p("UpSet plot showing the frequency of mutations affecting Ronapreve constituent monoclonal antibodies and their combinations in cumulative UK SARS-CoV-2 genome sequence data. Spike amino acid substitutions known to affect either ", em("casirivimab"), " or ", em("imdevimab"), " mAbs were considered. The upper histogram shows the number of sequences per combination whereas the bottom right histogram shows the number of sequences with each specific substitution. Rows are coloured according to the mAb to which the greatest fold-decrease in binding was recorded (blue = ", em("casirivimab"), ", orange = ", em("imdevimab"), "), with a lighter shade indicating a fold-decrease of less than 100 and darker shade indicating 100 or greater."),
-            #                 p("The plot is generated using data from ", tags$a("here.", href="https://www.fda.gov/drugs/drug-safety-and-availability/fda-authorizes-revisions-fact-sheets-address-sars-cov-2-variants-monoclonal-antibody-products-under", target = "_blank"))
-            #             )
-            #         )
-            # ), # end tabItem ronapreve
+            tabItem(tabName = "ronapreve",
+                    fluidRow(
+                        box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the therapeutical antibody cocktail, Ronapreve.", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("pills"),
+                            h4(textOutput("title_ronapreve", inline = TRUE), class = "text-center"),
+                            imageOutput("ronapreve_plot", width = "100%", height = "100%"),
+                            br(),
+                            p(.noWS = c("after-begin", "before-end"), "Plot showing the frequency of mutations affecting Ronapreve constituent monoclonal antibodies and their combinations in cumulative UK SARS-CoV-2 genome sequence data. Spike amino acid substitutions known to affect either ", em("casirivimab", .noWS = "outside"), " or ", em("imdevimab", .noWS = "outside"), " mAbs were considered. The upper histogram shows the number of sequences per combination whereas the bottom right histogram shows the number of sequences with each specific substitution. Rows are coloured according to the mAb to which the greatest fold-decrease in binding was recorded (blue = ", em("casirivimab", .noWS = "outside"), ", orange = ", em("imdevimab", .noWS = "outside"), "), with a lighter shade indicating a fold-decrease of less than 100 and darker shade indicating 100 or greater."),
+                            p(.noWS = c("after-begin", "before-end"), "The plot is generated using data from ", tags$a("here.", href="https://www.fda.gov/drugs/drug-safety-and-availability/fda-authorizes-revisions-fact-sheets-address-sars-cov-2-variants-monoclonal-antibody-products-under", target = "_blank", .noWS = "outside"))
+                        )
+                    )
+            ), # end tabItem ronapreve
             
             tabItem(tabName = "t_cell_func",
                     fluidRow(

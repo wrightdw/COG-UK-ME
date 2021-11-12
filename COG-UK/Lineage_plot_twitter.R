@@ -60,56 +60,19 @@ vui_voc_lineages <-
     theme(plot.title = element_text(hjust = 0.5)) +
     labs(x = "Sample date",
          y = "Sequences"
-    ) 
+    )
   
-  
-  
-  max_date <- lineages_weeks_uk %$% max(`Start date`)
-  
-  # Set height of annotation box according to highest weekly total sequences
-  if(input$variant_percentage){
-    ymax <- 1
-  } else {
+  ymax <- 
     ymax <- 
-      ymax <- 
-      lineages_weeks_uk %>% 
-      group_by(`Start date`) %>% 
-      summarise(total_week = sum(Sequences)) %$% 
-      max(total_week)
-  }
+    lineages_weeks_uk %>% 
+    group_by(`Start date`) %>% 
+    summarise(total_week = sum(Sequences)) %$% 
+    max(total_week)
   
-  # display annotation if upper slider is in latest 2 weeks
-  if (input$variant_range[2] >= max_date - days(7)){
-    if(input$variant_range[2] >= max_date ){
-      xmax = max_date + days(3) 
-    } else{
-      xmax = max_date + days(-4) 
-    }
-    
-    vui_voc_plot <- 
-      vui_voc_plot +
-      annotate("rect", 
-               xmax = xmax, 
-               xmin = max_date - days(10), 
-               ymin = 0, 
-               ymax = ymax,
-               alpha = 0.2)
-  }
+  vui_voc_plot <- 
+    vui_voc_plot + 
+    geom_bar(position="stack", stat="identity") +
+    ylim(0, ymax)
   
-  # TODO position_nudge
-  if(input$variant_percentage){
-    vui_voc_plot <- 
-      vui_voc_plot +
-      geom_bar(position="fill", stat="identity") +
-      scale_y_continuous(labels = scales::percent_format())
-  } else {
-    vui_voc_plot <- 
-      vui_voc_plot + 
-      geom_bar(position="stack", stat="identity") +
-      ylim(0, ymax)
-  }
+  
   vui_voc_plot
-} # end else by day
-vui_voc_plot
-}) %>% debounce(500)
-variant_plot() %>% ggplotly 

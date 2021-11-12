@@ -1857,8 +1857,13 @@ source("mab_upset_regeneron.R")
 ronapreve_upset <- generate_upset()
 ronapreve_upset_28 <- generate_upset(filter_date = sample_date_28)
 
-ronapreve_upset %>% write_rds(str_c("COG-UK/", params$dataset_date, "/ronapreve_upset.rds")) 
-ronapreve_upset_28 %>% write_rds(str_c("COG-UK/", params$dataset_date, "/ronapreve_upset_28.rds")) 
+png(filename=str_c("COG-UK/", params$dataset_date, "/Ronapreve.png"), width=1200, height=650, type = "cairo-png")
+ronapreve_upset
+dev.off()
+
+png(filename = str_c("COG-UK/", params$dataset_date, "/Ronapreve_28.png"), width=1200, height=650, type = "cairo-png")
+ronapreve_upset_28
+dev.off()
 
 # ronapreve_upset
 # ronapreve_upset_28
