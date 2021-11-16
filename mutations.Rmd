@@ -1440,11 +1440,11 @@ consortium_uk_delta_parent <-
 
 # count sequences by day
 lineages_days_uk_all <- 
-  consortium_uk_delta_parent %>% dplyr::count(lineage, sample_date, name = "n_day")
+  consortium_uk_delta_parent %>% dplyr::count(lineage, sample_date, adm1, name = "n_day")
 
 # by week
 lineages_weeks_uk_all <- 
- consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, name = "n_week") 
+ consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, adm1, name = "n_week") 
 
 lineages_days_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
 lineages_weeks_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))

@@ -68,7 +68,12 @@ dashboardPage(
                                    shape = "round",
                                    status = "info",
                                    selected = "AY.4.2")
-            )
+            ),
+            prettyRadioButtons(inputId = "nations_vui_voc",  label = "UK nations",
+                               choices = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"),
+                               shape = "round",
+                               status = "info",
+                               selected = "UK")
         ),
         
         conditionalPanel(
