@@ -514,9 +514,9 @@ dashboardPage(
                         box(title = "Spike amino acid replacements in T cell epitopes, detected in the UK data", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),   
                             
-                            p("T-cell epitope data have been compiled by Dhruv Shah and Thushan de Silva, University of Sheffield."),
+                            p("T-cell epitope data have been compiled by Dhruv Shah, Sharon Hsu and Thushan de Silva, University of Sheffield."),
+                            p("Data are filtered depending on the experiments that have been used either showing 'Reduced T cell recognition' or through 'Epitope studies' (options on the left hand side)."),
                             p("Predicted binding percentile rank values have been calculated by Morten Nielsen, The Technical University of Denmark."),
-                            
                             DTOutput("table_5"),
                             
                             h4("Table Key"),
