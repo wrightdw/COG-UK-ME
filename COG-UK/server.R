@@ -209,7 +209,19 @@ table_3 <- function(){
 }
 
 # T cell table
-table_5 = function(){
+table_5 = function(assay_filter = NULL){
+  if(!is.null(assay_filter)){
+    if(assay_filter == "recognition"){
+      database_tcell_predictions %<>% 
+        filter(assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
+    } else { # epitope_studies
+      database_tcell_predictions %<>% 
+        filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
+    }
+    
+    database_tcell_predictions %<>% mutate(across(c(gene, mutation, Epitope, CD4_CD8, HLA, assay), fct_drop)) # drop factor levels
+  }
+  
   database_tcell_predictions %>% 
     filter(`numSeqs UK` > 0) %>%
     select(gene, mutation, Epitope:Fold, `numSeqs UK`, `numSeqs UK 28 days`, -`End position`) %>%
@@ -440,11 +452,10 @@ shinyServer(function(input, output, session) {
         })
     
     output$table_5 <- renderDT({
-      table_5() %>% 
+      table_5(input$t_cell_experiment) %>% 
         mutate(Reference = str_c("<a href='", DOI, "'target='_blank'>", Reference,"</a>"), .keep = "unused", .after = `Supporting references`) %>% # hyperlink to citation DOI
         datatable(filter = "top", escape = FALSE, rownames = FALSE,
                     options = list(lengthMenu = c(10, 20, 50, 100, 200), pageLength = 10, scrollX = TRUE))
-        
     })
     
     output$table_therapeutics <- renderDT({

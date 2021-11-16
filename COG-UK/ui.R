@@ -94,6 +94,7 @@ dashboardPage(
             
             chooseSliderSkin("Modern", "#5bc0de"), # Bootstrap info colour
         ),
+        
         conditionalPanel(
             condition = "input.sidebar_menu == 'immunology'", 
             hr(),
@@ -109,7 +110,19 @@ dashboardPage(
             condition =  "input.sidebar_menu == 'ronapreve'",
             hr(),
             prettySwitch("ronapreve_28", "Latest 28 days", FALSE, status = "info", fill = TRUE)
+        ),
+        
+        conditionalPanel(
+            condition =  "input.sidebar_menu == 't_cell'",
+            hr(),
+            prettyRadioButtons("t_cell_experiment", "Type of experiment:",
+                                c("Reduced T cell recognition" = "recognition",
+                                  "Epitope studies" = "epitope_studies"),
+                                shape = "round",
+                                status = "info",
+                                selected = "recognition")
         )
+        
     ),
     
     body = dashboardBody(
