@@ -219,7 +219,7 @@ table_5 = function(assay_filter = NULL){
         filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
     }
     
-    database_tcell_predictions %<>% mutate(across(c(gene, mutation, Epitope, CD4_CD8, HLA, assay), fct_drop)) # drop factor levels
+    database_tcell_predictions %<>% mutate(across(c(gene, mutation, Epitope, CD4_CD8, HLA, assay), fct_drop)) # drop unused factor levels
   }
   
   database_tcell_predictions %>% 

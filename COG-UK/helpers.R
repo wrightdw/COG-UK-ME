@@ -150,12 +150,19 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   # include B.1.617.2 sublineages
   if(lineage == "B.1.617.2"){
     mutations_s_uk %<>% 
-      filter((lineage == !!lineage | str_starts(lineage, "AY\\.")) & !(variant %in% !!defining))
+      filter((lineage == !!lineage | str_starts(lineage, fixed("AY."))) & !(variant %in% !!defining))
     
     consortium_uk %<>% 
-      filter(lineage == !!lineage | str_starts(lineage, "AY\\."))
+      filter(lineage == !!lineage | str_starts(lineage, fixed("AY.")))
       
-  } else {
+  } else if(lineage %in% c("AY.4", "AY.4.2")) {
+    mutations_s_uk %<>% 
+      filter((lineage == !!lineage | str_starts(lineage, fixed(str_c(lineage, ".")))) & !(variant %in% !!defining))
+    
+    consortium_uk %<>% 
+      filter(lineage == !!lineage | str_starts(lineage, fixed(str_c(lineage, "."))))
+  }
+  else{
     mutations_s_uk %<>% 
       filter(lineage == !!lineage & !(variant %in% !!defining))
     
@@ -220,7 +227,6 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
     antigenic_mutations_lineages %<>% 
       filter(!epi_week %in% c(16, 17))
   }
-  
   
   # remove epiweeks before first occurrence
   first_occurrence <- 
