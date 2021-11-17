@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2021-11-15" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -217,7 +217,6 @@ mutation_counts_nations <-
   mutations_uk %>%
   dplyr::count(epi_week, epi_date, gene, position, variant, adm1)
 
-# TODO calculate UK counts by summing the nation counts
 mutation_reference_counts <- 
   bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %>% 
   mutate(across(variant, as_factor)) %T>% 
@@ -1440,12 +1439,26 @@ consortium_uk_delta_parent <-
 
 # count sequences by day
 lineages_days_uk_all <- 
-  consortium_uk_delta_parent %>% dplyr::count(lineage, sample_date, adm1, name = "n_day")
+  bind_rows(
+    consortium_uk_delta_parent %>% 
+      dplyr::count(lineage, sample_date, adm1, name = "n_day"),
+    
+    consortium_uk_delta_parent %>% 
+      dplyr::count(lineage, sample_date, name = "n_day") %>% 
+      mutate(adm1 = "UK") %>% 
+      mutate(across(adm1, as_factor))
+  )
 
 # by week
-lineages_weeks_uk_all <- 
- consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, adm1, name = "n_week") 
-
+lineages_weeks_uk_all <- bind_rows(
+ consortium_uk_delta_parent %>% 
+   dplyr::count(lineage, epi_date, adm1, name = "n_week"),
+ 
+ consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, name = "n_week") %>% 
+   mutate(adm1 = "UK") %>% 
+   mutate(across(adm1, as_factor))
+)
+ 
 lineages_days_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
 lineages_weeks_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```

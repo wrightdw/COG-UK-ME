@@ -694,7 +694,8 @@ shinyServer(function(input, output, session) {
     })
     
     variant_plot <- reactive({
-      lineages_days_uk_all
+      
+      
       selected_variants <- input$variant_vui_voc
       vui_voc_lineages <- 
         levels(vui_voc$lineage) %>% 
@@ -707,6 +708,8 @@ shinyServer(function(input, output, session) {
       }
       
       if(input$variant_day){
+          lineages_days_uk_all %<>% 
+            filter(adm1 == input$nations_vui_voc)
         
         if( "B.1.617.2" %in% input$variant_vui_voc){
           # remove unselected Deltas so they aren't counted in Other
@@ -744,7 +747,7 @@ shinyServer(function(input, output, session) {
         variants_other_day <- 
           lineages_days_uk_all %>% 
           filter(!(lineage %in% selected_variants)) %>% 
-          group_by(sample_date, adm1) %>% 
+          group_by(sample_date) %>% 
           summarise(n_day = sum(n_day)) %>% 
           mutate(lineage = "Other", .before = sample_date) %>% 
           ungroup
@@ -773,14 +776,10 @@ shinyServer(function(input, output, session) {
                                   "P.3" = "P.3 (Theta)",
                                   "Other" = "Other"
                                   )) %>% 
-          rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day, adm1 = adm1)
+          rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
         
         selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
-        
-        if (input$nations_vui_voc!="UK"){
-          lineages_days_uk %<>% 
-            filter(adm1 == input$nations_vui_voc)}
         
         vui_voc_plot <- 
           lineages_days_uk %>% 
@@ -845,6 +844,9 @@ shinyServer(function(input, output, session) {
         vui_voc_plot
       } else {  # variants by week
         
+          lineages_weeks_uk_all %<>% 
+            filter(adm1 == input$nations_vui_voc)
+        
         if( "B.1.617.2" %in% input$variant_vui_voc){
           # remove unselected Deltas so they aren't counted in Other
           delta_options <- c("B.1.617.2", "AY.4", "AY.4.2")
@@ -881,11 +883,10 @@ shinyServer(function(input, output, session) {
         variants_other_week <- 
           lineages_weeks_uk_all %>% 
           filter(!(lineage %in% selected_variants)) %>% 
-          group_by(epi_date, adm1) %>% 
+          group_by(epi_date) %>% 
           summarise(n_week = sum(n_week)) %>% 
           mutate(lineage = "Other", .before = epi_date) %>% 
           ungroup
-        
         
         lineages_weeks_uk <- 
           lineages_weeks_uk_all %>% 
@@ -911,14 +912,10 @@ shinyServer(function(input, output, session) {
                                          "P.3" = "P.3 (Theta)",
                                          "Other" = "Other"
           )) %>% 
-          rename(Variant = lineage, `Start date` = epi_date, adm1 = adm1, Sequences = n_week)
+          rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
         
         selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
-        
-        if (input$nations_vui_voc!="UK"){
-          lineages_weeks_uk %<>% 
-          filter(adm1 == input$nations_vui_voc)}
         
         vui_voc_plot <- 
           lineages_weeks_uk %>% 
