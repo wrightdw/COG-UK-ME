@@ -115,3 +115,10 @@ n_uk_lineages_all <-
 vui_voc %<>% 
   semi_join(n_uk_lineages_all %>% filter(variant == "sequences" & n_sequences_UK > 0), by = "lineage") %>% 
   mutate(lineage = fct_drop(lineage))
+
+# Lineages with AY removed
+vui_voc_lineages <- 
+  vui_voc %>% 
+  filter(!str_starts(lineage, fixed("AY."))) %>% 
+  mutate(lineage = fct_drop(lineage)) %$%  
+  levels(lineage)

@@ -53,11 +53,7 @@ dashboardPage(
             prettySwitch("variant_day", "By day", FALSE, status = "info", fill = TRUE),
             
             prettyCheckboxGroup("variant_vui_voc", "Variant:",
-                                
-                                
-                                vui_voc$lineage %>% levels %>% as.list,
-                                
-                                
+                                vui_voc_lineages,
                                 selected = c("B.1.1.7", "B.1.617.2"),
                                 shape = "curve",
                                 status = "info"),
@@ -234,7 +230,7 @@ dashboardPage(
                                 label = "Date range:",
                                 min = lineages_days_uk_all %$% min(sample_date), 
                                 max = lineages_days_uk_all %$% max(sample_date), 
-                                value = c(lineages_weeks_uk_all %>% filter(lineage %in% levels(vui_voc$lineage)) %$% min(epi_date),
+                                value = c(lineages_weeks_uk_all %>% filter(lineage %in% vui_voc_lineages) %$% min(epi_date),
                                           lineages_days_uk_all %$% max(sample_date)),
                                 step = 1,
                                 ticks = FALSE,

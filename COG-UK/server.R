@@ -695,10 +695,9 @@ shinyServer(function(input, output, session) {
     
     variant_plot <- reactive({
       
-      
       selected_variants <- input$variant_vui_voc
       vui_voc_lineages <- 
-        levels(vui_voc$lineage) %>% 
+        vui_voc_lineages %>% 
         append("Other Delta", after = 9) %>% 
         append("Other")
       
