@@ -95,7 +95,7 @@ lineages_t3 <-
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
 NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
-    "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. WHO label: <strong>Gamma</strong>."
+    "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. WHO label: <strong>Delta</strong>."
     ) %>% 
   enframe("lineage", "reason")
 
