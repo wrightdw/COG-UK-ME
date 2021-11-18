@@ -22,10 +22,6 @@ lineages_weeks_uk_all <- read_rds(str_c(dataset_date, "/lineages_weeks_uk_all.rd
 lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds")) # lineage counts by sample date
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
-# mab_data <- str_c(dataset_date, "/mab_data.rds") %>% read_rds # fold differences and 'phenotype' for upset matrix
-# mab <- str_c(dataset_date, "/mab.rds") %>% read_rds # ronopreve-relevant profiles and frequency in population
-# ronapreve_upset <- str_c(dataset_date, "/ronapreve_upset.rds") %>% read_rds
-# ronapreve_upset_28 <- str_c(dataset_date, "/ronapreve_upset_28.rds") %>% read_rds
 
 source("helpers.R")
 
@@ -95,7 +91,7 @@ lineages_t3 <-
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
 NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
-    "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. WHO label: <strong>Gamma</strong>."
+    "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. WHO label: <strong>Delta</strong>."
     ) %>% 
   enframe("lineage", "reason")
 
@@ -116,9 +112,8 @@ vui_voc %<>%
   semi_join(n_uk_lineages_all %>% filter(variant == "sequences" & n_sequences_UK > 0), by = "lineage") %>% 
   mutate(lineage = fct_drop(lineage))
 
-# Lineages with AY removed
+# VUI/VOC lineages with AY.x removed
 vui_voc_lineages <- 
-  vui_voc %>% 
-  filter(!str_starts(lineage, fixed("AY."))) %>% 
-  mutate(lineage = fct_drop(lineage)) %$%  
-  levels(lineage)
+  vui_voc %$% 
+  levels(lineage) %>% 
+  str_subset("^AY\\.", negate = TRUE)
