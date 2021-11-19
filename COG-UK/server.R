@@ -1051,7 +1051,8 @@ shinyServer(function(input, output, session) {
       #Join mydata with mapdata
       df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
       c<-"Percentage"
-      max_val<-1}
+      # max_val<-1
+      }
       else
       {
       geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
@@ -1065,7 +1066,7 @@ shinyServer(function(input, output, session) {
       # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
       #Join mydata with mapdata
       df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
-      max_val <- max(geo_all_1$value)
+      # max_val <- max(geo_all_1$value)
       
       }
       
@@ -1074,16 +1075,22 @@ shinyServer(function(input, output, session) {
       gg <- gg + scale_fill_gradient2(low = "blue", mid = "red", high = "yellow", na.value = "white")
       gg <- gg + coord_fixed(1)
       gg <- gg + theme_minimal()
-      gg <- gg +  scale_fill_viridis(trans = "log", limits = c(0,max_val), name= c, guide = guide_legend(keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1) )
+      gg <- gg +  scale_fill_viridis(name= c) #limits = c(0,max_val),, guide = guide_legend(keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1) )
+      # if(input$percentage_map == TRUE){
+      # gg<- gg + scale_fill_viridis(trans = "log")
+      # }
+      # else {}
       gg <- gg + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = 'right')
       gg <- gg + theme(axis.title.x=element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
       gg <- gg + theme(axis.title.y=element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
       gg
     }) 
     
-    output$map <- renderPlot({
+    output$map <- renderPlotly({
       
-      map_weekInput() 
+      y<- map_weekInput() 
+      ggplotly(y + theme(legend.position = 'bottom')) %>% layout(legend = list(orientation = "h", x = -0.5, y =-1))
+      
       
     })
     

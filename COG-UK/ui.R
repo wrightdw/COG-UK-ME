@@ -135,7 +135,7 @@ dashboardPage(
     conditionalPanel(
         condition =  "input.sidebar_menu == 'map'",
         hr(),
-        prettySwitch("percentage_map", "Percentage", FALSE, status = "info", fill = TRUE)
+        prettySwitch("percentage_map", "Percentage", TRUE , status = "info", fill = TRUE)
     )),
     
     body = dashboardBody(
@@ -647,37 +647,50 @@ dashboardPage(
             ), # end tabItem therapeutics,
             
             tabItem(tabName = "map",
+                    
                     fluidRow( box(title = "Geographical distribution", closable = FALSE, width = 12,
                                        status = "info", collapsible = FALSE, icon = icon("map"),
-                                     plotOutput("map", height = "70vh"),
-                                       prettyRadioButtons(
-                                           inputId = "variant_map",
-                                           label = "Variant:",
-                                           choices = (function(){
-                                               picks <- vui_voc %$% levels(lineage)
-                                               names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
-                                               picks
-                                           })(),
+                                  fluidRow(
+                                      column(width = 2,
+                                             prettyRadioButtons(
+                                                 inputId = "variant_map",
+                                                 label = "Lineage:",
+                                                 choices = (function(){
+                                                     picks <- vui_voc %$% levels(lineage)
+                                                     names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
+                                                     picks
+                                                 })(),
+                                                 selected = "AY.4.2"
+                                             )
+                                      )
+                                      ,
+                                      column( width = 10,
+                                              
+                                              plotlyOutput("map", height = "70vh")
+                                      )), #end of fluid
+                                  
+                                  
+                                           sliderInput(
+                                               inputId = "variant_date",
+                                               label = "Date:",
+                                               min = lineages_weeks_uk_all %$% min(epi_date),
+                                               max = lineages_weeks_uk_all %$% max(epi_date)-7,
+                                               value = c(
+                                                   lineages_weeks_uk_all %$% max(epi_date))-7,
+                                               step = 7,
+                                               ticks = FALSE,
+                                               animate = TRUE,
+                                               timeFormat = "%d %b %y"
+                                           )
                                            
-                                           selected = "B.1.617.2"
-                                       ),
-                                       sliderInput(
-                                           inputId = "variant_date",
-                                           label = "Date:",
-                                           min = lineages_weeks_uk_all %$% min(epi_date),
-                                           max = lineages_weeks_uk_all %$% max(epi_date)-7,
-                                           value = c(
-                                               lineages_weeks_uk_all %$% max(epi_date))-7,
-                                           step = 7,
-                                           ticks = FALSE,
-                                           animate = TRUE,
-                                           timeFormat = "%d %b %y"
-                                       ))
+                                  ) # end of box
+                              
+                              
                             )
 
-
+)
         ) # end map
-    )), # end dashboardBody ##8a7967
+    ), # end dashboardBody ##8a7967
     
     footer = dashboardFooter(
         left = fluidRow(
