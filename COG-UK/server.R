@@ -1038,7 +1038,10 @@ shinyServer(function(input, output, session) {
     # })
     
     map_weekInput <- reactive({
-      geo_all_1<- geo_all %>% filter(epi_date == input$variant_date & lineage == input$variant_map)
+      geo_all_1<- geo_all %>% filter(lineage == input$variant_map) 
+      max_count<- max(geo_all_1$Count)
+      max_proportion<- max(geo_all_1$Proportion)
+      geo_all_1<-geo_all_1 %>% filter(epi_date == input$variant_date)
       
       if(input$percentage_map == TRUE){
       geo_all_1<-dplyr::rename(geo_all_1, "value" = "Proportion")
@@ -1051,7 +1054,7 @@ shinyServer(function(input, output, session) {
       #Join mydata with mapdata
       df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
       c<-"Percentage"
-      # max_val<-1
+      max_val<-max_proportion
       }
       else
       {
@@ -1066,7 +1069,7 @@ shinyServer(function(input, output, session) {
       # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
       #Join mydata with mapdata
       df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
-      # max_val <- max(geo_all_1$value)
+      max_val <- max_count
       
       }
       
@@ -1075,7 +1078,7 @@ shinyServer(function(input, output, session) {
       gg <- gg + scale_fill_gradient2(low = "blue", mid = "red", high = "yellow", na.value = "white")
       gg <- gg + coord_fixed(1)
       gg <- gg + theme_minimal()
-      gg <- gg +  scale_fill_viridis(name= c) #limits = c(0,max_val),, guide = guide_legend(keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1) )
+      gg <- gg +  scale_fill_viridis(name= c, limits = c(0,max_val)) #limits = c(0,max_val),, guide = guide_legend(keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1) )
       # if(input$percentage_map == TRUE){
       # gg<- gg + scale_fill_viridis(trans = "log")
       # }
