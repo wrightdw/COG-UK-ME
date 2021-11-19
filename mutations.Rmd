@@ -1621,7 +1621,7 @@ geo_all <-
   dplyr::rename(Count = n_week) %T>%
   write_csv("nuts1.csv")
 
-inner_join(geo_all, epi_lookup)
+geo_all<-inner_join(geo_all, epi_lookup)
 
 geo
 geo_variants

@@ -1037,39 +1037,54 @@ shinyServer(function(input, output, session) {
     #   map_week$epi_week
     # })
     
+    map_weekInput <- reactive({
+      geo_all_1<- geo_all %>% filter(epi_date == input$variant_date & lineage == input$variant_map)
       
-    geo_all_1<- geo_all %>% filter(epi_week == "97" & lineage == "B.1.617.2")
-    
-    geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
-    geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
-    geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
-    geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
-    geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
-   
-    # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
-    #Join mydata with mapdata
-    df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
-    # df<- df[, -which(names(df) == "objectid")]
-    
-    
-    suppressPackageStartupMessages(library(tidyverse))
-    suppressPackageStartupMessages(library(magrittr))
-    
-    gg <- ggplot() + geom_polygon(data = df, aes(x = long, y = lat, group = group, fill = value), color = "#FFFFFF", size = 0.25)
-    gg <- gg + scale_fill_gradient2(low = "blue", mid = "red", high = "yellow", na.value = "white")
-    gg <- gg + coord_fixed(1)
-    gg <- gg + theme_minimal()
-    gg <- gg +  scale_fill_viridis(trans = "log", breaks=c(1,5,10,20,50,100), name="Number of Sequences", guide = guide_legend( keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1) )
-    gg <- gg + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = 'right')
-    gg <- gg + theme(axis.title.x=element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
-    gg <- gg + theme(axis.title.y=element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
-    
-    # }) 
+      if(input$percentage_map == TRUE){
+      geo_all_1<-dplyr::rename(geo_all_1, "value" = "Proportion")
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Count")]
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
+      
+      # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
+      #Join mydata with mapdata
+      df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
+      c<-"Percentage"
+      max_val<-1}
+      else
+      {
+      geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
+      c<-"Number of sequences"
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
+      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
+  
+      
+      # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
+      #Join mydata with mapdata
+      df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
+      max_val <- max(geo_all_1$value)
+      
+      }
+      
+      # generate plot
+      gg <- ggplot() + geom_polygon(data = df, aes(x = long, y = lat, group = group, fill = value), color = "#FFFFFF", size = 0.25)
+      gg <- gg + scale_fill_gradient2(low = "blue", mid = "red", high = "yellow", na.value = "white")
+      gg <- gg + coord_fixed(1)
+      gg <- gg + theme_minimal()
+      gg <- gg +  scale_fill_viridis(trans = "log", limits = c(0,max_val), name= c, guide = guide_legend(keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1) )
+      gg <- gg + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = 'right')
+      gg <- gg + theme(axis.title.x=element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
+      gg <- gg + theme(axis.title.y=element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+      gg
+    }) 
     
     output$map <- renderPlot({
-
-      gg
-
+      
+      map_weekInput() 
+      
     })
     
     

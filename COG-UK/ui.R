@@ -131,9 +131,12 @@ dashboardPage(
                                 shape = "round",
                                 status = "info",
                                 selected = "recognition")
-        )
-        
-    ),
+        ),
+    conditionalPanel(
+        condition =  "input.sidebar_menu == 'map'",
+        hr(),
+        prettySwitch("percentage_map", "Percentage", FALSE, status = "info", fill = TRUE)
+    )),
     
     body = dashboardBody(
         useShinyjs(), # set up the dashboard to use shinyjs  
@@ -646,17 +649,16 @@ dashboardPage(
             tabItem(tabName = "map",
                     fluidRow( box(title = "Geographical distribution", closable = FALSE, width = 12,
                                        status = "info", collapsible = FALSE, icon = icon("map"),
-                                  br(),
-                                       plotOutput("map", height = "70vh"),
-                                       br(),
-
+                                     plotOutput("map", height = "70vh"),
                                        prettyRadioButtons(
                                            inputId = "variant_map",
                                            label = "Variant:",
-                                           choices = c("B.1.617.2","B.1.1.7"),
-                                           inline = FALSE,
-                                           status = "info",
-                                           fill = TRUE,
+                                           choices = (function(){
+                                               picks <- vui_voc %$% levels(lineage)
+                                               names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
+                                               picks
+                                           })(),
+                                           
                                            selected = "B.1.617.2"
                                        ),
                                        sliderInput(
@@ -666,7 +668,7 @@ dashboardPage(
                                            max = lineages_weeks_uk_all %$% max(epi_date)-7,
                                            value = c(
                                                lineages_weeks_uk_all %$% max(epi_date))-7,
-                                           step = 1,
+                                           step = 7,
                                            ticks = FALSE,
                                            animate = TRUE,
                                            timeFormat = "%d %b %y"
