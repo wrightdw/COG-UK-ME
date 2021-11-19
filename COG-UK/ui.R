@@ -54,27 +54,31 @@ dashboardPage(
             prettySwitch("variant_day", "By day", FALSE, status = "info", fill = TRUE),
             
             prettyCheckboxGroup("variant_vui_voc", "Variant:",
-                                
-                                
-                                vui_voc$lineage %>% levels %>% as.list,
-                                
-                                
+                                vui_voc_lineages,
                                 selected = c("B.1.1.7", "B.1.617.2"),
                                 shape = "curve",
-                                status = "info"),
+                                status = "info",
+                                fill = TRUE),
             conditionalPanel(
                 condition = "input.variant_vui_voc.includes('B.1.617.2')",
-                prettyRadioButtons(inputId = "variant_delta",  label = "Delta sublineage",
+                prettyRadioButtons(inputId = "variant_delta",  label = "Delta sublineage:",
                                    choices = c("B.1.617.2", "AY.4", "AY.4.2"),
                                    shape = "round",
                                    status = "info",
-                                   selected = "AY.4.2")
+                                   selected = "AY.4.2",
+                                   fill = TRUE)
             ),
-            prettyRadioButtons(inputId = "nations_vui_voc",  label = "UK nations",
-                               choices = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"),
-                               shape = "round",
-                               status = "info",
-                               selected = "UK")
+            
+            prettyRadioButtons(
+              inputId = "nations_vui_voc",
+              label = "UK nation:", 
+              choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"),
+              inline = FALSE, 
+              status = "info",
+              fill = TRUE,
+              selected = "UK"
+            ),
+            
         ),
         
         conditionalPanel(
@@ -235,7 +239,7 @@ dashboardPage(
                                 label = "Date range:",
                                 min = lineages_days_uk_all %$% min(sample_date), 
                                 max = lineages_days_uk_all %$% max(sample_date), 
-                                value = c(lineages_weeks_uk_all %>% filter(lineage %in% levels(vui_voc$lineage)) %$% min(epi_date),
+                                value = c(lineages_weeks_uk_all %>% filter(lineage %in% vui_voc_lineages) %$% min(epi_date),
                                           lineages_days_uk_all %$% max(sample_date)),
                                 step = 1,
                                 ticks = FALSE,
@@ -622,7 +626,7 @@ dashboardPage(
                             h4(textOutput("title_ronapreve", inline = TRUE), class = "text-center"),
                             imageOutput("ronapreve_plot", width = "100%", height = "100%"),
                             br(),
-                            p(.noWS = c("after-begin", "before-end"), "Plot showing the frequency of mutations affecting Ronapreve constituent monoclonal antibodies and their combinations (shown as lines) in cumulative UK SARS-CoV-2 genome sequence data. Spike amino acid substitutions known to affect either ", em("casirivimab", .noWS = "outside"), " or ", em("imdevimab", .noWS = "outside"), " mAbs were considered. The upper histogram shows the number of sequences per combination whereas the bottom left histogram shows the number of sequences with each specific substitution. Rows are coloured according to the mAb to which the greatest fold-decrease in binding was recorded (blue = ", em("casirivimab", .noWS = "outside"), ", orange = ", em("imdevimab", .noWS = "outside"), "), with a lighter shade indicating a fold-decrease of less than 100 and darker shade indicating 100 or greater."),
+                            p(.noWS = c("after-begin", "before-end"), "Plot showing the frequency of mutations affecting Ronapreve constituent monoclonal antibodies (mAbs) and their combinations (shown as lines) in cumulative UK SARS-CoV-2 genome sequence data. Spike amino acid substitutions known to affect either ", em("casirivimab", .noWS = "outside"), " or ", em("imdevimab", .noWS = "outside"), " mAbs were considered. The upper histogram shows the number of sequences per combination whereas the bottom left histogram shows the number of sequences with each specific substitution. Rows are coloured according to the mAb to which the greatest fold-decrease in binding was recorded (blue = ", em("casirivimab", .noWS = "outside"), ", orange = ", em("imdevimab", .noWS = "outside"), "), with a lighter shade indicating a fold-decrease of less than 100 and darker shade indicating 100 or greater."),
                             p(.noWS = c("after-begin", "before-end"), "The plot is generated using data from ", tags$a("here.", href="https://www.fda.gov/drugs/drug-safety-and-availability/fda-authorizes-revisions-fact-sheets-address-sars-cov-2-variants-monoclonal-antibody-products-under", target = "_blank", .noWS = "outside"))
                         )
                     )

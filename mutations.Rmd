@@ -1621,6 +1621,8 @@ geo_all <-
   dplyr::rename(Count = n_week) %T>%
   write_csv("nuts1.csv")
 
+inner_join(geo_all, epi_lookup)
+
 geo
 geo_variants
 geo_all
@@ -1629,6 +1631,8 @@ geo_all
 ### Geo distribution
 ```{r geo_map_variant_alias, eval=FALSE, include=FALSE}
 #Download some important packages
+# Load Geo (above) first
+
 library(rgdal)
 library(rgeos)
 library(broom)
@@ -1643,7 +1647,7 @@ library(viridis)
 
 
 #Load the shapefile - make sure you change the filepath to where you saved the shapefiles
-shapefile<- readOGR(dsn = "Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries")
+shapefile<- readOGR(dsn = "COG-UK/Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries")
 
 #Reshape for ggplot2 using the Broom package
 mapdata <- shapefile  %>% tidy(region="nuts118nm") #This might take a few minutes
