@@ -43,6 +43,7 @@ dashboardPage(
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
+            menuItem("Geogrphical distribution", tabName = "map", icon = icon("map")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -246,8 +247,8 @@ dashboardPage(
                               The most recent sequence data (approx. the last two weeks) have low sample numbers,
                               so are highlighted with a grey box for the last two weeks of the weekly chart 
                               or from the second-to-last Sunday onwards for the daily chart.")
-                        )
-                    ),
+                        ))
+                    ,
 
                     fluidRow(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) detected in the UK data", closable = FALSE, width = 12,
@@ -636,11 +637,41 @@ dashboardPage(
                             # p("The table lists those mutations in the SARS-CoV-2 genome identified in the UK dataset that have been associated with resistance of the virus to antiviral treatments. There is variation in the detail of the viral assays between the different studies displayed here.")
                         )
                     )
-            ) # end tabItem therapeutics
+            ), # end tabItem therapeutics,
             
-            
-        ) # end tabItems
-    ), # end dashboardBody ##8a7967
+            tabItem(tabName = "map",
+                    fluidRow( box(title = "Geographical distribution", closable = FALSE, width = 12,
+                                       status = "info", collapsible = FALSE, icon = icon("map"),
+                                  br(),
+                                       plotOutput("map", height = "70vh"),
+                                       br(),
+
+                                       prettyRadioButtons(
+                                           inputId = "variant_map",
+                                           label = "Variant:",
+                                           choices = c("B.1.617.2","B.1.1.7"),
+                                           inline = FALSE,
+                                           status = "info",
+                                           fill = TRUE,
+                                           selected = "B.1.617.2"
+                                       ),
+                                       sliderInput(
+                                           inputId = "variant_date",
+                                           label = "Date:",
+                                           min = lineages_weeks_uk_all %$% min(epi_date),
+                                           max = lineages_weeks_uk_all %$% max(epi_date)-7,
+                                           value = c(
+                                               lineages_weeks_uk_all %$% max(epi_date))-7,
+                                           step = 1,
+                                           ticks = FALSE,
+                                           animate = TRUE,
+                                           timeFormat = "%d %b %y"
+                                       ))
+                            )
+
+
+        ) # end map
+    )), # end dashboardBody ##8a7967
     
     footer = dashboardFooter(
         left = fluidRow(
