@@ -657,7 +657,7 @@ dashboardPage(
                                                  label = "Lineage:",
                                                  choices = (function(){
                                                      picks <- vui_voc %$% levels(lineage)
-                                                     names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
+                                                     # names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
                                                      picks
                                                  })(),
                                                  selected = "AY.4.2"
