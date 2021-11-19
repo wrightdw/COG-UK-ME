@@ -1615,7 +1615,7 @@ geo_all <-
   dplyr::mutate(across(epi_week, as.integer)) %>% 
   # filter(epi_week >= 39 & epi_week <= 80) %>% # first week VUIs and VOCs appear
   filter(epi_week >= 39) %>% # first week VUIs and VOCs appear
-  dplyr::mutate(Proportion = ifelse(n==0, 0, n_week / n)) %>%  # keep zero counts for rendering 
+  dplyr::mutate(Proportion = ifelse(n==0, 0, n_week / n * 100)) %>%  # keep zero counts for rendering 
   select(-n) %>%
   inner_join(NUTS1_objectid) %>% 
   dplyr::rename(Count = n_week) %T>%
