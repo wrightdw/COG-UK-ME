@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2021-11-09" # if empty, defaults to today's date, otherwise enter date string
+  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -82,6 +82,24 @@ consortium_uk <-
   relocate(NUTS1,.after = adm1) %>% 
   type_convert 
 
+# Temporary fix - exclude duplicate Delta sequences with incorrect dates in April 2020
+dodgy_delta <- 
+  consortium_uk %>% 
+  filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
+
+consortium_uk %<>% anti_join(dodgy_delta)
+
+# # NUTS1 cleanup - correct NUTS1 missing or incorrect values
+consortium_uk %<>%
+  mutate(
+    NUTS1 = case_when(
+      adm1 == "Scotland" ~ "Scotland",
+      adm1 == "Wales" ~ "Wales",
+      adm1 == "Northern_Ireland" ~ "Northern_Ireland",
+      TRUE ~ NUTS1
+    )
+  )
+
 # Epidemic week / Sunday date conversion
 epi_lookup <-
   tibble(
@@ -99,12 +117,6 @@ consortium_uk %<>%
   mutate(across(c(epi_week, adm1, NUTS1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) # expand factor levels to include any missing weeks
 
- # Temporary fix - exclude duplicate Delta sequences with incorrect dates in April 2020
-dodgy_delta <- 
-  consortium_uk %>% 
-  filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
-
-consortium_uk %<>% anti_join(dodgy_delta)
 
 consortium_uk
 ```
