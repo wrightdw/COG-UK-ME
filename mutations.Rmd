@@ -1600,7 +1600,7 @@ NUTS1_objectid <- tibble(NUTS1, objectid = 1:length(NUTS1))
 geo <- 
   consortium_uk %>% 
   filter(!is.na(NUTS1)) %>% 
-  count(epi_week, NUTS1, .drop = FALSE) 
+  dplyr::count(epi_week, NUTS1, .drop = FALSE) 
 
 geo_variants <- 
   consortium_uk %>%
@@ -1610,18 +1610,18 @@ geo_variants <-
   dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE) 
 
 geo_all <- 
-  inner_join(geo, geo_variants) %>%
+  dplyr::inner_join(geo, geo_variants) %>%
   dplyr::mutate(across(epi_week, as.character)) %>% 
   dplyr::mutate(across(epi_week, as.integer)) %>% 
   # filter(epi_week >= 39 & epi_week <= 80) %>% # first week VUIs and VOCs appear
   filter(epi_week >= 39) %>% # first week VUIs and VOCs appear
   dplyr::mutate(Proportion = ifelse(n==0, 0, n_week / n * 100)) %>%  # keep zero counts for rendering 
-  select(-n) %>%
-  inner_join(NUTS1_objectid) %>% 
+  dplyr::select(-n) %>%
+  dplyr::inner_join(NUTS1_objectid) %>% 
   dplyr::rename(Count = n_week) %T>%
   write_csv("nuts1.csv")
 
-geo_all<-inner_join(geo_all, epi_lookup)
+geo_all<-dplyr::inner_join(geo_all, epi_lookup)
 
 geo
 geo_variants
@@ -1644,8 +1644,9 @@ library(maptools)
 library(ggmap)
 library(ggplot2)
 library(viridis)
-
-
+library(pacman)
+library(rmapshaper)
+library(rgdal)
 #Load the shapefile - make sure you change the filepath to where you saved the shapefiles
 shapefile<- readOGR(dsn = "COG-UK/Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries")
 
