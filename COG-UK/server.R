@@ -6,13 +6,6 @@ library(shinyjs)
 library(DT)
 library(ggseqlogo)
 library(RColorBrewer)
-
-library(maps)
-library(mapdata)
-library(maptools)
-library(ggmap)
-library(ggplot2)
-# library(plyr)
 library(viridis)
 
 lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = FALSE){
@@ -1038,39 +1031,35 @@ shinyServer(function(input, output, session) {
     # })
     
     map_weekInput <- reactive({
-      geo_all_1<- geo_all %>% filter(lineage == input$variant_map) 
-      max_count<- max(geo_all_1$Count)
-      max_proportion<- max(geo_all_1$Proportion)
-      geo_all_1<-geo_all_1 %>% filter(epi_date == input$variant_date)
+      geo_all_1 <- geo_all %>% filter(lineage == input$variant_map) 
+      
+      max_count <- max(geo_all_1$Count)
+      max_proportion <- max(geo_all_1$Proportion)
+      
+      geo_all_1 <- geo_all_1 %>% filter(epi_date == input$variant_date)
       
       if(input$percentage_map == TRUE){
-      geo_all_1<-dplyr::rename(geo_all_1, "value" = "Proportion")
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Count")]
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
-      
-      # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
-      #Join mydata with mapdata
-      df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
-      c<-"Percentage"
-      max_val<-max_proportion
-      }
-      else
-      {
-      geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
-      c<-"Number of sequences"
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
-      geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
-  
-      
-      # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
-      #Join mydata with mapdata
-      df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
-      max_val <- max_count
-      
+        geo_all_1 <- dplyr::rename(geo_all_1, "value" = "Proportion")
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "Count")]
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "objectid")]
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "lineage")]
+        
+        #Join mydata with mapdata
+        df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
+        c <- "Percentage"
+        max_val<-max_proportion
+      } else {
+        geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
+        c<-"Number of sequences"
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "objectid")]
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "lineage")]
+        geo_all_1 <- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
+        
+        #Join mydata with mapdata
+        df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
+        max_val <- max_count
       }
       
       # generate plot
@@ -1078,11 +1067,7 @@ shinyServer(function(input, output, session) {
       gg <- gg + scale_fill_gradient2(low = "blue", mid = "red", high = "yellow", na.value = "white")
       gg <- gg + coord_fixed(1)
       gg <- gg + theme_minimal()
-      gg <- gg +  scale_fill_viridis(name= c, limits = c(0,max_val)) #limits = c(0,max_val),, guide = guide_legend(keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1) )
-      # if(input$percentage_map == TRUE){
-      # gg<- gg + scale_fill_viridis(trans = "log")
-      # }
-      # else {}
+      gg <- gg +  scale_fill_viridis(name= c, limits = c(0,max_val)) 
       gg <- gg + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = 'right')
       gg <- gg + theme(axis.title.x=element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
       gg <- gg + theme(axis.title.y=element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())

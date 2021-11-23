@@ -2,7 +2,6 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 library(UpSetR)
-#Ale's changes
 
 # derive date of most recent dataset from directory names, set date string here instead to switch to older dataset
 dataset_date <- 
@@ -22,6 +21,9 @@ lineages_weeks_uk_all <- read_rds(str_c(dataset_date, "/lineages_weeks_uk_all.rd
 lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds")) # lineage counts by sample date
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
+
+geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
+mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
 
 source("helpers.R")
 

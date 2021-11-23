@@ -43,7 +43,7 @@ dashboardPage(
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
-            menuItem("Geogrphical distribution", tabName = "map", icon = icon("map")),
+            menuItem("Geographical distribution", tabName = "map", icon = icon("map")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
