@@ -24,6 +24,7 @@ insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (g
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
+antigenic_mutations_lineages_all <- read_rds(str_c(dataset_date, "/antigenic_mutations_lineages_all.rds"))
 
 source("helpers.R")
 

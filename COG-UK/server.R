@@ -1049,9 +1049,8 @@ shinyServer(function(input, output, session) {
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
           
-          # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
           #Join mydata with mapdata
-          df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
+          df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
           c<-"Percentage"
           max_val<-max_proportion
         }
@@ -1064,10 +1063,8 @@ shinyServer(function(input, output, session) {
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
           
-          
-          # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
           #Join mydata with mapdata
-          df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
+          df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
           max_val <- max_count
           
         }
@@ -1088,9 +1085,8 @@ shinyServer(function(input, output, session) {
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
           
-          # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
           #Join mydata with mapdata
-          df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
+          df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
           c<-"Percentage"
           max_val<-max_proportion
         }
@@ -1102,9 +1098,8 @@ shinyServer(function(input, output, session) {
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
-          # mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
           #Join mydata with mapdata
-          df <- plyr::join(mapdata_1, geo_all_1, by= c("NUTS1"))
+          df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
           max_val <- max_count
         }
       }
