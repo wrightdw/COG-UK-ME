@@ -1569,7 +1569,7 @@ dev.off()
 antigenic_mutations_gisaid_all
 ```
 ## Geo
-```{r geo, eval=FALSE, include=TRUE}
+```{r geo}
 # TOPOJSON objectid
 # 1 North East (England)
 # 2 "North West (England)"
@@ -1588,7 +1588,8 @@ antigenic_mutations_gisaid_all
 # 12 Northern Ireland
 # 
 
-NUTS1 <- c(
+# NUTS1 categories from consortium_uk
+NUTS1 <- c( 
 "North_East",               
 "North_West",     
 "Yorkshire_And_The_Humber",
@@ -1619,51 +1620,42 @@ geo_variants <-
   filter(!is.na(NUTS1)) %>% 
   mutate(across(lineage, as_factor)) %>%
   mutate(lineage = fct_other(lineage, keep = vui_voc %$% levels(lineage))) %>% 
-  dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE) 
+  dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE) # TODO count AY lineages / Other Delta
 
 geo_all <- 
   dplyr::inner_join(geo, geo_variants) %>%
   dplyr::mutate(across(epi_week, as.character)) %>% 
   dplyr::mutate(across(epi_week, as.integer)) %>% 
   # filter(epi_week >= 39 & epi_week <= 80) %>% # first week VUIs and VOCs appear
-  filter(epi_week >= 39) %>% # first week VUIs and VOCs appear
+  filter(epi_week >= 39) %>% # first week VUIs and VOCs appeared - this is no longer correct!
   dplyr::mutate(Proportion = ifelse(n==0, 0, n_week / n * 100)) %>%  # keep zero counts for rendering 
   dplyr::select(-n) %>%
   dplyr::inner_join(NUTS1_objectid) %>% 
-  dplyr::rename(Count = n_week) %T>%
-  write_csv("nuts1.csv")
+  dplyr::rename(Count = n_week) # %T>%
+  # write_csv("nuts1.csv") # data file for Observable / Vega Lite
 
-geo_all <- dplyr::inner_join(geo_all, epi_lookup)
+geo_all <- 
+  dplyr::inner_join(geo_all, epi_lookup) %T>% 
+  write_rds(str_c("COG-UK/", params$dataset_date, "/geo_all.rds"))
 
 geo
 geo_variants
 geo_all
 ```
-##MAP
-### Geo distribution
+## MAP
+### Geo distribution - run once
 ```{r geo_map_variant_alias, eval=FALSE, include=TRUE}
-# Load Geo (above) first
+# Shapefile: NUTS Level 1 (January 2018) Ultra Generalised Clipped Boundaries in the United Kingdom
+# https://data.gov.uk/dataset/37edc0ad-ffff-47c9-a01c-cb8d6123ec79/nuts-level-1-january-2018-ultra-generalised-clipped-boundaries-in-the-united-kingdom
 
-# library(rgdal)
-# library(rgeos)
-# library(broom)
-# 
-# library(maps)
-# library(mapdata)
-# library(maptools)
-# 
-# library(ggmap)
-# library(ggplot2)
-# library(viridis)
-# library(pacman)
-# library(rmapshaper)
-# library(rgdal)
+# Convert shapefile to dataframe for ggplot2
+# Run once locally and transfer mapdata RDS file to web server
+# Uses packages rgdal and broom - not required on CLIMB
 
-# Load the shapefile - make sure you change the filepath to where you saved the shapefiles
 # Reshape for ggplot2 using the Broom package
 mapdata <- 
-  rgdal::readOGR(dsn = "COG-UK/Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries") %>% 
-  broom::tidy(region="nuts118nm") %>% #This might take a few minutes
+  rgdal::readOGR(dsn = "COG-UK/Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries") %>%  # Load shapefile
+  broom::tidy(region="nuts118nm") %>% # Convert shapefile to dataframe
   mutate(id = recode(id, 
                                             "East Midlands (England)" = "East_Midlands",
                                             "East of England"= "East_Of_England" ,     
