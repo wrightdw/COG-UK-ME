@@ -660,7 +660,16 @@ dashboardPage(
                                                      # names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
                                                      picks
                                                  })(),
-                                                 selected = "AY.4.2"
+                                                 selected = "AY.4.2",
+                                                 # options = list(dropdownParent = 'body')# prevent dropdown opening behind footer
+                                             ),
+                                             
+                                             selectizeInput(
+                                                 inputId = "antigenic_mutation",
+                                                 label = "Antigenic mutation:",
+                                                 choices = NULL, 
+                                                 size = 10,
+                                                 selected = ""
                                              )
                                       )
                                       ,
@@ -681,7 +690,8 @@ dashboardPage(
                                                ticks = FALSE,
                                                animate = TRUE,
                                                timeFormat = "%d %b %y"
-                                           )
+                                           ),
+                                  p("Plot showing the geographical distribution of lineages as either number of sequences or percentage relative to a specific region. It is also possible to select specific mutation with antigenic role (for more details see the Antigenic mutations tab).")
                                            
                                   ) # end of box
                               
