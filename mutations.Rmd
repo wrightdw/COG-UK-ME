@@ -1633,7 +1633,7 @@ geo_all <-
   dplyr::rename(Count = n_week) %T>%
   write_csv("nuts1.csv")
 
-geo_all<-dplyr::inner_join(geo_all, epi_lookup)
+geo_all <- dplyr::inner_join(geo_all, epi_lookup)
 
 geo
 geo_variants
@@ -1641,32 +1641,30 @@ geo_all
 ```
 ##MAP
 ### Geo distribution
-```{r geo_map_variant_alias, eval=FALSE, include=FALSE}
-#Download some important packages
+```{r geo_map_variant_alias, eval=FALSE, include=TRUE}
 # Load Geo (above) first
 
-library(rgdal)
-library(rgeos)
-library(broom)
+# library(rgdal)
+# library(rgeos)
+# library(broom)
+# 
+# library(maps)
+# library(mapdata)
+# library(maptools)
+# 
+# library(ggmap)
+# library(ggplot2)
+# library(viridis)
+# library(pacman)
+# library(rmapshaper)
+# library(rgdal)
 
-library(maps)
-library(mapdata)
-library(maptools)
-
-library(ggmap)
-library(ggplot2)
-library(viridis)
-library(pacman)
-library(rmapshaper)
-library(rgdal)
-#Load the shapefile - make sure you change the filepath to where you saved the shapefiles
-shapefile<- readOGR(dsn = "COG-UK/Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries")
-
-#Reshape for ggplot2 using the Broom package
-mapdata <- shapefile  %>% tidy(region="nuts118nm") #This might take a few minutes
-
-# as.factor(mapdataid) 
-mapdata_1 <- mapdata %>% mutate(id = recode(id, 
+# Load the shapefile - make sure you change the filepath to where you saved the shapefiles
+# Reshape for ggplot2 using the Broom package
+mapdata <- 
+  rgdal::readOGR(dsn = "COG-UK/Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries") %>% 
+  broom::tidy(region="nuts118nm") %>% #This might take a few minutes
+  mutate(id = recode(id, 
                                             "East Midlands (England)" = "East_Midlands",
                                             "East of England"= "East_Of_England" ,     
                                             "London" = "Greater_London",               
@@ -1676,9 +1674,11 @@ mapdata_1 <- mapdata %>% mutate(id = recode(id,
                                             "South East (England)" = "South_East",    
                                             "South West (England)" = "South_West",  
                                             "West Midlands (England)" = "West_Midlands",
-                                            "Yorkshire and The Humber" = "Yorkshire_And_The_Humber"))
+                                            "Yorkshire and The Humber" = "Yorkshire_And_The_Humber")) %>% 
+  dplyr::rename("NUTS1" = "id") %>% 
+  write_rds(str_c("COG-UK/mapdata.rds"))
 
-mapdata_1<- dplyr::rename(mapdata_1, "NUTS1" = "id")
+mapdata
 ```
 
 ## ISARIC
