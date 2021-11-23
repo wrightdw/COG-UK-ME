@@ -1672,6 +1672,66 @@ mapdata <-
 
 mapdata
 ```
+### Antigenic and map
+```{r geo_map_antigenic_alias, eval=FALSE, include=FALSE}
+#capture delettion data
+del_22289_6_samples <- 
+  deletions %>% 
+  filter(
+    (ref_start == 22289 & length == 6) 
+  ) %$% samples 
+
+### Antigenic deletions by lineage 22289-22294 (6nt)
+del_22289_6 <- 
+  consortium_uk %>% 
+  filter(sequence_name %in% del_22289_6_samples) %>% 
+  dplyr::count(epi_week, lineage, NUTS1, name = "n_sequences_lineage", .drop = FALSE) %>% 
+  mutate(variant = "del243-244", .before = 1)
+
+# del_22289_6_week <- 
+#   consortium_uk %>% 
+#   filter(sequence_name %in% del_22289_6_samples) %>% 
+#   dplyr::count(epi_week, NUTS1, name = "n", .drop = FALSE) %>% 
+#   mutate(variant = "del243-244", .before = 1)
+
+sequences_by_week_lineages <- 
+  consortium_uk %>% 
+  filter(!is.na(NUTS1)) %>%
+  dplyr::count(epi_week,  lineage, NUTS1, name = "n", .drop = FALSE) # count sequences per epiweek and NUTS1
+
+escape_mutations <-
+  database %>%
+  filter(!is.na(escape)) %$% 
+  mutation # filter escape mutations from database
+
+mutations_s_uk<- inner_join(mutations_s_uk, consortium_uk)
+mutations_s_uk<- mutations_s_uk %>% filter(!is.na(NUTS1))
+antigenic_mutations <- 
+  mutations_s_uk %>% 
+  filter(variant %in% escape_mutations) %>% 
+  filter(sequence_name != "England/NEWC-2729532/2021") %>% # remove Delta outlier from January 2021
+  dplyr::count(variant, epi_week,lineage, NUTS1, name = "n_sequences_lineage", .drop = FALSE) #count specific variant carry a specific mutation per epiweek and NUTS1
+
+antigenic_mutations <-bind_rows(antigenic_mutations,del_22289_6) # bind with deletion data
+
+antigenic_mutations_lineages_all <- 
+  inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
+  mutate(percentage = ifelse(n==0, 0, n_sequences_lineage  / n * 100)) # calculate proportion
+antigenic_mutations_lineages_all$variant <- as.factor(antigenic_mutations_lineages_all$variant)
+
+# antigenic_mutations_lineages_all %>% mutate(variant, fct_expand(variant, "All"))
+antigenic_mutations_lineages_all$epi_week<- as.character(antigenic_mutations_lineages_all$epi_week)
+antigenic_mutations_lineages_all$epi_week<- as.numeric(antigenic_mutations_lineages_all$epi_week)
+antigenic_mutations_lineages_all<-dplyr::inner_join(antigenic_mutations_lineages_all, epi_lookup)
+antigenic_mutations_lineages_all<-dplyr::rename(antigenic_mutations_lineages_all, "Count" = "n_sequences_lineage")
+antigenic_mutations_lineages_all<-dplyr::rename(antigenic_mutations_lineages_all, "Proportion" = "percentage")
+antigenic_mutations_lineages_all<- antigenic_mutations_lineages_all %>% 
+  mutate(lineage = fct_other(lineage, keep = vui_voc %$% levels(lineage))) %>%
+  filter(!is.na(NUTS1) & !is.na(lineage))
+
+write_rds(str_c("COG-UK/antigenic_mutations_lineages_all.rds"))
+antigenic_mutations_lineages_all
+```
 
 ## ISARIC
 ### Alias
