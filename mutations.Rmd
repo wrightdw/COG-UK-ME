@@ -1588,7 +1588,7 @@ antigenic_mutations_gisaid_all
 # 12 Northern Ireland
 # 
 
-# NUTS1 categories from consortium_uk
+# NUTS1 categories from consortium_uk in same order 
 NUTS1 <- c( 
 "North_East",               
 "North_West",     
@@ -1609,25 +1609,40 @@ NUTS1 <- c(
 
 NUTS1_objectid <- tibble(NUTS1, objectid = 1:length(NUTS1))
 
-# regional counts for all variants with NUTS1 data
+# count regional total sequences by week for calculation of percentage
 geo <- 
   consortium_uk %>% 
   filter(!is.na(NUTS1)) %>% 
   dplyr::count(epi_week, NUTS1, .drop = FALSE) 
 
+# regional counts for all variants with NUTS1 data
 geo_variants <- 
+  # Delta
   consortium_uk %>%
   filter(!is.na(NUTS1)) %>% 
+  mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>%  # convert AY.x lineages to B.617.2
   mutate(across(lineage, as_factor)) %>%
-  mutate(lineage = fct_other(lineage, keep = vui_voc %$% levels(lineage))) %>% 
+  mutate(lineage = fct_other(lineage, 
+                             keep = 
+                               vui_voc %$% 
+                               levels(lineage) %>% 
+                               str_subset("^AY\\.", negate = TRUE))) %>% # convert non-VUI/VOC lineages to "Other"
   dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE) # TODO count AY lineages / Other Delta
+
+  # AY.4
+  # consortium_uk %>% 
+  #   filter(!is.na(NUTS1)) %>% 
+  #   filter(lineage_full == "B.1.617.2" | str_starts(lineage_full, fixed("B.1.617.2."))) %>% # filter Delta only
+  #   mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage))
+
+  # AY.4.2
 
 geo_all <- 
   dplyr::inner_join(geo, geo_variants) %>%
   dplyr::mutate(across(epi_week, as.character)) %>% 
   dplyr::mutate(across(epi_week, as.integer)) %>% 
   # filter(epi_week >= 39 & epi_week <= 80) %>% # first week VUIs and VOCs appear
-  filter(epi_week >= 39) %>% # first week VUIs and VOCs appeared - this is no longer correct!
+  filter(epi_week >= 39) %>% # TODO first week VUIs and VOCs appeared - this is no longer correct!
   dplyr::mutate(Proportion = ifelse(n==0, 0, n_week / n * 100)) %>%  # keep zero counts for rendering 
   dplyr::select(-n) %>%
   dplyr::inner_join(NUTS1_objectid) %>% 
@@ -1656,7 +1671,7 @@ geo_all
 mapdata <- 
   rgdal::readOGR(dsn = "COG-UK/Maps/", layer = "NUTS_Level_1_(January_2018)_Boundaries") %>%  # Load shapefile
   broom::tidy(region="nuts118nm") %>% # Convert shapefile to dataframe
-  mutate(id = recode(id, 
+  mutate(id = recode(id, # recode from NUTS1 categories in consortium_uk to NUTS1 names in map
                                             "East Midlands (England)" = "East_Midlands",
                                             "East of England"= "East_Of_England" ,     
                                             "London" = "Greater_London",               
