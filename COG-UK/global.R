@@ -76,25 +76,14 @@ lineages_t3 <-
     "C.37" = "South America. Δ246-252, G75V, T76I, L452Q, F490S, D614G, and T859N. WHO label: <strong>Lambda</strong>.",
     "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H. WHO label: <strong>Mu</strong>.",
     
-    "AY.1" = "As B.1.617.2.1, with the addition of K417N. Several European countries. WHO label: <strong>Delta</strong>.",
-    "AY.2" = "Alias of B.1.617.2.2, in USA with K417N. WHO label: <strong>Delta</strong>.",
-    "AY.3" = "Alias of B.1.617.2.3, USA. WHO label: <strong>Delta</strong>.",
-    "AY.3.1" = "Alias of B.1.617.2.3.1, USA. WHO label: <strong>Delta</strong>.",
     "AY.4" = "Alias of B.1.617.2.4, UK. WHO label: <strong>Delta</strong>.",
-    "AY.5" = "Alias of B.1.617.2.5, UK. WHO label: <strong>Delta</strong>.",
-    "AY.6" = "Alias of B.1.617.2.6, UK. WHO label: <strong>Delta</strong>.",
-    "AY.7" = "Alias of B.1.617.2.7, UK. WHO label: <strong>Delta</strong>.",
-    "AY.8" = "Alias of B.1.617.2.8, UK. WHO label: <strong>Delta</strong>.",
-    "AY.9" = "Alias of B.1.617.2.9, UK. WHO label: <strong>Delta</strong>.",
-    "AY.10" = "Alias of B.1.617.2.10, UK. WHO label: <strong>Delta</strong>.",
-    "AY.11" = "Alias of B.1.617.2.11, UK. WHO label: <strong>Delta</strong>.",
-    "AY.12" = "Alias of B.1.617.2.12, Israel. WHO label: <strong>Delta</strong>.",
+    
+    "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. Alias of  B.1.617.2.4.2. WHO label: <strong>Delta</strong>.",
+    "AY.4.2.1" = "Alias of  B.1.617.2.4.2.1. WHO label: <strong>Delta</strong>.",
     
     "P.1" = " Japan ex Brazil. L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I. WHO label: <strong>Gamma</strong>.",
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
-NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
-
-    "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. WHO label: <strong>Delta</strong>."
+NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>."
     ) %>% 
   enframe("lineage", "reason")
 
