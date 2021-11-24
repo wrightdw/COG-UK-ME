@@ -1570,6 +1570,13 @@ antigenic_mutations_gisaid_all
 ```
 ## Geo
 ```{r geo}
+# Construct a regular expression for replacement of the sublineages of a lineage using gsub
+sublineage_regex_gsub <- function(lineage){
+  str_replace_all(lineage, "\\.", "\\\\\\.") %>% 
+    paste0("^", ., "\\..*")
+}
+
+
 # TOPOJSON objectid
 # 1 North East (England)
 # 2 "North West (England)"
@@ -1616,27 +1623,36 @@ geo <-
   dplyr::count(epi_week, NUTS1, .drop = FALSE) 
 
 # regional counts for all variants with NUTS1 data
-geo_variants <- 
+geo_variants <- bind_rows(
   # Delta
   consortium_uk %>%
   filter(!is.na(NUTS1)) %>% 
-  mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)) %>%  # convert AY.x lineages to B.617.2
+  mutate(lineage = gsub(sublineage_regex_gsub("AY"), "B.1.617.2", lineage)) %>%  # convert AY.x lineages to B.617.2
   mutate(across(lineage, as_factor)) %>%
   mutate(lineage = fct_other(lineage, 
                              keep = 
                                vui_voc %$% 
                                levels(lineage) %>% 
                                str_subset("^AY\\.", negate = TRUE))) %>% # convert non-VUI/VOC lineages to "Other"
-  dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE) # TODO count AY lineages / Other Delta
+  dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE), # TODO count AY lineages / Other Delta
 
   # AY.4
-  # consortium_uk %>% 
-  #   filter(!is.na(NUTS1)) %>% 
-  #   filter(lineage_full == "B.1.617.2" | str_starts(lineage_full, fixed("B.1.617.2."))) %>% # filter Delta only
-  #   mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage))
-
+  consortium_uk %>%
+    filter(!is.na(NUTS1)) %>%
+    filter(lineage_full == "B.1.617.2" | str_starts(lineage_full, fixed("B.1.617.2."))) %>% # filter Delta only
+    mutate(lineage = gsub(sublineage_regex_gsub("AY.4"), "AY.4", lineage)) %>%  # recode AY.4.x to AY.4
+    mutate(lineage = fct_other(lineage, keep = "AY.4", other_level = "Delta_minus_AY.4")) %>%  # convert Delta non-AY.4/AY.4.x lineages to other Delta
+    dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE),
+  
   # AY.4.2
-
+  consortium_uk %>%
+    filter(!is.na(NUTS1)) %>%
+    filter(lineage_full == "B.1.617.2" | str_starts(lineage_full, fixed("B.1.617.2."))) %>% # filter Delta only
+    mutate(lineage = gsub(sublineage_regex_gsub("AY.4.2"), "AY.4.2", lineage)) %>%  # recode AY.4.2.x to AY.4.2
+    mutate(lineage = fct_other(lineage, keep = "AY.4.2", other_level = "Delta_minus_AY.4.2")) %>%  # convert Delta non-AY.4.2/AY.4.x lineages to other Delta
+    dplyr::count(epi_week, NUTS1, lineage, name = "n_week", .drop = FALSE)
+)
+    
 geo_all <- 
   dplyr::inner_join(geo, geo_variants) %>%
   dplyr::mutate(across(epi_week, as.character)) %>% 
