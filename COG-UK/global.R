@@ -22,11 +22,11 @@ lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds"
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
 
+source("helpers.R")
+
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
 antigenic_mutations_lineages_all <- read_rds(str_c(dataset_date, "/antigenic_mutations_lineages_all.rds"))
-
-source("helpers.R")
 
 database <- 
   database_genome %>% 
