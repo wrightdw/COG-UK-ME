@@ -119,7 +119,7 @@ dashboardPage(
         conditionalPanel(
             condition =  "input.sidebar_menu == 'ronapreve'",
             hr(),
-            prettySwitch("ronapreve_28", "Latest 28 days", FALSE, status = "info", fill = TRUE)
+            prettySwitch("ronapreve_28", "Latest 28 days", TRUE, status = "info", fill = TRUE)
         ),
         
         conditionalPanel(
