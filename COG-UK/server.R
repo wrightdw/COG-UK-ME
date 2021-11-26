@@ -1017,25 +1017,25 @@ shinyServer(function(input, output, session) {
     ########### Map and geographical distribution of variants
     #
     
-    observeEvent(input$variant_map, {
-      updateSelectizeInput(session, 
-                           "antigenic_mutation",
-                           choices = antigenic_mutations_lineages_all %>% 
-                             filter(lineage == input$variant_map) %>% 
-                             distinct(variant))
-    })
+    # observeEvent(input$variant_map, {
+    #   updateSelectizeInput(session, 
+    #                        "antigenic_mutation",
+    #                        choices = antigenic_mutations_lineages_all %>% 
+    #                          filter(lineage == input$variant_map) %>% 
+    #                          distinct(variant))
+    # })
     
     
     map_weekInput <- reactive({
-      if((input$antigenic_mutation) == ""){ # if input is empty show only lineages
-        
+      # if((input$antigenic_mutation) == ""){ # if input is empty show only lineages
+      
         geo_all_1<- geo_all %>% filter(lineage == input$variant_map)
         
         max_count<- max(geo_all_1$Count)
         max_proportion<- max(geo_all_1$Proportion)
         geo_all_1<-geo_all_1 %>% filter(epi_date == input$variant_date)
         
-        if(input$percentage_map == TRUE){
+        if(input$percentage_map == TRUE){ 
           geo_all_1<-dplyr::rename(geo_all_1, "value" = "Proportion")
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Count")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
@@ -1046,11 +1046,9 @@ shinyServer(function(input, output, session) {
           df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
           c<-"Percentage"
           max_val<-max_proportion
-        }
-        else
-        {
+        } else {
           geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
-          c<-"Number of sequences"
+          c <-"Number of sequences"
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
           geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
@@ -1059,43 +1057,42 @@ shinyServer(function(input, output, session) {
           #Join mydata with mapdata
           df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
           max_val <- max_count
-          
         }
-      }else{ # if a mutation is selected
+      # } else { # if a mutation is selected
         
-        antigenic_mutations_lineages_all_1<- antigenic_mutations_lineages_all %>% 
-          filter(variant == input$antigenic_mutation)
-        geo_all_1<- antigenic_mutations_lineages_all_1 %>% filter(lineage == input$variant_map)
-        
-        max_count<- max(geo_all_1$Count)
-        max_proportion<- max(geo_all_1$Proportion)
-        geo_all_1<-geo_all_1 %>% filter(epi_date == input$variant_date)
-        
-        if(input$percentage_map == TRUE){
-          geo_all_1<-dplyr::rename(geo_all_1, "value" = "Proportion")
-          geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Count")]
-          # geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
-          geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
-          geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
-          
-          #Join mydata with mapdata
-          df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
-          c<-"Percentage"
-          max_val<-max_proportion
-        }
-        else
-        {
-          geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
-          c<-"Number of sequences"
-          # geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
-          geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
-          geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
-          geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
-          #Join mydata with mapdata
-          df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
-          max_val <- max_count
-        }
-      }
+        # antigenic_mutations_lineages_all_1<- antigenic_mutations_lineages_all %>% 
+        #   filter(variant == input$antigenic_mutation)
+        # geo_all_1<- antigenic_mutations_lineages_all_1 %>% filter(lineage == input$variant_map)
+        # 
+        # max_count<- max(geo_all_1$Count)
+        # max_proportion<- max(geo_all_1$Proportion)
+        # geo_all_1<-geo_all_1 %>% filter(epi_date == input$variant_date)
+        # 
+        # if(input$percentage_map == TRUE){
+        #   geo_all_1<-dplyr::rename(geo_all_1, "value" = "Proportion")
+        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Count")]
+        #   # geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
+        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
+        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
+        #   
+        #   #Join mydata with mapdata
+        #   df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
+        #   c<-"Percentage"
+        #   max_val<-max_proportion
+        # }
+        # else
+        # {
+        #   geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
+        #   c<-"Number of sequences"
+        #   # geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
+        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
+        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
+        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
+        #   #Join mydata with mapdata
+        #   df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
+        #   max_val <- max_count
+        # }
+      # } # end else
       
       # generate plot
       gg <- ggplot() + geom_polygon(data = df, aes(x = long, y = lat, group = group, fill = value), color = "#FFFFFF", size = 0.25)

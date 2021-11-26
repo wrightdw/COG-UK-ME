@@ -24,14 +24,11 @@ insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (g
 
 source("helpers.R")
 
-geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
-mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
-antigenic_mutations_lineages_all <- read_rds(str_c(dataset_date, "/antigenic_mutations_lineages_all.rds"))
-
 database <- 
   database_genome %>% 
   filter(gene == "S") %>% 
-  select(-gene)
+  select(-gene) %>% 
+  mutate(across(where(is.factor), fct_drop))
 
 mutations_s_uk <- 
   mutations_uk %>% 
@@ -66,7 +63,7 @@ lineages_t3 <-
     "B.1.324.1" = "UK associated variant. E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
     "P.2" = "Brazil. E484K and V1176F. WHO label: <strong>Zeta</strong>.",
     "P.3" = "The Philippines. Δ141-143, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases Δ243-244. WHO label: <strong>Theta</strong>.",
-    # "B.1.617" = "India. G142D, E154K, L452R, E484Q, P681R and Q1071H.",
+    
     "B.1.617.1" = "India. E154K, L452R, E484Q and P681R. WHO label: <strong>Kappa</strong>.",
     "B.1.617.2" = "India. T19R, Δ156-157, R158G, L452R, T478K, D614G, P681R and D950N. WHO label: <strong>Delta</strong>.",
     "B.1.617.3" = "India. T19R, Δ156-158, L452R, E484Q, D614G, P681R and D950N.",
@@ -77,13 +74,14 @@ lineages_t3 <-
     "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H. WHO label: <strong>Mu</strong>.",
     
     "AY.4" = "Alias of B.1.617.2.4, UK. WHO label: <strong>Delta</strong>.",
-    
     "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. Alias of  B.1.617.2.4.2. WHO label: <strong>Delta</strong>.",
     "AY.4.2.1" = "Alias of  B.1.617.2.4.2.1. WHO label: <strong>Delta</strong>.",
     
     "P.1" = " Japan ex Brazil. L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I. WHO label: <strong>Gamma</strong>.",
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
-NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>."
+NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
+
+    "B.1.1.529" = "South Africa and Botswana. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F . WHO label: <strong>Omicron</strong>."
     ) %>% 
   enframe("lineage", "reason")
 
@@ -109,3 +107,7 @@ vui_voc_lineages <-
   vui_voc %$% 
   levels(lineage) %>% 
   str_subset("^AY\\.", negate = TRUE)
+
+geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
+mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
+# antigenic_mutations_lineages_all <- read_rds(str_c(dataset_date, "/antigenic_mutations_lineages_all.rds"))

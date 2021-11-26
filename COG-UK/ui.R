@@ -38,7 +38,6 @@ dashboardPage(
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
-            # menuItem("T Cell Functional Mutations", tabName = "t_cell_func", icon = icon("disease")),
             menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
@@ -345,7 +344,7 @@ dashboardPage(
                                 ),
                                 
                                 (function() { 
-                                    database %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
+                                    database_genome %<>% filter(`numSeqs UK` >= 5 & `numSeqs UK 28 days` > 0) 
                                     
                                     column(
                                         width = 4, 
@@ -614,7 +613,7 @@ dashboardPage(
             tabItem(tabName = "therapeutics",
                     fluidRow(
                         box(title = "Amino acid mutations reported to confer resistance to antiviral therapies, detected in the UK data", closable = FALSE, width = 12,
-                            status = "info", collapsible = FALSE, icon = icon("prescription_bottle_alt"),
+                            status = "info", collapsible = FALSE, icon = icon("prescription-bottle-alt"),
                             DTOutput("table_therapeutics"),
                             br(),
                             p("The table lists those mutations in the SARS-CoV-2 genome identified in the UK dataset that have been associated with resistance of the virus to antiviral treatments. There is variation in the detail of the viral assays between the different studies displayed here.")
@@ -635,19 +634,7 @@ dashboardPage(
                     )
             ), # end tabItem ronapreve
             
-            tabItem(tabName = "t_cell_func",
-                    fluidRow(
-                        box(title = "Amino acid mutations in epitopes that change/reduce T cell recognition, detected in UK data", closable = FALSE, width = 12,
-                            status = "info", collapsible = FALSE, icon = icon("prescription_bottle_alt"),
-                            DTOutput("functional")
-                            # br(),
-                            # p("The table lists those mutations in the SARS-CoV-2 genome identified in the UK dataset that have been associated with resistance of the virus to antiviral treatments. There is variation in the detail of the viral assays between the different studies displayed here.")
-                        )
-                    )
-            ), # end tabItem therapeutics,
-            
             tabItem(tabName = "map",
-                    
                     fluidRow( box(title = "Geographical distribution", closable = FALSE, width = 12,
                                        status = "info", collapsible = FALSE, icon = icon("map"),
                                   fluidRow(
@@ -656,36 +643,42 @@ dashboardPage(
                                                  inputId = "variant_map",
                                                  label = "Lineage:",
                                                  choices = (function(){
-                                                     picks <- vui_voc %$% levels(lineage)
-                                                     # names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
-                                                     picks
+                                                     picks <- 
+                                                         vui_voc %$% 
+                                                         levels(lineage)
+                                                     
+                                                     names(picks) <- 
+                                                         picks %>% 
+                                                         str_replace(fixed("B.1.617.2"), "B.1.617.2/AY.x (Delta)") %>% 
+                                                         str_replace("^AY\\.4\\.2$", "AY.4.2/AY.4.2.x (Delta)") %>% 
+                                                         str_replace("^AY\\.4$", "AY.4/AY.4.x (Delta)")
+                                                     
+                                                     picks %>% c("Delta non-AY.4" = "Delta_minus_AY.4",
+                                                                 "Delta non-AY.4.2" = "Delta_minus_AY.4.2")
                                                  })(),
                                                  selected = "AY.4.2",
-                                                 # options = list(dropdownParent = 'body')# prevent dropdown opening behind footer
                                              ),
                                              
-                                             selectizeInput(
-                                                 inputId = "antigenic_mutation",
-                                                 label = "Antigenic mutation:",
-                                                 choices = NULL, 
-                                                 size = 10,
-                                                 selected = ""
-                                             )
-                                      )
-                                      ,
+                                             # selectizeInput(
+                                             #     inputId = "antigenic_mutation",
+                                             #     label = "Antigenic mutation:",
+                                             #     choices = NULL, 
+                                             #     size = 10,
+                                             #     selected = ""
+                                             # )
+                                      ),
+                                      
                                       column( width = 10,
-                                              
                                               plotlyOutput("map", height = "70vh")
-                                      )), #end of fluid
-                                  
+                                      )), # end of fluidRow
                                   
                                            sliderInput(
                                                inputId = "variant_date",
                                                label = "Date:",
-                                               min = lineages_weeks_uk_all %$% min(epi_date),
-                                               max = lineages_weeks_uk_all %$% max(epi_date)-7,
+                                               min = geo_all %$% min(epi_date),
+                                               max = geo_all %$% max(epi_date) - 7,
                                                value = c(
-                                                   lineages_weeks_uk_all %$% max(epi_date))-7,
+                                                   geo_all %$% max(epi_date)) - 7,
                                                step = 7,
                                                ticks = FALSE,
                                                animate = TRUE,
@@ -694,8 +687,6 @@ dashboardPage(
                                   p("Plot showing the geographical distribution of lineages as either number of sequences or percentage relative to a specific region. It is also possible to select specific mutation with antigenic role (for more details see the Antigenic mutations tab).")
                                            
                                   ) # end of box
-                              
-                              
                             )
 
 )

@@ -152,7 +152,7 @@ consortium_uk
 ```{r consortium_write}
 mutations_uk <- 
   consortium_uk %>% 
-  select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, mutations) %>% 
+  select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1, mutations) %>% 
   distinct # get rid of identical variant calls
 
 message("Writing consortium_uk.rds")
@@ -173,11 +173,6 @@ mutations_uk %<>%
   mutate(position = parse_number(variant)) %>% 
   mutate(across(c(gene, position, variant), as_factor)) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
-
-# exclude duplicate delta variants with incorrect dates in April 2020
-dodgy_delta_mutations <- 
-  mutations_uk %>% 
-  filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
 
 mutations_uk
 ```
@@ -832,11 +827,6 @@ functional %<>%
   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
   mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))  
 
-# functional_spike <- 
-#   functional %>% 
-  # filter(gene == "S") %>% 
-  # select(-gene) %>%
-
 database_genome_functional <-
   database_genome %>%
   select(gene, position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
@@ -851,38 +841,6 @@ database_functional_predictions <-
 database_functional_predictions
 
 bind_rows(database_tcell_predictions, database_functional_predictions) %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
-
-
-# mutations_func_uk <- 
-#   mutations_uk %>% 
-#   mutate(across(position, as.character)) %>%
-#   mutate(across(position, as.numeric)) %>%
-#   mutate(across(c(variant), fct_drop)) %>% 
-#   semi_join(functional)
-# 
-# variants_func_uk <-
-#   mutations_func_uk %>%
-#   group_by(gene, position, variant) %>%
-#   summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
-# 
-# # Sample dates in last 28 days
-# variants_func_uk_28 <-
-#   mutations_func_uk %>%
-#   filter(sample_date >= sample_date_28) %>%
-#   dplyr::count(gene, position, variant, name = "UK_28")
-# 
-# functional %<>%  
-#   mutate(anchor = str_c("<a href='https://", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>%   # hyperlink to citation DOI
-#   left_join(variants_func_uk) %>% 
-#   left_join(variants_func_uk_28) %>% 
-#   rename(
-#     `numSeqs UK` = UK,
-#     `numSeqs UK 28 days` = UK_28) %>% 
-#   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) 
-# 
-# 
-# functional %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/functional.rds"))
-
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -1655,18 +1613,22 @@ geo_variants <- bind_rows(
     
 geo_all <- 
   dplyr::inner_join(geo, geo_variants) %>%
-  dplyr::mutate(across(epi_week, as.character)) %>% 
-  dplyr::mutate(across(epi_week, as.integer)) %>% 
-  # filter(epi_week >= 39 & epi_week <= 80) %>% # first week VUIs and VOCs appear
-  filter(epi_week >= 39) %>% # TODO first week VUIs and VOCs appeared - this is no longer correct!
+  dplyr::mutate(across(epi_week, as.character)) %>%
+  dplyr::mutate(across(epi_week, as.integer))
+
+# calculate first week
+earliest_voc_vui <- 
+  geo_all %>% 
+  filter(lineage != "Other" & n_week > 0) %$%
+  min(epi_week)
+
+geo_all %<>% 
+  filter(epi_week >= earliest_voc_vui) %>% 
+  dplyr::inner_join(epi_lookup) %>% 
   dplyr::mutate(Proportion = ifelse(n==0, 0, n_week / n * 100)) %>%  # keep zero counts for rendering 
   dplyr::select(-n) %>%
   dplyr::inner_join(NUTS1_objectid) %>% 
-  dplyr::rename(Count = n_week) # %T>%
-  # write_csv("nuts1.csv") # data file for Observable / Vega Lite
-
-geo_all <- 
-  dplyr::inner_join(geo_all, epi_lookup) %T>% 
+  dplyr::rename(Count = n_week) %T>%
   write_rds(str_c("COG-UK/", params$dataset_date, "/geo_all.rds"))
 
 geo
@@ -1704,59 +1666,54 @@ mapdata <-
 mapdata
 ```
 ### Antigenic and map
-```{r geo_map_antigenic_alias}
-#capture delettion data
+```{r geo_map_antigenic_alias, eval=FALSE, include=FALSE}
+# del243-244 sample IDs
 del_22289_6_samples <- 
   deletions %>% 
   filter(
     (ref_start == 22289 & length == 6) 
   ) %$% samples 
 
-### Antigenic deletions by lineage 22289-22294 (6nt)
-del_22289_6 <- 
+# Antigenic deletion del243-244 22289-22294 (6nt) by region 
+del_22289_6_regions <- 
   consortium_uk %>% 
+  filter(!is.na(NUTS1)) %>%
   filter(sequence_name %in% del_22289_6_samples) %>% 
   dplyr::count(epi_week, lineage, NUTS1, name = "n_sequences_lineage", .drop = FALSE) %>% 
   mutate(variant = "del243-244", .before = 1)
 
-# del_22289_6_week <- 
-#   consortium_uk %>% 
-#   filter(sequence_name %in% del_22289_6_samples) %>% 
-#   dplyr::count(epi_week, NUTS1, name = "n", .drop = FALSE) %>% 
-#   mutate(variant = "del243-244", .before = 1)
-
-sequences_by_week_lineages <- 
+sequences_by_week_regions <- 
   consortium_uk %>% 
   filter(!is.na(NUTS1)) %>%
-  dplyr::count(epi_week, lineage, NUTS1, name = "n", .drop = FALSE) # count sequences per epiweek and NUTS1
+  dplyr::count(epi_week, lineage, NUTS1, name = "n", .drop = FALSE) # count total sequences per epiweek/lineage/NUTS1
 
-escape_mutations <-
-  database %>%
-  filter(!is.na(escape)) %$% 
+escape_mutations <- 
+  database_genome %>%
+  filter(gene == "S" & !is.na(escape)) %$% 
   mutation # filter escape mutations from database
 
-mutations_s_uk <- inner_join(mutations_s_uk, consortium_uk)
-mutations_s_uk <- mutations_s_uk %>% filter(!is.na(NUTS1))
 antigenic_mutations <- 
-  mutations_s_uk %>% 
+  mutations_uk %>% 
+  filter(!is.na(NUTS1)) %>% 
   filter(variant %in% escape_mutations) %>% 
   filter(sequence_name != "England/NEWC-2729532/2021") %>% # remove Delta outlier from January 2021
-  dplyr::count(variant, epi_week,lineage, NUTS1, name = "n_sequences_lineage", .drop = FALSE) #count specific variant carry a specific mutation per epiweek and NUTS1
+  dplyr::count(variant, epi_week, lineage, NUTS1, name = "n_sequences_lineage", .drop = FALSE) # count specific variant carry a specific mutation per epiweek and NUTS1
 
-antigenic_mutations <-bind_rows(antigenic_mutations,del_22289_6) # bind with deletion data
+antigenic_mutations <- bind_rows(antigenic_mutations,del_22289_6) # bind with deletion data
 
 antigenic_mutations_lineages_all <- 
   inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
   mutate(percentage = ifelse(n==0, 0, n_sequences_lineage  / n * 100)) # calculate proportion
+
 antigenic_mutations_lineages_all$variant <- as.factor(antigenic_mutations_lineages_all$variant)
 
 # antigenic_mutations_lineages_all %>% mutate(variant, fct_expand(variant, "All"))
-antigenic_mutations_lineages_all$epi_week<- as.character(antigenic_mutations_lineages_all$epi_week)
-antigenic_mutations_lineages_all$epi_week<- as.numeric(antigenic_mutations_lineages_all$epi_week)
-antigenic_mutations_lineages_all<-dplyr::inner_join(antigenic_mutations_lineages_all, epi_lookup)
-antigenic_mutations_lineages_all<-dplyr::rename(antigenic_mutations_lineages_all, "Count" = "n_sequences_lineage")
-antigenic_mutations_lineages_all<-dplyr::rename(antigenic_mutations_lineages_all, "Proportion" = "percentage")
-antigenic_mutations_lineages_all<- antigenic_mutations_lineages_all %>% 
+antigenic_mutations_lineages_all$epi_week <- as.character(antigenic_mutations_lineages_all$epi_week)
+antigenic_mutations_lineages_all$epi_week <- as.numeric(antigenic_mutations_lineages_all$epi_week)
+antigenic_mutations_lineages_all <- dplyr::inner_join(antigenic_mutations_lineages_all, epi_lookup)
+antigenic_mutations_lineages_all <- dplyr::rename(antigenic_mutations_lineages_all, "Count" = "n_sequences_lineage")
+antigenic_mutations_lineages_all <- dplyr::rename(antigenic_mutations_lineages_all, "Proportion" = "percentage")
+antigenic_mutations_lineages_all <- antigenic_mutations_lineages_all %>% 
   mutate(lineage = fct_other(lineage, keep = vui_voc %$% levels(lineage))) %>%
   filter(!is.na(NUTS1) & !is.na(lineage)) 
 
