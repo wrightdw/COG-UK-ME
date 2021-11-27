@@ -3,7 +3,7 @@ title:  "COG-UK Mutations"
 output: html_notebook
 params: 
   latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # if empty, defaults to today's date, otherwise enter date string
+  dataset_date:     "" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -75,21 +75,22 @@ consortium_uk <-
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
   select(-gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
-         -lineages_version, -country, 
-         -received_date, -collection_date, -published_date, -starts_with("scorpio"), 
+         -lineages_version, -country,
+         -received_date, -collection_date, -published_date, -starts_with("scorpio"),
          -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
          ) %>% # remove unused columns
   relocate(NUTS1,.after = adm1) %>% 
   type_convert 
 
-# Temporary fix - exclude duplicate Delta sequences with incorrect dates in April 2020
+# Temporary fixes
+# exclude duplicate Delta sequences with incorrect dates in April 2020
 dodgy_delta <- 
   consortium_uk %>% 
   filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
 
 consortium_uk %<>% anti_join(dodgy_delta)
 
-# # NUTS1 cleanup - correct NUTS1 missing or incorrect values
+# NUTS1 cleanup - correct NUTS1 missing or incorrect values
 consortium_uk %<>%
   mutate(
     NUTS1 = case_when(
@@ -99,6 +100,9 @@ consortium_uk %<>%
       TRUE ~ NUTS1
     )
   )
+
+# Exclude embargoed Omicron sequence
+consortium_uk %<>% filter(cog_id != "PHEC-3U06FU0A")
 
 # Epidemic week / Sunday date conversion
 epi_lookup <-
@@ -1378,7 +1382,6 @@ mutations_s_uk_wide
 ```
 ### VUI/VOC/other
 ```{r vui_voc_other}
-# sequences with B.617.2.x, AY.4.x and AY.4.2.x converted to parent lineage (N.B. contains duplicate sequences for Delta!)
 consortium_uk_delta_parent <-
   bind_rows(
     # convert AY.x sublineages  to parent B.1.617.2
@@ -1410,12 +1413,26 @@ consortium_uk_delta_parent <-
 
 # count sequences by day
 lineages_days_uk_all <- 
-  consortium_uk_delta_parent %>% dplyr::count(lineage, sample_date, adm1, name = "n_day")
+  bind_rows(
+    consortium_uk_delta_parent %>% 
+      dplyr::count(lineage, sample_date, adm1, name = "n_day"),
+    
+    consortium_uk_delta_parent %>% 
+      dplyr::count(lineage, sample_date, name = "n_day") %>% 
+      mutate(adm1 = "UK") %>% 
+      mutate(across(adm1, as_factor))
+  )
 
 # by week
-lineages_weeks_uk_all <- 
- consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, adm1, name = "n_week") 
-
+lineages_weeks_uk_all <- bind_rows(
+ consortium_uk_delta_parent %>% 
+   dplyr::count(lineage, epi_date, adm1, name = "n_week"),
+ 
+ consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, name = "n_week") %>% 
+   mutate(adm1 = "UK") %>% 
+   mutate(across(adm1, as_factor))
+)
+ 
 lineages_days_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
 lineages_weeks_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
@@ -1644,6 +1661,8 @@ geo_all
 # Convert shapefile to dataframe for ggplot2
 # Run once locally and transfer mapdata RDS file to web server
 # Uses packages rgdal and broom - not required on CLIMB
+# Requires packages rgeos, maptools, rgdal, broom
+# On Linux, install rgeos before rgdal
 
 # Reshape for ggplot2 using the Broom package
 mapdata <- 
