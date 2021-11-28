@@ -101,9 +101,6 @@ consortium_uk %<>%
     )
   )
 
-# Exclude embargoed Omicron sequence
-consortium_uk %<>% filter(cog_id != "PHEC-3U06FU0A")
-
 # Epidemic week / Sunday date conversion
 epi_lookup <-
   tibble(
