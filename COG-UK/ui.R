@@ -284,21 +284,21 @@ dashboardPage(
                         ),
                         
                         column(width = 6,
-                               box(title = "Spike protein structure (B.1.1.7)", closable = FALSE, width = NULL, 
+                               box(title = "Spike protein mutations (Omicron: B.1.1.529)", closable = FALSE, width = NULL, 
                                    status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                   img(src = "structure.png", class = "center-block img-responsive"))
+                                   img(src = "mutants_lineage_B.1.1.529_web.png", class = "center-block img-responsive"))
                         )
                     ),
                     
                     fluidRow(
-                        box(title = "Spike protein mutations (B.1.1.7)", closable = FALSE, width = 6, 
+                        box(title = "Spike protein mutations (Alpha: B.1.1.7)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
                             img(src = "lineage_B.1.1.7_web.png", 
                                 class = "center-block img-responsive", 
                                 height = 480,
                                 alt = "B.1.1.7 spike structure with mutations")),
                         
-                        box(title = "Spike protein mutations (B.1.617.2)", closable = FALSE, width = 6, 
+                        box(title = "Spike protein mutations (Delta: B.1.617.2)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
                             img(src = "mutants_lineage_B.1.617.2_web.png", 
                                 class = "center-block img-responsive", 
@@ -307,14 +307,14 @@ dashboardPage(
                     ), 
                     
                     fluidRow(
-                        box(title = "Spike protein mutations (B.1.351)", closable = FALSE, width = 6, 
+                        box(title = "Spike protein mutations (Beta: B.1.351)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"), 
                             img(src = "mutants_lineage_B.1.351_web.png", 
                                 class = "center-block img-responsive", 
                                 height = 480,
                                 alt = "B.1.351 spike structure with mutations")),
                         
-                        box(title = "Spike protein mutations (P.1)", closable = FALSE, width = 6, 
+                        box(title = "Spike protein mutations (Gamma: P.1)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
                             img(src = "mutants_lineage_P.1_web.png", 
                                 class = "center-block img-responsive", 
