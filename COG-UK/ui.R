@@ -41,8 +41,8 @@ dashboardPage(
             menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
-            menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
-            menuItem("Geographical distribution", tabName = "map", icon = icon("map")),
+            # menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
+            menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -230,8 +230,6 @@ dashboardPage(
             
             tabItem("vui_voc", 
                     fluidRow(
-                      p("DISCLAIMER: COG-UK uses curated sequences for determining the counts of a given lineage. Other sources of information may be reporting cases with partial sequence information or other forms of PCR testing.")  
-                    ,
                         box(title = "Variants of concern (VOC) and under investigation (VUI) and any other variant by weeks and days", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
                             
@@ -260,7 +258,8 @@ dashboardPage(
 
                     fluidRow(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) detected in the UK data", closable = FALSE, width = 12,
-                            status = "info", collapsible = FALSE, icon = icon("table"),                                                
+                            status = "info", collapsible = FALSE, icon = icon("table"),
+                            p("DISCLAIMER: COG-UK uses curated sequences for determining the counts of a given lineage. Other sources of information may be reporting cases with partial sequence information or other forms of PCR testing."),
                             dataTableOutput("table_3")
                         )
                     ),
@@ -686,7 +685,7 @@ dashboardPage(
                                                animate = TRUE,
                                                timeFormat = "%d %b %y"
                                            ),
-                                  p("Plot showing the geographical distribution of lineages as either number of sequences or percentage relative to a specific region. It is also possible to select specific mutation with antigenic role (for more details see the Antigenic mutations tab).")
+                                  p("Map showing the geographical distribution of variants, as either number of sequences or percentage relative to a specific region. N.B. Sequences without geographical information have been excluded from this analysis, so overall counts may be slightly lower than reported in VOCs/VUIs in the UK.")
                                            
                                   ) # end of box
                             )

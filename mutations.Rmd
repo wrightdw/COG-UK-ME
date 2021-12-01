@@ -1808,7 +1808,9 @@ isaric_dfr <-
         }
       } 
     } else { # filter deletion/insertion/mutation
-     gene_mutation <- str_split(current$Mutation, ":") %>% unlist # split gene:mutation
+     gene_mutation <- 
+       str_split(current$Mutation, ":") %>% 
+       unlist # split gene:mutation
 
       if(str_starts(gene_mutation[2], "del|ins")){ # deletion or insertion - look up consortium
         output <- consortium_uk
@@ -1964,7 +1966,7 @@ isaric_dfr_collapse <-
 isaric_dfr_collapse
 ```
 ## Ronapreve plot
-```{r ronopreve_plot}
+```{r ronopreve_plot, eval=FALSE, include=FALSE}
 source("mab_upset_regeneron.R")
 ronapreve_upset <- generate_upset()
 ronapreve_upset_28 <- generate_upset(filter_date = sample_date_28)
@@ -1977,8 +1979,8 @@ png(filename = str_c("COG-UK/", params$dataset_date, "/Ronapreve_28.png"), width
 ronapreve_upset_28
 dev.off()
 
-# ronapreve_upset
-# ronapreve_upset_28
+ronapreve_upset
+ronapreve_upset_28
 
 ```
 
