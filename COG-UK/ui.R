@@ -230,6 +230,8 @@ dashboardPage(
             
             tabItem("vui_voc", 
                     fluidRow(
+                      p("DISCLAIMER: COG-UK uses curated sequences for determining the counts of a given lineage. Other sources of information may be reporting cases with partial sequence information or other forms of PCR testing.")  
+                    ,
                         box(title = "Variants of concern (VOC) and under investigation (VUI) and any other variant by weeks and days", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("chart-line"),
                             
