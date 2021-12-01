@@ -1,18 +1,23 @@
 library(tidyverse)
 library(lubridate)
 library(magrittr)
-library(UpSetR)
+
+# Derive date of most recent dataset from directory names.
+# Dataset directories are named according to date e.g. "2021-11-24".
+dataset_date <- 
+  list.dirs() %>% 
+  ymd(quiet = TRUE) %>%  
+  max(na.rm = TRUE)
 
 # Derive date of second most recent dataset from directory names.
-# Dataset directories are named according to date e.g. "2021-11-24".
-dataset_date <-
-  list.dirs() %>%
-  ymd(quiet = TRUE) %>% # convert dataset directory names to dates
-  .[. != max(., na.rm = TRUE)] %>% # exclude most recent dataset
-  max(na.rm = TRUE) # second most recent dataset
+# dataset_date <-
+#   list.dirs() %>%
+#   ymd(quiet = TRUE) %>% # convert dataset directory names to dates
+#   .[. != max(., na.rm = TRUE)] %>% # exclude most recent dataset
+#   max(na.rm = TRUE) # second most recent dataset
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2021-11-29")
+# dataset_date <- as.Date("2021-11-30")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
