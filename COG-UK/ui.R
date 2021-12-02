@@ -41,7 +41,7 @@ dashboardPage(
             menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
-            # menuItem("Ronapreve", tabName = "ronapreve", icon = icon("pills")),
+            menuItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
             menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),

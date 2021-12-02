@@ -1966,7 +1966,7 @@ isaric_dfr_collapse <-
 isaric_dfr_collapse
 ```
 ## Ronapreve plot
-```{r ronopreve_plot, eval=FALSE, include=FALSE}
+```{r ronopreve_plot}
 source("mab_upset_regeneron.R")
 ronapreve_upset <- generate_upset()
 ronapreve_upset_28 <- generate_upset(filter_date = sample_date_28)
@@ -1979,8 +1979,8 @@ png(filename = str_c("COG-UK/", params$dataset_date, "/Ronapreve_28.png"), width
 ronapreve_upset_28
 dev.off()
 
-ronapreve_upset
-ronapreve_upset_28
+# ronapreve_upset
+# ronapreve_upset_28
 
 ```
 
