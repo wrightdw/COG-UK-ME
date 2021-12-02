@@ -10,7 +10,7 @@ generate_upset <- function(filter_date = NULL){
   ## load info on amino acid substitutions
   
   ## Read in mab data which has mutations assoc. fold differences
-  mab_data <- readRDS('mab_data.rds')
+  mab_data <- read.csv('COG-UK/data_auxiliary/mab_mutations_data.csv')
   mab_data <- mab_data[which(mab_data$Cas > 0 | mab_data$Imd > 0),]
   mab_data <- mab_data[is.na(mab_data$Cas) == F,]
   mab_data <- mab_data[is.na(mab_data$Imd) == F,]
