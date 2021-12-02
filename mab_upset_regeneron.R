@@ -11,6 +11,9 @@ generate_upset <- function(filter_date = NULL){
   
   ## Read in mab data which has mutations assoc. fold differences
   mab_data <- readRDS('mab_data.rds')
+  mab_data <- mab_data[which(mab_data$Cas > 0 | mab_data$Imd > 0),]
+  mab_data <- mab_data[is.na(mab_data$Cas) == F,]
+  mab_data <- mab_data[is.na(mab_data$Imd) == F,]
   
   # use mutations df to get to viruses df
   mutations_uk <- 
