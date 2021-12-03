@@ -2,19 +2,27 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 
-# Derive date of most recent dataset from directory names.
-# Dataset directories are named according to date e.g. "2021-11-24".
-dataset_date <- 
-  list.dirs() %>% 
-  ymd(quiet = TRUE) %>%  
-  max(na.rm = TRUE)
+# Work out choice of dataset based on hour of day or most recent dataset
+get_dataset_date <- function(rollover = 7){
+  # list dataset dates removing today
+  dirs <- 
+    list.dirs() %>% 
+    ymd(quiet = TRUE) %>% 
+    .[. != today()]
+  
+  # if before 7am, remove yesterday as well
+  if(hour(now()) < rollover){
+    dirs %<>% .[. != (today() - days(1))]
+  }
+  
+  # get next most recent dataset
+  max(dirs, na.rm = TRUE)
+}
 
-# Derive date of second most recent dataset from directory names.
-# dataset_date <-
-#   list.dirs() %>%
-#   ymd(quiet = TRUE) %>% # convert dataset directory names to dates
-#   .[. != max(., na.rm = TRUE)] %>% # exclude most recent dataset
-#   max(na.rm = TRUE) # second most recent dataset
+# Dataset directories are named according to date e.g. "2021-11-24".
+# if after 7am, use yesterday
+# else before 7am, use 2 days ago
+dataset_date <- get_dataset_date()
 
 # Alternatively, set date here instead to switch to specific dataset.
 # dataset_date <- as.Date("2021-11-30")
