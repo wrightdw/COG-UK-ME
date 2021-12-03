@@ -652,7 +652,8 @@ dashboardPage(
                                                          picks %>% 
                                                          str_replace(fixed("B.1.617.2"), "B.1.617.2/AY.x (Delta)") %>% 
                                                          str_replace("^AY\\.4\\.2$", "AY.4.2/AY.4.2.x (Delta)") %>% 
-                                                         str_replace("^AY\\.4$", "AY.4/AY.4.x (Delta)")
+                                                         str_replace("^AY\\.4$", "AY.4/AY.4.x (Delta)") %>% 
+                                                         str_replace(fixed("B.1.1.529"), "B.1.1.529 (Omicron)")
                                                      
                                                      picks %>% c("Delta non-AY.4" = "Delta_minus_AY.4",
                                                                  "Delta non-AY.4.2" = "Delta_minus_AY.4.2")

@@ -762,6 +762,7 @@ shinyServer(function(input, output, session) {
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                   "AV.1" = "AV.1", 
                                   "B.1.1.318" = "B.1.1.318",
+                                  "B.1.1.529" = "B.1.1.529 (Omicron)",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.525" = "B.1.525 (Eta)",
@@ -898,6 +899,7 @@ shinyServer(function(input, output, session) {
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                          "AV.1" = "AV.1", 
                                          "B.1.1.318" = "B.1.1.318",
+                                         "B.1.1.529" = "B.1.1.529 (Omicron)",
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
                                          "B.1.525" = "B.1.525 (Eta)",
@@ -938,8 +940,6 @@ shinyServer(function(input, output, session) {
           labs(x = "Sample date",
                y = "Sequences"
           ) 
-        
-          
 
         max_date <- lineages_weeks_uk %$% max(`Start date`)
         
@@ -1107,12 +1107,8 @@ shinyServer(function(input, output, session) {
     }) 
     
     output$map <- renderPlotly({
-      
-      y<- map_weekInput() 
-      ggplotly(y + theme(legend.position = 'bottom')) %>% layout(legend = list(orientation = "h", x = -0.5, y =-1))
-      
-      
+      y <- map_weekInput() 
+      ggplotly(y + theme(legend.position = 'bottom')) %>% 
+        layout(legend = list(orientation = "h", x = -0.5, y =-1))
     })
-    
-    
 })
