@@ -624,7 +624,7 @@ dashboardPage(
             
             tabItem(tabName = "ronapreve",
                     fluidRow(
-                        box(title = "Combinations of spike amino acid substitutions that may affect confer resistance to antibodies in the therapeutical antibody cocktail, Ronapreve.", closable = FALSE, width = 12,
+                        box(title = "Combinations of spike amino acid substitutions that may confer resistance to antibodies in the therapeutical antibody cocktail, Ronapreve.", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("pills"),
                             h4(textOutput("title_ronapreve", inline = TRUE), class = "text-center"),
                             imageOutput("ronapreve_plot", width = "100%", height = "100%"),
