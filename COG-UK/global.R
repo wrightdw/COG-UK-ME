@@ -83,7 +83,7 @@ lineages_t3 <-
     "P.3" = "The Philippines. Δ141-143, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases Δ243-244. WHO label: <strong>Theta</strong>.",
     
     "B.1.617.1" = "India. E154K, L452R, E484Q and P681R. WHO label: <strong>Kappa</strong>.",
-    "B.1.617.2" = "India. T19R, Δ156-157, R158G, L452R, T478K, D614G, P681R and D950N. WHO label: <strong>Delta</strong>.",
+    "B.1.617.2" = "India. T19R, G142D, Δ156-157, R158G, L452R, T478K, D614G, P681R and D950N. WHO label: <strong>Delta</strong>.",
     "B.1.617.3" = "India. T19R, Δ156-158, L452R, E484Q, D614G, P681R and D950N.",
     "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V and D1139H.",
     "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S.",
@@ -92,8 +92,8 @@ lineages_t3 <-
     "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H. WHO label: <strong>Mu</strong>.",
     
     "AY.4" = "Alias of B.1.617.2.4, UK. WHO label: <strong>Delta</strong>.",
-    "AY.4.2" = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. Alias of  B.1.617.2.4.2. WHO label: <strong>Delta</strong>.",
-    "AY.4.2.1" = "Alias of  B.1.617.2.4.2.1. WHO label: <strong>Delta</strong>.",
+    "AY.4.2" = "Subineage of AY.4 with the addition of Y145H and A222V. Alias of  B.1.617.2.4.2. WHO label: <strong>Delta</strong>.",
+    "AY.4.2.1" = "Sublineage of AY.4.2 with the addition of V36F. Alias of  B.1.617.2.4.2.1. WHO label: <strong>Delta</strong>.",
     
     "P.1" = " Japan ex Brazil. L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I. WHO label: <strong>Gamma</strong>.",
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
