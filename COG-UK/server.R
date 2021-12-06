@@ -1111,4 +1111,11 @@ shinyServer(function(input, output, session) {
       ggplotly(y + theme(legend.position = 'bottom')) %>% 
         layout(legend = list(orientation = "h", x = -0.5, y =-1))
     })
+  
+  output$omicron_table <- renderUI({
+      tags$embed(seamless="seamless", 
+                  src= "Omicron_2.htm",
+                  width=1600, 
+                  height=1200)
+    })
 })
