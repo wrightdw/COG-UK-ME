@@ -43,6 +43,7 @@ dashboardPage(
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
             menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
+            menuItem("Omicron and mAb", tabName = "omicron", icon = icon("disease")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -691,7 +692,17 @@ dashboardPage(
                                   ) # end of box
                             )
 
-)
+),
+tabItem(tabName = "omicron",
+         fluidRow(
+             box(title = "Possible effect of Omicron against mAbs", closable = FALSE, width = 12,
+                 status = "info", collapsible = FALSE, icon = icon("map")
+                 ,fluidRow(
+                     p("The table shows the fold reduction in neutralisation by monoclonal antibodies for circulating variants and single mutation spike profiles. Comparison between single mutation and full variant data indicates the role of each mutation in the evasion of the full variant. Some suggestion is made of the likely evasion profile of the Omicron (B.1.1.529) variant based on the mutations it contains. However, more definitive conclusions await clinical data and neutralisation assays involving the full virus."),
+                     htmlOutput("omicron_table"))
+             )
+         )
+) 
         ) # end map
     ), # end dashboardBody ##8a7967
     
