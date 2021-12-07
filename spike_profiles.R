@@ -62,8 +62,8 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
     spike_tab$N_f3[i] <- sum(viruses_f3$mutations == profile)
     spike_tab$N_f4[i] <- sum(viruses_f4$mutations == profile)
     spike_tab$N_56[i] <- sum(viruses_56$mutations == profile)
-    spike_tab$N_change[i] <- str_count(profile, ';') + 1
-    spike_tab$N_change_antigenic[i] <- str_count(viruses$muts_ab[viruses$mutations == profile][1], ';') + 1
+    spike_tab$N_change[i] <- stringr::str_count(profile, ';') + 1
+    spike_tab$N_change_antigenic[i] <- stringr::str_count(viruses$muts_ab[viruses$mutations == profile][1], ';') + 1
   }
   
   # Frequencies from counts
@@ -91,5 +91,13 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
   
   spike_tab <- spike_tab[,c('profile', 'N_change', 'N_change_antigenic', 'lineage',
                             'N', 'N_28', 'Growth', 'expansion')]
+  names(spike_tab) <- c('Profile',
+                        'Number of amino acid changes',
+                        'Number of antigenic changes',
+                        'lineage(s)',
+                        'Count',
+                        'Count in latest 28 days',
+                        'Change v prev. 28 days (%)',
+                        'Expansion')
   spike_tab
 }
