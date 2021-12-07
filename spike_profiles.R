@@ -1,3 +1,28 @@
+## Function: take mutations_uk format, filter to spike and get one row per virus
+virus_profiles <- function(mutation_df = NA, filter_date = NULL) {
+  mutation_df <- 
+    mutation_df %>% 
+    filter(gene == 'S')
+  
+  if(!is.null(filter_date)){
+    mutation_df %<>% 
+      filter(sample_date >= filter_date)
+  }
+  
+  mutation_df <- 
+    mutation_df %>%
+    mutate(epi_week = as.numeric(as.character(epi_week)))
+  
+  mutation_df <- mutation_df[,c('sequence_name', 'sample_date', 'epi_week',
+                                'epi_date', 'lineage', 'adm1', 'gene',
+                                'variant')]
+  
+  viruses <- dplyr::summarise(group_by(mutation_df, sequence_name, sample_date, epi_week,
+                                       epi_date, lineage, adm1),
+                              mutations = paste0(variant, collapse = ';'))
+  viruses
+}
+
 ## Function: take virus_df, a dataframe with list of mutations separated by ';' and sample dates
 spike_profiles <- function(viruses = NA, spike_period = 7) {
   
@@ -48,8 +73,9 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
                           Freq_f4 = NA,
                           Freq_56 = NA,
                           Growth = NA,
-                          N_change = NA,
-                          N_change_antigenic = NA)
+                          N_change = NA#,
+                          #N_change_antigenic = NA
+                          )
   
   for (i in 1:nrow(spike_tab)) {
     profile <- spike_tab$profile[i]
@@ -63,7 +89,7 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
     spike_tab$N_f4[i] <- sum(viruses_f4$mutations == profile)
     spike_tab$N_56[i] <- sum(viruses_56$mutations == profile)
     spike_tab$N_change[i] <- stringr::str_count(profile, ';') + 1
-    spike_tab$N_change_antigenic[i] <- stringr::str_count(viruses$muts_ab[viruses$mutations == profile][1], ';') + 1
+    #spike_tab$N_change_antigenic[i] <- stringr::str_count(viruses$muts_ab[viruses$mutations == profile][1], ';') + 1
   }
   
   # Frequencies from counts
@@ -86,18 +112,17 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
   spike_tab$Increase <- ifelse(spike_tab$Freq_28 > spike_tab$Freq_28p, 1, spike_tab$Increase)
   spike_tab$Increase <- ifelse(spike_tab$Freq_28p > spike_tab$Freq_28, 0, spike_tab$Increase)
   
-  # use column to put sign on 
+  # use column to put take absolute value of change and put sign on it
   spike_tab$expansion <- ifelse(spike_tab$Increase == 0, spike_tab$chi_2 - spike_tab$chi_2*2, spike_tab$chi_2)
   
-  spike_tab <- spike_tab[,c('profile', 'N_change', 'N_change_antigenic', 'lineage',
+  spike_tab <- spike_tab[,c('profile', 'N_change', 'lineage', 
                             'N', 'N_28', 'Growth', 'expansion')]
   names(spike_tab) <- c('Profile',
                         'Number of amino acid changes',
-                        'Number of antigenic changes',
                         'lineage(s)',
                         'Count',
                         'Count in latest 28 days',
-                        'Change v prev. 28 days (%)',
+                        'Change in Frequency vs. previous 28 days (%)',
                         'Expansion')
   spike_tab
 }
