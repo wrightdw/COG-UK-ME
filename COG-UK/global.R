@@ -122,9 +122,13 @@ vui_voc %<>%
 
 # VUI/VOC lineages with AY.x removed
 vui_voc_lineages <- 
-  vui_voc %$% 
-  levels(lineage) %>% 
-  str_subset("^AY\\.", negate = TRUE)
+  vui_voc %>% 
+  filter(!str_starts(lineage, fixed("AY."))) %>% 
+  mutate(across(c(lineage, lineage_display), fct_drop)) 
+
+vui_voc_lineages <- 
+  levels(vui_voc_lineages$lineage) %>% 
+  setNames(levels(vui_voc_lineages$lineage_display))
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe

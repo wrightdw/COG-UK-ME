@@ -699,7 +699,7 @@ shinyServer(function(input, output, session) {
       selected_variants <- input$variant_vui_voc
       vui_voc_lineages <- 
         vui_voc_lineages %>% 
-        append("Other Delta", after = 9) %>% 
+        append("Other Delta", after = which(. == "B.1.617.2")[1]) %>% 
         append("Other")
       
       if( "B.1.617.2" %in% input$variant_vui_voc && input$variant_delta != "B.1.617.2"){
@@ -760,21 +760,14 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                  "AV.1" = "AV.1", 
-                                  "B.1.1.318" = "B.1.1.318",
                                   "B.1.1.529" = "B.1.1.529 (Omicron)",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
-                                  "B.1.525" = "B.1.525 (Eta)",
-                                  "B.1.617.1" = "B.1.617.1 (Kappa)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                   "Other Delta" = "Other Delta",
                                   "AY.4" = "AY.4/AY.4.x (Delta)",
                                   "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
-                                  "B.1.617.3" = "B.1.617.3",
                                   "P.1" = "P.1 (Gamma)",
-                                  "P.2" = "P.2 (Zeta)",
-                                  "P.3" = "P.3 (Theta)",
                                   "Other" = "Other"
                                   )) %>% 
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
@@ -900,21 +893,14 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                         "AV.1" = "AV.1", 
-                                         "B.1.1.318" = "B.1.1.318",
                                          "B.1.1.529" = "B.1.1.529 (Omicron)",
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
-                                         "B.1.525" = "B.1.525 (Eta)",
-                                         "B.1.617.1" = "B.1.617.1 (Kappa)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                          "Other Delta" = "Other Delta",
                                          "AY.4" = "AY.4/AY.4.x (Delta)",
                                          "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
-                                         "B.1.617.3" = "B.1.617.3",
                                          "P.1" = "P.1 (Gamma)",
-                                         "P.2" = "P.2 (Zeta)",
-                                         "P.3" = "P.3 (Theta)",
                                          "Other" = "Other"
           )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)

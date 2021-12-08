@@ -1335,8 +1335,7 @@ vui_voc <-
   read_csv(params$vui_voc_csv) %>% 
   filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
   select(-gene, -details_gene, -non_syn) %>% 
-  mutate(across(lineage, as_factor)) %>% 
-  mutate(across(lineage, ~fct_relevel(.x, sort)))
+  mutate(across(c(lineage, lineage_display), as_factor)) 
 
 vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
 ```

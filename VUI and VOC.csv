@@ -1,105 +1,105 @@
-non_syn,gene,mutation,details_gene,lineage
-aa,orf1ab,T183I,nsp3,B.1.1.7
-aa,orf1ab,A890D,nsp3,B.1.1.7
-aa,orf1ab,I1412T,nsp3,B.1.1.7
-del,orf1ab,11288:9,nsp6,B.1.1.7
-del,S,21765:6,,B.1.1.7
-del,S,21991:3,,B.1.1.7
-aa,S,N501Y,,B.1.1.7
-aa,S,A570D,,B.1.1.7
-aa,S,P681H,,B.1.1.7
-aa,S,T716I,,B.1.1.7
-aa,S,S982A,,B.1.1.7
-aa,S,D1118H,,B.1.1.7
-aa,Orf8,Q27*,,B.1.1.7
-aa,Orf8,R52I,,B.1.1.7
-aa,Orf8,Y73C,,B.1.1.7
-aa,N,D3L,,B.1.1.7
-aa,N,S235F,,B.1.1.7
-aa,E,P71L,,B.1.351
-aa,N,T205I,,B.1.351
-aa,S,D80A,,B.1.351
-aa,S,D215G,,B.1.351
-aa,S,K417N,,B.1.351
-aa,S,A701V,,B.1.351
-aa,S,N501Y,,B.1.351
-aa,S,E484K,,B.1.351
-aa,orf1ab,T85I,nsp2,B.1.351
-aa,orf1ab,K837N,nsp3,B.1.351
-aa,orf1ab,K90R,nsp5,B.1.351
-aa,orf1ab,Q57H,orf3a,B.1.351
-aa,orf1ab,S171L,orf3a,B.1.351
-del,S,22281:9,,B.1.351
-aa,orf1ab,11288:9,nsp6,B.1.351
-aa,orf1ab,S370L,nsp3,P.1
-aa,orf1ab,K977Q,nsp3,P.1
-del,orf1ab,11288:9,nsp6,P.1
-aa,S,L18F,,P.1
-aa,S,T20N,,P.1
-aa,S,P26S,,P.1
-aa,S,D138Y,,P.1
-aa,S,R190S,,P.1
-aa,S,K417T,,P.1
-aa,S,E484K,,P.1
-aa,S,N501Y,,P.1
-aa,S,H655Y,,P.1
-aa,S,T1027I,,P.1
-aa,orf3a,G174C,,P.1
-aa,orf8,E92K,,P.1
-aa,N,P80R,,P.1
-ins,.,28262:4,intergene,P.1
-aa,S,T19R,,B.1.617.2
-aa,S,L452R,,B.1.617.2
-aa,S,T478K,,B.1.617.2
-aa,S,D614G,,B.1.617.2
-aa,S,P681R,,B.1.617.2
-aa,S,D950N,,B.1.617.2
-aa,S,R158G,,B.1.617.2
-aa,S,G142D,,B.1.617.2
-aa,S,T19R,,AY.4
-aa,S,L452R,,AY.4
-aa,S,T478K,,AY.4
-aa,S,D614G,,AY.4
-aa,S,P681R,,AY.4
-aa,S,D950N,,AY.4
-aa,S,R158G,,AY.4
-aa,S,G142D,,AY.4
-aa,S,T19R,,AY.4.2
-aa,S,L452R,,AY.4.2
-aa,S,T478K,,AY.4.2
-aa,S,D614G,,AY.4.2
-aa,S,P681R,,AY.4.2
-aa,S,D950N,,AY.4.2
-aa,S,R158G,,AY.4.2
-aa,S,G142D,,AY.4.2
-aa,S,A222V,,AY.4.2
-aa,S,Y145H,,AY.4.2
-aa,S,A67V,,B.1.1.529
-aa,S,T95I,,B.1.1.529
-aa,S,G142D,,B.1.1.529
-aa,S,G339D,,B.1.1.529
-aa,S,S371L,,B.1.1.529
-aa,S,S373P,,B.1.1.529
-aa,S,S375F,,B.1.1.529
-aa,S,K417N,,B.1.1.529
-aa,S,N440K,,B.1.1.529
-aa,S,G446S,,B.1.1.529
-aa,S,S477N,,B.1.1.529
-aa,S,T478K,,B.1.1.529
-aa,S,E484A,,B.1.1.529
-aa,S,Q493R,,B.1.1.529
-aa,S,G496S,,B.1.1.529
-aa,S,Q498R,,B.1.1.529
-aa,S,N501Y,,B.1.1.529
-aa,S,Y505H,,B.1.1.529
-aa,S,T547K,,B.1.1.529
-aa,S,D614G,,B.1.1.529
-aa,S,H655Y,,B.1.1.529
-aa,S,N679K,,B.1.1.529
-aa,S,P61H,,B.1.1.529
-aa,S,N764K,,B.1.1.529
-aa,S,D796Y,,B.1.1.529
-aa,S,N856K,,B.1.1.529
-aa,S,Q954H,,B.1.1.529
-aa,S,N969K,,B.1.1.529
-aa,S,L981F,,B.1.1.529
+non_syn,gene,mutation,details_gene,lineage,lineage_display
+aa,S,A67V,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,T95I,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,G142D,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,G339D,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,S371L,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,S373P,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,S375F,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,K417N,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,N440K,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,G446S,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,S477N,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,T478K,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,E484A,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,Q493R,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,G496S,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,Q498R,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,N501Y,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,Y505H,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,T547K,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,D614G,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,H655Y,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,N679K,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,P61H,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,N764K,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,D796Y,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,N856K,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,Q954H,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,N969K,,B.1.1.529,B.1.1.529 (Omicron)
+aa,S,L981F,,B.1.1.529,B.1.1.529 (Omicron)
+aa,orf1ab,T183I,nsp3,B.1.1.7,B.1.1.7 (Alpha)
+aa,orf1ab,A890D,nsp3,B.1.1.7,B.1.1.7 (Alpha)
+aa,orf1ab,I1412T,nsp3,B.1.1.7,B.1.1.7 (Alpha)
+del,orf1ab,11288:9,nsp6,B.1.1.7,B.1.1.7 (Alpha)
+del,S,21765:6,,B.1.1.7,B.1.1.7 (Alpha)
+del,S,21991:3,,B.1.1.7,B.1.1.7 (Alpha)
+aa,S,N501Y,,B.1.1.7,B.1.1.7 (Alpha)
+aa,S,A570D,,B.1.1.7,B.1.1.7 (Alpha)
+aa,S,P681H,,B.1.1.7,B.1.1.7 (Alpha)
+aa,S,T716I,,B.1.1.7,B.1.1.7 (Alpha)
+aa,S,S982A,,B.1.1.7,B.1.1.7 (Alpha)
+aa,S,D1118H,,B.1.1.7,B.1.1.7 (Alpha)
+aa,Orf8,Q27*,,B.1.1.7,B.1.1.7 (Alpha)
+aa,Orf8,R52I,,B.1.1.7,B.1.1.7 (Alpha)
+aa,Orf8,Y73C,,B.1.1.7,B.1.1.7 (Alpha)
+aa,N,D3L,,B.1.1.7,B.1.1.7 (Alpha)
+aa,N,S235F,,B.1.1.7,B.1.1.7 (Alpha)
+aa,E,P71L,,B.1.351,B.1.351 (Beta)
+aa,N,T205I,,B.1.351,B.1.351 (Beta)
+aa,S,D80A,,B.1.351,B.1.351 (Beta)
+aa,S,D215G,,B.1.351,B.1.351 (Beta)
+aa,S,K417N,,B.1.351,B.1.351 (Beta)
+aa,S,A701V,,B.1.351,B.1.351 (Beta)
+aa,S,N501Y,,B.1.351,B.1.351 (Beta)
+aa,S,E484K,,B.1.351,B.1.351 (Beta)
+aa,orf1ab,T85I,nsp2,B.1.351,B.1.351 (Beta)
+aa,orf1ab,K837N,nsp3,B.1.351,B.1.351 (Beta)
+aa,orf1ab,K90R,nsp5,B.1.351,B.1.351 (Beta)
+aa,orf1ab,Q57H,orf3a,B.1.351,B.1.351 (Beta)
+aa,orf1ab,S171L,orf3a,B.1.351,B.1.351 (Beta)
+del,S,22281:9,,B.1.351,B.1.351 (Beta)
+aa,orf1ab,11288:9,nsp6,B.1.351,B.1.351 (Beta)
+aa,S,T19R,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,S,L452R,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,S,T478K,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,S,D614G,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,S,P681R,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,S,D950N,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,S,R158G,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,S,G142D,,B.1.617.2,B.1.617.2/AY.x (Delta)
+aa,orf1ab,S370L,nsp3,P.1,P.1 (Gamma)
+aa,orf1ab,K977Q,nsp3,P.1,P.1 (Gamma)
+del,orf1ab,11288:9,nsp6,P.1,P.1 (Gamma)
+aa,S,L18F,,P.1,P.1 (Gamma)
+aa,S,T20N,,P.1,P.1 (Gamma)
+aa,S,P26S,,P.1,P.1 (Gamma)
+aa,S,D138Y,,P.1,P.1 (Gamma)
+aa,S,R190S,,P.1,P.1 (Gamma)
+aa,S,K417T,,P.1,P.1 (Gamma)
+aa,S,E484K,,P.1,P.1 (Gamma)
+aa,S,N501Y,,P.1,P.1 (Gamma)
+aa,S,H655Y,,P.1,P.1 (Gamma)
+aa,S,T1027I,,P.1,P.1 (Gamma)
+aa,orf3a,G174C,,P.1,P.1 (Gamma)
+aa,orf8,E92K,,P.1,P.1 (Gamma)
+aa,N,P80R,,P.1,P.1 (Gamma)
+ins,.,28262:4,intergene,P.1,P.1 (Gamma)
+aa,S,T19R,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,L452R,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,T478K,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,D614G,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,P681R,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,D950N,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,R158G,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,G142D,,AY.4,AY.4/AY.4.x (Delta)
+aa,S,T19R,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,L452R,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,T478K,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,D614G,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,P681R,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,D950N,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,R158G,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,G142D,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,A222V,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
+aa,S,Y145H,,AY.4.2,AY.4.2/AY.4.2.x (Delta)
