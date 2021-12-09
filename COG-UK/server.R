@@ -775,10 +775,17 @@ shinyServer(function(input, output, session) {
         selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
         
-        if(input$Other_switch == TRUE){
+        if(input$Other_switch){
+          lineages_days_uk %<>% 
+            filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2] & Variant !="Other") 
+        } else {
+          lineages_days_uk %<>% 
+            filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2]) 
+        }
+        
         vui_voc_plot <- 
           lineages_days_uk %>% 
-                   filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2] & Variant !="Other") %>% 
+          filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Variant, y = Sequences, x = `Sample date`) ) +
           theme_classic() +
           
@@ -788,42 +795,15 @@ shinyServer(function(input, output, session) {
                                           # fix variant/colour combos plus extra colour for Other
                                           order = match(selected_variants, 
                                                         vui_voc_lineages) %>% c(vui_voc_lineages %>% length)
-                                          ) +
+          ) +
           
           scale_x_date(breaks = date_breaks("1 month"),
                        labels = date_format("%b %y")) +
-          # scale_x_date(breaks = date_breaks("2 months"),
-          #              minor_breaks = date_breaks("1 month"),
-          #              labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
                y = "Sequences"
-          )} else {
-            vui_voc_plot <- 
-              lineages_days_uk %>% 
-              filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2]) %>% 
-              ggplot(aes(fill = Variant, y = Sequences, x = `Sample date`) ) +
-              theme_classic() +
-              
-              scale_fill_discrete_qualitative(palette = "Dynamic", 
-                                              nmax = vui_voc_lineages %>% length , # extra colour for Other
-                                              
-                                              # fix variant/colour combos plus extra colour for Other
-                                              order = match(selected_variants, 
-                                                            vui_voc_lineages) %>% c(vui_voc_lineages %>% length)
-              ) +
-              
-              scale_x_date(breaks = date_breaks("1 month"),
-                           labels = date_format("%b %y")) +
-              # scale_x_date(breaks = date_breaks("2 months"),
-              #              minor_breaks = date_breaks("1 month"),
-              #              labels = date_format("%b %y")) +
-              theme(plot.title = element_text(hjust = 0.5)) +
-              labs(x = "Sample date",
-                   y = "Sequences"
-              ) 
-          } 
-        
+          ) 
+
         # display annotation from Sunday on 2nd last epiweek for consistency with weeks plot
         max_epi_date <- lineages_weeks_uk_all %$% max(epi_date) 
         
@@ -936,11 +916,17 @@ shinyServer(function(input, output, session) {
         selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
         
-        if(input$Other_switch == TRUE){
+        if(input$Other_switch){
+          lineages_weeks_uk %<>% 
+            filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2] & Variant !="Other")
+        } else {
+          lineages_weeks_uk %<>% 
+            filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2])
+        }
+        
         vui_voc_plot <- 
           lineages_weeks_uk %>% 
-         
-          filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2] & Variant !="Other") %>% 
+          filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2]) %>% 
           ggplot(aes(fill = Variant, y = Sequences, x = `Start date`) ) +
           theme_classic() +
           
@@ -958,33 +944,8 @@ shinyServer(function(input, output, session) {
           labs(x = "Sample date",
                y = "Sequences"
           ) 
-
-        max_date <- lineages_weeks_uk %$% max(`Start date`)
-        }else{
-          vui_voc_plot <- 
-            lineages_weeks_uk %>% 
-            
-            filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2]) %>% 
-            ggplot(aes(fill = Variant, y = Sequences, x = `Start date`) ) +
-            theme_classic() +
-            
-            scale_fill_discrete_qualitative(palette = "Dynamic", 
-                                            nmax = vui_voc_lineages %>% length , # extra colour for Other
-                                            
-                                            # fix variant/colour combos plus extra colour for Other
-                                            order = match(selected_variants, 
-                                                          vui_voc_lineages) %>% c(vui_voc_lineages %>% length) 
-            ) +
-            
-            scale_x_date(breaks = date_breaks("1 month"),
-                         labels = date_format("%b %y")) +
-            theme(plot.title = element_text(hjust = 0.5)) +
-            labs(x = "Sample date",
-                 y = "Sequences"
-            ) 
           
           max_date <- lineages_weeks_uk %$% max(`Start date`)
-        }
         
         # Set height of annotation box according to highest weekly total sequences
         if(input$variant_percentage){
