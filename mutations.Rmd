@@ -82,33 +82,37 @@ consortium_uk <-
   relocate(NUTS1,.after = adm1) %>% 
   type_convert 
 
-# Temporary fixes
-# exclude duplicate Delta sequences with incorrect dates in April 2020
+consortium_uk
+```
+```{r consortium_clean, include=FALSE}
+# Data cleaning:
+# Exclude duplicate Delta sequences with incorrect dates in April 2020
+# NUTS1 cleanup - correct NUTS1 missing or incorrect values
+# Correct to 2nd December
+  # England/PHEP-YYNQW43/2021	2021-11-02	97	2021-10-31	B.1.1.529
+  # to sample_date 2021-12-02 epi_week 101
 dodgy_delta <- 
   consortium_uk %>% 
   filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
 
-consortium_uk %<>% anti_join(dodgy_delta)
-
-# NUTS1 cleanup - correct NUTS1 missing or incorrect values
-consortium_uk %<>%
-  mutate(
+consortium_uk %<>% 
+  anti_join(dodgy_delta) %>% 
+  mutate( 
     NUTS1 = case_when(
       adm1 == "Scotland" ~ "Scotland",
       adm1 == "Wales" ~ "Wales",
       adm1 == "Northern_Ireland" ~ "Northern_Ireland",
       TRUE ~ NUTS1
     )
-  )
-
+  ) %>%
+  rows_update(tibble(sequence_name = "England/PHEP-YYNQW43/2021", sample_date = as.Date("2021-12-02"), epi_week = 101))
+  
 # Epidemic week / Sunday date conversion
 epi_lookup <-
   tibble(
     epi_date = seq(from = ymd("2020-01-26"), to = consortium_uk %$% max(sample_date), by = "week"),
     epi_week = seq(consortium_uk %$% min(epi_week), consortium_uk %$% max(epi_week))
   ) 
-# %T>% # lookup table of epi_week and Sunday date
-#   write_rds(str_c("COG-UK/", params$dataset_date, "/epi_lookup.rds"))
 
 epi_levels <- min(consortium_uk$epi_week):max(consortium_uk$epi_week) %>% as.character
 
@@ -117,7 +121,6 @@ consortium_uk %<>%
   relocate(epi_date, .after = epi_week) %>% 
   mutate(across(c(epi_week, adm1, NUTS1), as_factor)) %>%
   mutate(epi_week = fct_expand(epi_week, epi_levels) %>% fct_inseq) # expand factor levels to include any missing weeks
-
 
 consortium_uk
 ```
@@ -685,28 +688,25 @@ tcell <- read_csv(params$tcell_csv,
                           `Supporting references` = col_integer()
                   ))
 
-predictions <- read_tsv(params$predictions_tsv)
+predictions <- 
+  read_tsv(params$predictions_tsv)
 
 predictions %<>%
-  rename(
-    position = X1,
-    mutation = X2,
-    Epitope = X3,
-    `Start position` = X5,
-    `End position` = X6,
-    CD4_CD8 = X7,
-    HLA_prediction = X8) %>%
-  select(-(starts_with("X"))) %>%
+  select(
+    position,
+    mutation,
+    Epitope,
+    `Start position`,
+    `End position`,
+    CD4_CD8,
+    HLA_prediction,
+    `IC50 WT`,
+    IC50_mutation,
+    Fold
+    ) %>%
   mutate(gene = "S", .before = 1)
 
 tcell %<>%
-  # mutate (gene = recode(ORF,
-  #                       "Spike" = "S",
-  #                       "Nucleocapsid" = "N",
-  #                       "Membrane" = "M",
-  #                       "Envelope" = "E"),
-  #         .before = 1,
-  #         .keep = "unused") %>%
   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
   mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_")) # %>%
 
@@ -728,18 +728,14 @@ container_html <- function(summary_var){
 database_tcell <-
   database_genome %>%
   filter(gene == "S") %>%
-  # select(-gene) %>%
   select(gene,
          position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>%
-  # filter(`numSeqs UK` > 0) %>% # filter zero counts from predicted antibodies not observed in mutations
   fuzzy_inner_join(
     tcell,
     by = c(
-      # "gene" = "gene",
       "position" = "Start position",
       "position" = "End position"),
     match_fun = list(
-      # `==`,
       `>=`, `<=`))
 
 database_tcell_predictions <-
@@ -749,67 +745,6 @@ database_tcell_predictions <-
   mutate(across(c(gene, mutation, Epitope, CD4_CD8, HLA, assay), as_factor))
 
 database_tcell_predictions
-
-
-
-# tcell <- read_csv(params$tcell_csv,
-#                   col_types = cols(
-#                           `Start position` = col_integer(),
-#                           `End position` = col_integer(),
-#                           `Supporting references` = col_integer()
-#                   ))
-# 
-# predictions <- read_tsv(params$predictions_tsv) 
-# 
-# predictions %<>%
-#   rename(
-#     position = X1, 
-#     mutation = X2, 
-#     Epitope = X3, 
-#     `Start position` = X5, 
-#     `End position` = X6, 
-#     CD4_CD8 = X7,
-#     HLA_prediction = X8) %>% 
-#   select(-(starts_with("X")))
-# 
-# tcell %<>%
-#   mutate(HLA_prediction = str_replace(HLA, "\\*", "")) %>%
-#   mutate(HLA_prediction = str_replace(HLA_prediction, "^DRB1", "DRB1_"))
-# 
-# nested_html <- function(summary_var){
-#   summary_var %>% 
-#     unique %>% 
-#     map(function(i) div(i, class = "nested-row")) %>% 
-#     div(class = "nested-container") %>% 
-#     as.character()
-# }
-# 
-# container_html <- function(summary_var){
-#   summary_var %>% 
-#     map(function(i) div(HTML(i), class = "cell-row")) %>% 
-#     div(class = "cell-container") %>% 
-#     as.character()
-# }
-# 
-# database_tcell <-
-#   database_genome %>% 
-#   filter(gene == "S") %>% 
-#   select(-gene) %>% 
-#   select(position, mutation, `numSeqs UK`, `numSeqs UK 28 days`) %>% 
-#   # filter(`numSeqs UK` > 0) %>% # filter zero counts from predicted antibodies not observed in mutations
-#   fuzzy_inner_join(
-#     tcell,
-#     by = c("position" = "Start position",
-#            "position" = "End position"),
-#     match_fun = list(`>=`, `<=`))
-# 
-# database_tcell_predictions <- 
-#   database_tcell %>% 
-#   left_join(predictions) %>% 
-#   select(-HLA_prediction) %>% 
-#   mutate(across(c(mutation, Epitope, CD4_CD8, HLA, assay), as_factor)) 
-# 
-# database_tcell_predictions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
 
 ```
 ## Functional
@@ -1333,7 +1268,6 @@ df
 ```{r vui_voc}
 vui_voc <-
   read_csv(params$vui_voc_csv) %>% 
-  filter(non_syn == "aa" & gene == "S" & lineage != "B.1.617") %>% # B.1.617 no longer used - reassigned to clades
   select(-gene, -details_gene, -non_syn) %>% 
   mutate(across(c(lineage, lineage_display), as_factor)) 
 
