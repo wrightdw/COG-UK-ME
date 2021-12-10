@@ -56,7 +56,6 @@ lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = 
       is.null(variant2) ~mutate(., variant = !!variant),
       ~mutate(., variant = str_c(!!variant, " + ", !!variant2))
     ) 
-  
 }
 
 ## Table functions
@@ -84,69 +83,6 @@ table_1 <- function(){
            `Date of first detection in UK` = earliest) 
 }
 
-# no longer used
-table_2 <- function(){
-  n_uk_lineages_all %>% 
-    filter(    
-      (variant == "D614G" & lineage == "B.1" ) | 
-                 
-     (variant == "A222V" & lineage == "B.1.177" ) | 
-     
-     (variant == "N439K" & lineage == "B.1.141" ) | 
-     (variant == "N439K" & lineage == "B.1.258" ) |
-     (variant == "N439K + ∆69-70" & lineage == "B.1.258" ) |
-     
-     (variant == "∆69-70" & lineage == "B.1.1" ) |
-     (variant == "∆69-70" & lineage == "B.1.258" ) |
-     
-     (variant == "N501Y + ∆69-70" & lineage == "B.1.1.7" ) |
-     (variant == "N501Y" & lineage == "B.1.1.70" ) |
-     
-     (variant == "Y453F" & lineage == "B.1.1" ) |
-     (variant == "Y453F" & lineage == "B.1.1.298" ) |
-     
-     (variant == "E484K" & lineage == "B.1.351" ) |
-     (variant == "E484K" & lineage == "P.2" ) |
-     (variant == "E484K" & lineage == "P.1" ) |
-     (variant == "E484K" & lineage == "A.23.1" ) |
-     (variant == "E484K" & lineage == "B.1.1.119" ) |
-     (variant == "E484K" & lineage == "B.1.177.4" ) |
-     (variant == "E484K" & lineage == "B.1.222" ) |
-     (variant == "E484K" & lineage == "B.1.177" ) |
-     (variant == "E484K" & lineage == "B.1" ) |
-     (variant == "E484K" & lineage == "B.1.525" ) |
-     
-     (variant == "N501Y + E484K" & lineage == "B.1.351") |
-     (variant == "N501Y + E484K" & lineage == "B.1.1.7")) %>% 
-    relocate(variant) %>% 
-    relocate(n_sequences_UK, .after = lineage) %>% 
-    mutate(`UK (%)` = n_sequences_UK / total_sequences,
-           .after = n_sequences_UK) %>%
-    relocate(n_sequences_28_UK, .after = `UK (%)`) %>% 
-    mutate(`UK 28 days (%)` = n_sequences_28_UK / total_sequences_28,
-           .after = n_sequences_28_UK) %>%
-    relocate(n_sequences_28_England, .after = n_sequences_England) %>% 
-    relocate(n_sequences_28_Northern_Ireland, .after = n_sequences_Northern_Ireland) %>% 
-    relocate(n_sequences_28_Scotland, .after = n_sequences_Scotland) %>% 
-    relocate(n_sequences_28_Wales, .after = n_sequences_Wales) %>% 
-    arrange(variant, lineage) %>% 
-    rename(Mutation = variant, 
-           `Lineage` = lineage, 
-           `UK` = n_sequences_UK, 
-           `UK 28 days` = n_sequences_28_UK,
-           
-           England = n_sequences_England,
-           `Northern Ireland` = n_sequences_Northern_Ireland,
-           Scotland = n_sequences_Scotland,
-           Wales = n_sequences_Wales,
-           
-           `England 28 Days` = n_sequences_28_England,
-           `Northern Ireland 28 Days` = n_sequences_28_Northern_Ireland,
-           `Scotland 28 Days` = n_sequences_28_Scotland,
-           `Wales 28 Days` = n_sequences_28_Wales
-    )
-}
-
 # Variants
 table_3 <- function(){
   bind_rows(
@@ -170,10 +106,6 @@ table_3 <- function(){
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>%
       mutate(reason = "As B.1.1.7, with the addition of S494P."),
     
-    # lineage_plus_variant(lineage = "AY.4", variant = "A222V", variant2 = "Y145H") %>% # for non-key double mutations
-    #   mutate(lineage = 'AY.4.2', .keep = "unused") %>%
-    #   mutate(reason = "Sublineage of interest carrying a further set of mutations. As AY.4, with the addition of Y145H and A222V. <strong>Note</strong>: Lineage is temporarily undercounted due to sequencing aftefact"),
-
     n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.324.1") %>%
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
@@ -466,20 +398,6 @@ shinyServer(function(input, output, session) {
         
     })
     
-    # output$functional <- renderDT({
-    #   functional %>% 
-    #     arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`)) %>% 
-    #     select(gene, variant, Epitope, `CD4/CD8`, `HLA type`, `funtional observation`, `numSeqs UK`, `numSeqs UK 28 days`, anchor) %>%
-    #     rename_with(str_to_title, c(gene)) %>%
-    #     rename(`Amino acid replacement` = variant,
-    #            `Cumulative sequences in UK` = `numSeqs UK`,
-    #            `Sequences over 28 days` = `numSeqs UK 28 days`,
-    #            `Reference` = anchor
-    #     ) %>% 
-    #     datatable(filter = "none", escape = FALSE, rownames = FALSE, 
-    #             options = list(dom = 't', paging = FALSE, scrollX = TRUE)) 
-    # })
-    
     # always display wild type on percentage chart
     observeEvent(input$percentage, {
       if(input$percentage){
@@ -695,7 +613,10 @@ shinyServer(function(input, output, session) {
     })
     
     variant_plot <- reactive({
-      
+      # only generate plot if variant selected and exclude other switch is off
+      if(is.null(input$variant_vui_voc) && input$other_switch){
+        ggplot() + theme_void()
+      } else {
       selected_variants <- input$variant_vui_voc
       vui_voc_lineages <- 
         vui_voc_lineages %>% 
@@ -752,6 +673,7 @@ shinyServer(function(input, output, session) {
           mutate(lineage = "Other", .before = sample_date) %>% 
           ungroup
         
+        # TODO legend names from vui_voc$lineage_display
         lineages_days_uk <- 
           lineages_days_uk_all %>% 
           filter(lineage %in% selected_variants) %>% 
@@ -760,7 +682,7 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                  "B.1.1.529" = "B.1.1.529 (Omicron)",
+                                  "BA.1" = "BA.1 (Omicron)",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -775,7 +697,7 @@ shinyServer(function(input, output, session) {
         selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
         
-        if(input$Other_switch){
+        if(input$other_switch){
           lineages_days_uk %<>% 
             filter(`Sample date` >= input$variant_range[1] & `Sample date` <= input$variant_range[2] & Variant !="Other") 
         } else {
@@ -833,13 +755,11 @@ shinyServer(function(input, output, session) {
         }
         
         if(input$variant_percentage){
-          disable("Other_switch")
           vui_voc_plot <- 
             vui_voc_plot +
             geom_bar(position="fill", stat="identity", width = 1) +
             scale_y_continuous(labels = scales::percent_format())
         } else {
-          enable("Other_switch")
           vui_voc_plot <- 
             vui_voc_plot + 
             geom_bar(position="stack", stat="identity", width = 1) +
@@ -892,7 +812,8 @@ shinyServer(function(input, output, session) {
           summarise(n_week = sum(n_week)) %>% 
           mutate(lineage = "Other", .before = epi_date) %>% 
           ungroup
-                
+        
+        # TODO legend names from vui_voc$lineage_display
         lineages_weeks_uk <- 
           lineages_weeks_uk_all %>% 
           filter(lineage %in% selected_variants) %>% 
@@ -901,7 +822,7 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                         "B.1.1.529" = "B.1.1.529 (Omicron)",
+                                         "BA.1" = "BA.1 (Omicron)",
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -916,7 +837,7 @@ shinyServer(function(input, output, session) {
         selected_variants <- replace(selected_variants, selected_variants %in% c("Delta_minus_AY.4.2", "Delta_minus_AY.4"), "Other Delta") 
         selected_variants <- replace(selected_variants, selected_variants == "B.1.617.2", input$variant_delta)
         
-        if(input$Other_switch){
+        if(input$other_switch){
           lineages_weeks_uk %<>% 
             filter(`Start date` >= input$variant_range[1] & `Start date` <= input$variant_range[2] & Variant !="Other")
         } else {
@@ -992,11 +913,46 @@ shinyServer(function(input, output, session) {
         vui_voc_plot
       } # end else by day
       vui_voc_plot
+      
+      } # end if other switch
     }) %>% debounce(500)
     
     output$variant_time <- renderPlotly({
       variant_plot() %>% ggplotly
     })
+    
+    # if no variants selected, disable and turn off Exclude Other
+    # if variants are selected, enable
+    observeEvent(input$variant_vui_voc, {
+      state <- !is.null(input$variant_vui_voc)
+      toggleState("other_switch", condition = state)
+      if(!state){
+        updatePrettySwitch(
+          session = session,
+          inputId = "other_switch",
+          value = state
+        )
+      }
+    }, ignoreNULL = FALSE)
+    
+    # if percentage is turned on, disable and turn off exclude other
+    observeEvent(input$variant_percentage, {
+      toggleState("other_switch", condition = !input$variant_percentage)
+      if(input$variant_percentage){
+        updatePrettySwitch(
+          session = session,
+          inputId = "other_switch",
+          value = FALSE
+        )
+      }
+    })
+    
+    # observe({
+    #   if(!input$variant_percentage && is.null(input$variant_vui_voc)){
+    #     print("in observer")
+    #     disable(input$other_switch)
+    #   }
+    # })
     
     ########### Ronapreve plot
     # always display wild type on percentage chart
@@ -1019,7 +975,6 @@ shinyServer(function(input, output, session) {
     })
     
     ########### Map and geographical distribution of variants
-    #
     
     # observeEvent(input$variant_map, {
     #   updateSelectizeInput(session, 
@@ -1028,7 +983,6 @@ shinyServer(function(input, output, session) {
     #                          filter(lineage == input$variant_map) %>% 
     #                          distinct(variant))
     # })
-    
     
     map_weekInput <- reactive({
       # if((input$antigenic_mutation) == ""){ # if input is empty show only lineages

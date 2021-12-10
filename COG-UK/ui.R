@@ -52,7 +52,7 @@ dashboardPage(
             hr(),
             prettySwitch("variant_percentage", "Percentage", FALSE, status = "info", fill = TRUE),
             prettySwitch("variant_day", "By day", FALSE, status = "info", fill = TRUE),
-            prettySwitch("Other_switch", "Exclude Other", FALSE, status = "info", fill = TRUE),
+            prettySwitch("other_switch", "Exclude Other", FALSE, status = "info", fill = TRUE),
             prettyCheckboxGroup("variant_vui_voc", "Variant:",
                                 vui_voc_lineages,
                                 selected = c("B.1.1.7", "B.1.617.2"),
