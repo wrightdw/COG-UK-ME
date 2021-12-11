@@ -451,9 +451,8 @@ shinyServer(function(input, output, session) {
       mutation_reference_plot
     }) 
     
-    # mutation plot by percentage or count
+    # Mutation plot by percentage or count
     mutation_plot_bar <- reactive({
-      
       max_date <- mutation_reference_counts %$% max(epi_date)
       gg_bar <- mutation_plot()
       
@@ -922,7 +921,7 @@ shinyServer(function(input, output, session) {
     })
     
     # if no variants selected, disable and turn off Exclude Other
-    # if variants are selected, enable
+    # else variants are selected, enable
     observeEvent(input$variant_vui_voc, {
       state <- !is.null(input$variant_vui_voc)
       toggleState("other_switch", condition = state)
@@ -935,9 +934,19 @@ shinyServer(function(input, output, session) {
       }
     }, ignoreNULL = FALSE)
     
-    # if percentage is turned on, disable and turn off exclude other
+    # Observer for variant Percentage switch to enable/disable and change state of Exclude Other switch
     observeEvent(input$variant_percentage, {
-      toggleState("other_switch", condition = !input$variant_percentage)
+      
+      # if percentage on, OR if percentage off and no variants selected, disable Exlude Other
+      # else if percentage off and variants selected, enable Exclude Other
+      # toggleState("other_switch", condition = !input$variant_percentage)
+      if(input$variant_percentage || (!input$variant_percentage && is.null(input$variant_vui_voc)) ){
+        disable("other_switch")
+      } else {
+        enable("other_switch")
+      }
+      
+      # percentage off, also turn off Exclude Other
       if(input$variant_percentage){
         updatePrettySwitch(
           session = session,
@@ -946,13 +955,6 @@ shinyServer(function(input, output, session) {
         )
       }
     })
-    
-    # observe({
-    #   if(!input$variant_percentage && is.null(input$variant_vui_voc)){
-    #     print("in observer")
-    #     disable(input$other_switch)
-    #   }
-    # })
     
     ########### Ronapreve plot
     # always display wild type on percentage chart
