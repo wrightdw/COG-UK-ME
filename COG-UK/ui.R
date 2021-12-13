@@ -617,9 +617,10 @@ dashboardPage(
             # Spike Profiles tab
             tabItem(tabName = "spike_profiles",
                     fluidRow(
-                        box(title = "Spike profile expansion and contraction",
+                        box(title = "Spike profile expansion and contraction", 
+                            width = 12,
                             collapsible = FALSE,
-                            plotlyOutput("spikesPlot_count28", height = 500))
+                            plotlyOutput("spikePlot_count28", height = 500))
                     )
                     ,
                     
