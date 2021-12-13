@@ -20,9 +20,9 @@ get_dataset_date <- function(rollover = 7){
 }
 
 # Dataset directories are named according to date e.g. "2021-11-24".
-# if after 7am, use yesterday
-# else before 7am, use 2 days ago
-dataset_date <- get_dataset_date()
+# if after midnight, use yesterday
+# else before midnight, use 2 days ago
+dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
 # dataset_date <- as.Date("2021-12-11")
