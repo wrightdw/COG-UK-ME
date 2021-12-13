@@ -185,6 +185,51 @@ table_therapeutics <- function(){
   ) 
 }
 
+### spike profiles start
+spike_tab$Profile <- gsub(';', ', ', spike_tab$Profile)
+
+# identify where 0 is in range of expansion
+col_min <- -0.022
+col_max <- 0.02
+zero_percentile <- (0 - col_min) / (col_max - col_min)
+
+# Generate ggplot object - ggplotly() will read this lower in script
+spikesPlot_count28 <- ggplot(spike_tab[order(abs(spike_tab$Expansion), decreasing = F),],
+                             aes(x = `Count in latest 28 days`, y = Expansion, col = Expansion,
+                                 text = paste('</br>Profile: ', Profile,
+                                              '</br>Count 28 days = ', `Count in latest 28 days`,
+                                              '</br>Lineage(s) = ', `lineage(s)`))) +
+  geom_point() +
+  scale_x_continuous(trans = 'log',
+                     breaks = c(1, 10, 100, 1000, 10000)) +
+  scale_y_continuous(limits = c(-0.022, 0.02),
+                     breaks = seq(-0.1, 0.1, 0.005)) +
+  scale_color_gradientn(limits = c(col_min, col_max),
+                        values = c(0, zero_percentile - 0.02,
+                                   zero_percentile, zero_percentile + 0.02, 1),
+                        colours = c('dodgerblue4', 'lightblue1', 'grey90', 'coral', 'firebrick4')) +
+  labs(x = 'Count of sequences over latest 28-day period',
+       y = 'Expansion/contraction',
+       col = 'Expansion/\nContraction') +
+  theme_minimal() +
+  theme(text = element_text(size = 13))
+
+# create 'spike_table' slightly re-formatted version of spike_tab for datatable()
+spike_table <- spike_tab
+# rounding
+spike_table$`Change in Frequency vs. previous 28 days (%)` <- round(spike_table$`Change in Frequency vs. previous 28 days (%)`, 2)
+spike_table$Expansion <- signif(spike_table$Expansion, 4)
+# column re-naming for display
+names(spike_table)[2] <- 'Amino acid substitutions'
+names(spike_table)[4] <- 'UK total'
+names(spike_table)[5] <- 'UK 28 days'
+names(spike_table)[6] <- 'Frequency change vs. prev 28 days (%)'
+names(spike_table)[7] <- 'Expansion/ contraction'
+# order from greatest expanding to greatest contraction for default display
+spike_table <- spike_table[order(spike_table$`Expansion/ contraction`, decreasing = T),]
+
+### spike profiles end
+
 shinyServer(function(input, output, session) {
 
     output$table_1 <- renderDataTable({
@@ -1078,4 +1123,14 @@ shinyServer(function(input, output, session) {
                   width=1600, 
                   height=1200)
     })
+  
+  ### 'Spike profiles' tab - outputs
+  output$spikePlot_count28 <- renderPlotly({
+    ggplotly(spikesPlot_count28, tooltip = c("text"))
+  })
+  
+  output$spikeTable <- renderDataTable({
+    datatable(spike_table, options = list(lengthMenu = c(20, 50, 100, 200)), rownames = FALSE) 
+  })
+  ### 'Spike profiles' tab - end
 })

@@ -40,6 +40,7 @@ dashboardPage(
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
             menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
+            menuItem("Spike Profiles", icon = icon("eye"), tabName = "spike_profiles"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
             menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
@@ -610,7 +611,27 @@ dashboardPage(
                                )
                         )
                     )
-            ), # end tabItem t_cell 
+            ), # end tabItem t_cell
+            
+            
+            # Spike Profiles tab
+            tabItem(tabName = "spike_profiles",
+                    fluidRow(
+                        box(title = "Spike profile expansion and contraction",
+                            collapsible = FALSE,
+                            plotlyOutput("spikesPlot_count28", height = 500))
+                    )
+                    ,
+                    
+                    fluidRow(
+                        box(title = "Spike profiles detected in the UK during the last week", closable = FALSE, width = 12,
+                            status = "info", collapsible = FALSE, icon = icon("table"),
+                            p("Count of amino acid substitutions is shown relative to Wuhan-Hu-1."),
+                            dataTableOutput("spikeTable")
+                        )
+                    )
+            ), # end tabitem spike_profiles
+            
             
             tabItem(tabName = "therapeutics",
                     fluidRow(
