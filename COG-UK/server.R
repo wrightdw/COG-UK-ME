@@ -189,8 +189,8 @@ table_therapeutics <- function(){
 spike_tab$Profile <- gsub(';', ', ', spike_tab$Profile)
 
 # identify where 0 is in range of expansion
-col_min <- -0.022
-col_max <- 0.02
+col_min <- min(c(-0.02, plyr::round_any(min(spike_tab$Expansion), 0.005, floor)))
+col_max <- max(c(0.02, plyr::round_any(max(spike_tab$Expansion), 0.005, ceiling)))
 zero_percentile <- (0 - col_min) / (col_max - col_min)
 
 # Generate ggplot object - ggplotly() will read this lower in script
