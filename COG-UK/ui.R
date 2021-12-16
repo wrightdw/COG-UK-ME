@@ -287,42 +287,42 @@ dashboardPage(
                         ),
                         
                         column(width = 6,
-                               box(title = "Spike protein mutations (Omicron: B.1.1.529)", closable = FALSE, width = NULL, 
+                               box(title = "Spike protein mutations (Omicron: BA.1)", closable = FALSE, width = NULL, 
                                    status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                   img(src = "mutants_lineage_B.1.1.529_web.png", class = "center-block img-responsive"))
+                                   img(src = "mutants_BA.1_ME_web.png", 
+                                       class = "center-block img-responsive", 
+                                       alt = "Omicron BA.1 spike structure with mutations"))
                         )
                     ),
                     
                     fluidRow(
                         box(title = "Spike protein mutations (Alpha: B.1.1.7)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "lineage_B.1.1.7_web.png", 
+                            img(src = "mutants_B.1.1.7_ME_web.png", 
                                 class = "center-block img-responsive", 
-                                height = 480,
-                                alt = "B.1.1.7 spike structure with mutations")),
+                                # height = 480,
+                                alt = "Alpha B.1.1.7 spike structure with mutations")),
                         
                         box(title = "Spike protein mutations (Delta: B.1.617.2)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "mutants_lineage_B.1.617.2_web.png", 
+                            img(src = "mutants_B.1.617.2_ME_web.png", 
                                 class = "center-block img-responsive", 
-                                height = 480,
-                                alt = "B.1.617.2 spike structure with mutations"))
+                                # height = 480,
+                                alt = "Delta B.1.617.2 spike structure with mutations"))
                     ), 
                     
                     fluidRow(
                         box(title = "Spike protein mutations (Beta: B.1.351)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"), 
-                            img(src = "mutants_lineage_B.1.351_web.png", 
+                            img(src = "mutants_B.1.351_ME_web.png", 
                                 class = "center-block img-responsive", 
-                                height = 480,
-                                alt = "B.1.351 spike structure with mutations")),
+                                alt = "Beta B.1.351 spike structure with mutations")),
                         
                         box(title = "Spike protein mutations (Gamma: P.1)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "mutants_lineage_P.1_web.png", 
+                            img(src = "mutants_P.1_ME_web.png", 
                                 class = "center-block img-responsive", 
-                                height = 480, 
-                                alt = "P.1 spike structure with mutations"))
+                                alt = "Gamma P.1 spike structure with mutations"))
                     )
             ),
             
