@@ -187,10 +187,14 @@ table_therapeutics <- function(){
 
 ### spike profiles start
 spike_tab$Profile <- gsub(';', ', ', spike_tab$Profile)
+# create 'spike_table' slightly re-formatted version of spike_tab for datatable()
+spike_table <- spike_tab
+# hack to allow display of all omicron profile subs 
+spike_tab$Profile <- gsub('Y505H, T547K', 'Y505H,\nT547K', spike_tab$Profile)
 
 # identify where 0 is in range of expansion
-col_min <- -0.022
-col_max <- 0.02
+col_min <- min(c(-0.02, plyr::round_any(min(spike_tab$Expansion), 0.005, floor)))
+col_max <- max(c(0.02, plyr::round_any(max(spike_tab$Expansion), 0.005, ceiling)))
 zero_percentile <- (0 - col_min) / (col_max - col_min)
 
 # Generate ggplot object - ggplotly() will read this lower in script
@@ -214,9 +218,8 @@ spikesPlot_count28 <- ggplot(spike_tab[order(abs(spike_tab$Expansion), decreasin
   theme_minimal() +
   theme(text = element_text(size = 13))
 
-# create 'spike_table' slightly re-formatted version of spike_tab for datatable()
-spike_table <- spike_tab
-# rounding
+
+# rounding for table
 spike_table$`Change in Frequency vs. previous 28 days (%)` <- round(spike_table$`Change in Frequency vs. previous 28 days (%)`, 2)
 spike_table$Expansion <- signif(spike_table$Expansion, 4)
 # column re-naming for display
