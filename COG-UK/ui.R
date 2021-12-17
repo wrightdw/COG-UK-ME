@@ -140,10 +140,13 @@ dashboardPage(
     )),
     
     body = dashboardBody(
-        useShinyjs(), # set up the dashboard to use shinyjs  
+        useShinyjs(), # set up the dashboard to use shinyjs 
+        
         tags$head(
             tags$link(rel = "shortcut icon", href = "favicon.png"),
             tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+            tags$link(rel = "stylesheet", type = "text/css", href = "lightbox2-2.11.3/dist/css/lightbox.min.css"),
+            tags$script(src = "lightbox2-2.11.3/dist/js/lightbox.min.js"),
             includeHTML("google-analytics.html")
         ),
         
@@ -287,42 +290,88 @@ dashboardPage(
                         ),
                         
                         column(width = 6,
-                               box(title = "Spike protein mutations (Omicron: BA.1)", closable = FALSE, width = NULL, 
-                                   status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                                   img(src = "mutants_BA.1_ME_web.png", 
-                                       class = "center-block img-responsive", 
-                                       alt = "Omicron BA.1 spike structure with mutations"))
+                               box(title = "Spike protein mutations (Omicron: BA.1)", 
+                                   closable = FALSE, 
+                                   width = NULL, 
+                                   status = "orange", 
+                                   collapsible = TRUE, 
+                                   icon = icon("microscope"),
+                                   height = 480,
+                                   tags$a(
+                                       href = "mutants_BA.1_ME_web.png",
+                                       `data-lightbox` = "structure",
+                                       `data-title` = "Spike protein mutations (Omicron: BA.1)",
+                                       `data-alt` = "Omicron BA.1 spike structure with mutations",
+                                       img(src = "mutants_BA.1_ME_web.png",
+                                           class = "center-block img-responsive", 
+                                           alt = "Omicron BA.1 spike structure with mutations")
+                                   ))
                         )
                     ),
                     
                     fluidRow(
-                        box(title = "Spike protein mutations (Alpha: B.1.1.7)", closable = FALSE, width = 6, 
-                            status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "mutants_B.1.1.7_ME_web.png", 
-                                class = "center-block img-responsive", 
-                                # height = 480,
-                                alt = "Alpha B.1.1.7 spike structure with mutations")),
+                        box(title = "Spike protein mutations (Alpha: B.1.1.7)", 
+                            closable = FALSE, 
+                            width = 6, 
+                            status = "orange", 
+                            collapsible = TRUE, 
+                            icon = icon("microscope"),
+                            tags$a(
+                                href = "mutants_B.1.1.7_ME_web.png",
+                                `data-lightbox` = "structure",
+                                `data-title` = "Spike protein mutations (Alpha: B.1.1.7)",
+                                `data-alt` = "Alpha B.1.1.7 spike structure with mutations",
+                                img(src = "mutants_B.1.1.7_ME_web.png", 
+                                    class = "center-block img-responsive", 
+                                    alt = "Alpha B.1.1.7 spike structure with mutations")
+                            )),
                         
                         box(title = "Spike protein mutations (Delta: B.1.617.2)", closable = FALSE, width = 6, 
                             status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "mutants_B.1.617.2_ME_web.png", 
-                                class = "center-block img-responsive", 
-                                # height = 480,
-                                alt = "Delta B.1.617.2 spike structure with mutations"))
+                            tags$a(
+                                href = "mutants_B.1.617.2_ME_web.png",
+                                `data-lightbox` = "structure",
+                                `data-title` = "Spike protein mutations (Delta: B.1.617.2)",
+                                `data-alt` = "Delta B.1.617.2 spike structure with mutations",
+                                img(src = "mutants_B.1.617.2_ME_web.png", 
+                                    class = "center-block img-responsive", 
+                                    alt = "Delta B.1.617.2 spike structure with mutations")
+                            ))
                     ), 
                     
                     fluidRow(
-                        box(title = "Spike protein mutations (Beta: B.1.351)", closable = FALSE, width = 6, 
-                            status = "orange", collapsible = TRUE, icon = icon("microscope"), 
-                            img(src = "mutants_B.1.351_ME_web.png", 
-                                class = "center-block img-responsive", 
-                                alt = "Beta B.1.351 spike structure with mutations")),
+                        box(title = "Spike protein mutations (Beta: B.1.351)", 
+                            closable = FALSE, 
+                            width = 6, 
+                            status = "orange", 
+                            collapsible = TRUE, 
+                            icon = icon("microscope"), 
+                            
+                            tags$a(
+                                href = "mutants_B.1.351_ME_web.png",
+                                `data-lightbox` = "structure",
+                                `data-title` = "Spike protein mutations (Beta: B.1.351)",
+                                `data-alt` = "Beta B.1.351 spike structure with mutations",
+                                img(src = "mutants_B.1.351_ME_web.png", 
+                                    class = "center-block img-responsive", 
+                                    alt = "Beta B.1.351 spike structure with mutations")
+                            )),
                         
-                        box(title = "Spike protein mutations (Gamma: P.1)", closable = FALSE, width = 6, 
-                            status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            img(src = "mutants_P.1_ME_web.png", 
-                                class = "center-block img-responsive", 
-                                alt = "Gamma P.1 spike structure with mutations"))
+                        box(title = "Spike protein mutations (Gamma: P.1)", 
+                            closable = FALSE, 
+                            width = 6, 
+                            status = "orange", 
+                            collapsible = TRUE, 
+                            icon = icon("microscope"),
+                            tags$a(
+                                href = "mutants_P.1_ME_web.png",
+                                `data-lightbox` = "structure",
+                                `data-title` = "Spike protein mutations (Gamma: P.1)",
+                                `data-alt` = "Gamma P.1 spike structure with mutations",
+                                img(src = "mutants_P.1_ME_web.png", 
+                                    class = "center-block img-responsive", 
+                                    alt = "Gamma P.1 spike structure with mutations")
+                            ))
                     )
             ),
             
@@ -744,4 +793,5 @@ tabItem(tabName = "omicron",
             column(2, tags$a(img(src = "University of Cambridge-colour.gif", alt = "University of Cambridge logo", class = "img-responsive center-block footer-logo"), href="https://www.cam.ac.uk"))
         )
     )
+ 
 )
