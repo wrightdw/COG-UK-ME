@@ -206,7 +206,7 @@ spikesPlot_count28 <- ggplot(spike_tab[order(abs(spike_tab$Expansion), decreasin
   geom_point() +
   scale_x_continuous(trans = 'log',
                      breaks = c(1, 10, 100, 1000, 10000)) +
-  scale_y_continuous(limits = c(-0.022, 0.02),
+  scale_y_continuous(limits = c(col_min, col_max),
                      breaks = seq(-0.1, 0.1, 0.005)) +
   scale_color_gradientn(limits = c(col_min, col_max),
                         values = c(0, zero_percentile - 0.02,
