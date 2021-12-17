@@ -766,7 +766,7 @@ shinyServer(function(input, output, session) {
                                                         vui_voc_lineages) %>% c(vui_voc_lineages %>% length)
           ) +
           
-          scale_x_date(breaks = date_breaks("1 month"),
+          scale_x_date(breaks = date_breaks("2 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
@@ -906,7 +906,7 @@ shinyServer(function(input, output, session) {
                                                         vui_voc_lineages) %>% c(vui_voc_lineages %>% length) 
           ) +
           
-          scale_x_date(breaks = date_breaks("1 month"),
+          scale_x_date(breaks = date_breaks("2 month"),
                        labels = date_format("%b %y")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
