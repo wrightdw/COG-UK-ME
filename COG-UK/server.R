@@ -1007,18 +1007,21 @@ shinyServer(function(input, output, session) {
     ########### Ronapreve plot
     # always display wild type on percentage chart
     observeEvent(input$ronapreve_28, {
+      css_class <- "center-block img-responsive"
       if(input$ronapreve_28){
         output$title_ronapreve <- renderText("28 days to latest UK sequence date")
         output$ronapreve_plot <- renderImage({
           list(src = str_c(dataset_date, "/Ronapreve_28.png"),
-               alt = "Ronapreve plot 28 days"
+               alt = "Ronapreve plot 28 days",
+               class = css_class
           )
         }, deleteFile = FALSE)
       } else {
         output$title_ronapreve <- renderText("All time")
         output$ronapreve_plot <- renderImage({
           list(src = str_c(dataset_date, "/Ronapreve.png"),
-               alt = "Ronapreve plot all time"
+               alt = "Ronapreve plot all time",
+               class = css_class
           )
         }, deleteFile = FALSE)
       }
