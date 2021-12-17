@@ -10,7 +10,7 @@ get_dataset_date <- function(rollover = 7){
     ymd(quiet = TRUE) %>% 
     .[. != today()]
   
-  # if before 7am, remove yesterday as well
+  # if before rollover time, remove yesterday as well
   if(hour(now()) < rollover){
     dirs %<>% .[. != (today() - days(1))]
   }
