@@ -25,7 +25,7 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2021-12-11")
+# dataset_date <- as.Date("2021-12-21")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -97,7 +97,9 @@ lineages_t3 <-
 NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
     "BA.1" = "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F. WHO label: <strong>Omicron</strong>.",
-  "BA.2" = "Southern Africa. Full Spike profile: T19I, Δ24-26, A27S, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."
+  "BA.2" = "Southern Africa. Full Spike profile: T19I, Δ24-26/A27S, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>.",
+  "BA.3" = "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, G339D, S371F, S373P, S375F, D405N, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."
+  
     ) %>% 
   enframe("lineage", "reason")
 
