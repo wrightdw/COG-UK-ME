@@ -21,3 +21,12 @@
 .footer-logo {
   max-height: 71px;
 }
+
+#table_4 a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+#table_4 :is(a:active, a:focus, a:hover){
+ text-decoration:none;
+}

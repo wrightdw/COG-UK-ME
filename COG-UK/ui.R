@@ -668,10 +668,10 @@ dashboardPage(
                     fluidRow(
                         box(title = "Spike profile expansion and contraction", width = 12,
                             collapsible = FALSE, icon = icon("chart-line"),
-                            p("Each point represents a spike profile sampled within 7 days of the latest UK sequence. Each spike profile is a set of amino acid substitutions listed relative to the original genotype (Wuhan-Hu-1). The number of sequences per profile in the latest 28-day period is shown on the x-axis. On the the y-axis a statistic to show the recent expansion or contraction in numbers of a profile sequenced is shown. This statistic takes into account both the rate of change in frequency and the overall numbers of a profile detected."),
+                            p("Each point represents a spike profile sampled within 7 days of the latest UK sequence. Each spike profile is a set of amino acid substitutions listed relative to the original genotype (Wuhan-Hu-1). The number of sequences per profile in the latest 28-day period is shown on the x-axis. On the y-axis a statistic to show the recent expansion or contraction in numbers of a profile sequenced is shown. This statistic takes into account both the rate of change in frequency and the overall numbers of a profile detected."),
                             p("Hover your cursor over a point to reveal the substitutions defining a spike profile, count in the latest 28-day period and the associated pango lineages."),
                             plotlyOutput("spikePlot_count28", height = 500),
-                            p("The absolute value for 'Expansion/contraction' is calculated using the observed frequency in each of the 4 most recent 2-week periods and an expectation that the there is no change in frequency across this period"))
+                            p("The absolute value for 'Expansion/contraction' is calculated using the observed frequency in each of the 4 most recent 2-week periods and an expectation that there is no change in frequency across this period"))
                     )
                     ,
                     
@@ -679,9 +679,9 @@ dashboardPage(
                         box(title = "Spike profiles detected in the UK during the last week", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),
                             dataTableOutput("spikeTable"),
-                            p(strong("Profile"), "lists the amino acid substitutions (currently deletions and insertions are not included) in the spike protein relative to the original genotype (Wuhan-Hu-1). Note: Incomplete spike profiles may be called where the underlying sequence data is incomplete An example of this is the substitution G142D which is present in Delta sequences but often not called due to an amplicon dropout."),
+                            p(strong("Profile"), "lists the amino acid substitutions (currently deletions and insertions are not included) in the spike protein relative to the original genotype (Wuhan-Hu-1). Note: Incomplete spike profiles may be called where the underlying sequence data is incomplete. An example of this is the substitution G142D which is present in Delta sequences but often not called due to an amplicon dropout."),
                             p(strong("Amino acid substitutions"), "is the count of spike amino acid substitutions relative to the orginal genotype (Wuhan-Hu-1)."),
-                            p(strong("Frequency change vs. prev 28 days (%)"), "28 day periods are calculated relative to the date of the most recent UK sequence. A blank cell indicates that a spike profile was not sequenced in the 28-day period preceding the most recent 28-day period since the latest UK sein is the percentage change in the frequency of a profile among all sequenced genomes in the most recent 28-day period.")
+                            p(strong("Frequency change vs. prev 28 days (%)"), "28 day periods are calculated relative to the date of the most recent UK sequence. A blank cell indicates that a spike profile was not sequenced in the 28-day period preceding the most recent 28-day period. It shows the percentage change in the frequency of a profile among all sequenced genomes in the most recent 28-day period.")
                         )
                     )
             ), # end tabitem spike_profiles
