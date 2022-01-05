@@ -670,7 +670,19 @@ dashboardPage(
                             collapsible = FALSE, icon = icon("chart-line"),
                             p("Each point represents a spike profile sampled within 7 days of the latest UK sequence. Each spike profile is a set of amino acid substitutions listed relative to the original genotype (Wuhan-Hu-1). The number of sequences per profile in the latest 28-day period is shown on the x-axis. On the y-axis a statistic to show the recent expansion or contraction in numbers of a profile sequenced is shown. This statistic takes into account both the rate of change in frequency and the overall numbers of a profile detected."),
                             p("Hover your cursor over a point to reveal the substitutions defining a spike profile, count in the latest 28-day period and the associated pango lineages."),
-                            plotlyOutput("spikePlot_count28", height = 500),
+                            
+                            prettyRadioButtons(
+                                inputId = "spike_geo",
+                                label = h5("Dataset:"),
+                                choices = list("United Kingdom" = "United Kingdom" ,
+                                               "England" = "England",
+                                               "Northern Ireland" = "Northern Ireland",
+                                               "Scotland" = "Scotland",
+                                               "Wales" = "Wales"),
+                                selected = "United Kingdom"
+                            ),
+                            
+                            plotlyOutput("spikePlot_count28", height = 550),
                             p("The absolute value for 'Expansion/contraction' is calculated using the observed frequency in each of the 4 most recent 2-week periods and an expectation that there is no change in frequency across this period"))
                     )
                     ,

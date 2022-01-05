@@ -1921,7 +1921,7 @@ dev.off()
 ```{r spike_profiles}
 source("spike_profiles.R")
 viruses <- virus_profiles(mutation_df = mutations_uk)
-spike_tab <- spike_profiles(viruses)
+spike_tab <- spike_profiles_nations(viruses)
 write_rds(viruses, str_c("COG-UK/", params$dataset_date, "/spike_viruses.rds"))
 write_rds(spike_tab, str_c("COG-UK/", params$dataset_date, "/spike_table.rds"))
 ```
