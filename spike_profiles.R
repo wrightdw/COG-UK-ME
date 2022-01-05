@@ -126,3 +126,24 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
                         'Expansion')
   spike_tab
 }
+
+
+spike_profiles_nations <- function(viruses = NA) {
+  spike_tab_uk <- spike_profiles(viruses)
+  spike_tab_eng <- spike_profiles(viruses[viruses$adm1 == 'England',])
+  spike_tab_nir <- spike_profiles(viruses[viruses$adm1 == 'Northern_Ireland',])
+  spike_tab_sco <- spike_profiles(viruses[viruses$adm1 == 'Scotland',])
+  spike_tab_wal <- spike_profiles(viruses[viruses$adm1 == 'Wales',])
+  
+  spike_tab_uk$Geography <- 'United Kingdom'
+  spike_tab_eng$Geography <- 'England'
+  spike_tab_nir$Geography <- 'Northern Ireland'
+  spike_tab_sco$Geography <- 'Scotland'
+  spike_tab_wal$Geography <- 'Wales'
+  
+  spike_profiles_nations <- rbind(spike_tab_uk, spike_tab_eng,
+                                  spike_tab_nir, spike_tab_sco,
+                                  spike_tab_wal)
+  spike_profiles_nations
+  
+}
