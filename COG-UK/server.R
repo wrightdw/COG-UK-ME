@@ -1099,7 +1099,7 @@ shinyServer(function(input, output, session) {
   
   output$omicron_table <- renderUI({
       tags$embed(seamless="seamless", 
-                  src= "Omicron_3.htm",
+                  src= "Omicron_4.htm",
                   width=1600, 
                   height=1200)
     })
