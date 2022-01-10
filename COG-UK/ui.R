@@ -669,7 +669,11 @@ dashboardPage(
                         box(title = "Spike profile expansion and contraction", width = 12,
                             collapsible = FALSE, icon = icon("chart-line"),
                             p("Each point represents a spike profile sampled within 7 days of the latest UK sequence. Each spike profile is a set of amino acid substitutions listed relative to the original genotype (Wuhan-Hu-1). The number of sequences per profile in the latest 28-day period is shown on the x-axis. On the y-axis a statistic to show the recent expansion or contraction in numbers of a profile sequenced is shown. This statistic takes into account both the rate of change in frequency and the overall numbers of a profile detected."),
-                            p("Hover your cursor over a point to reveal the substitutions defining a spike profile, count in the latest 28-day period and the associated pango lineages."),
+                            p("Hover the cursor over a point to reveal the substitutions defining a spike profile, count in the latest 28-day period and the associated pango lineages."),
+                            p("Hover the cursor over a point to reveal the substitutions defining a spike profile, count in the latest 28-day period and the associated pango lineages."),
+                            p("For profiles associated with the Delta or Omicron variants of concern (VOCs), profiles are described as amino acid substitutions relative to the core profiles:"),
+                            p("Delta: T19R, G142D, Δ156-157/R158G, L452R, T478K, D614G, P681R, D950N"),
+                            p("Omicron: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F"),
                             
                             prettyRadioButtons(
                                 inputId = "spike_geo",
@@ -683,7 +687,9 @@ dashboardPage(
                             ),
                             
                             plotlyOutput("spikePlot_count28", height = 550),
-                            p("The absolute value for 'Expansion/contraction' is calculated using the observed frequency in each of the 4 most recent 2-week periods and an expectation that there is no change in frequency across this period"))
+                            p("The absolute value for 'Expansion/contraction' is calculated using the observed frequency in each of the 4 most recent 2-week periods and an expectation that there is no change in frequency across this period."),
+                            p("Substitutions fixed in VOCs but often not called as present in sequences (due to amplicon dropout during sequencing) are assumed to be present in Delta (G142D) and Omicron (K417N, N440K, G446S) profiles."))
+                        
                     )
                     ,
                     
