@@ -24,7 +24,24 @@ virus_profiles <- function(mutation_df = NA, filter_date = NULL) {
 }
 
 ## Function: take virus_df, a dataframe with list of mutations separated by ';' and sample dates
-spike_profiles <- function(viruses = NA, spike_period = 7) {
+spike_profiles <- function(viruses = NA, spike_period = 7,
+                           do_pretty_profiles = T) {
+  
+  if (do_pretty_profiles == T) {
+    viruses <- viruses[viruses$sample_date > (max(viruses$sample_date) - 56), ]
+    profile_lineage_combos <- dplyr::distinct(viruses[, c('lineage', 'mutations')])
+    profile_lineage_combos <- get_pretty_profiles(x = profile_lineage_combos)
+    # Sort to place 'lineage == 'None' later in order so they'll be removed by duplicated()
+    # when they also show up linked to a 
+    profile_lineage_combos$sort_by <- ifelse(profile_lineage_combos$lineage == 'None', 2, 1)
+    profile_lineage_combos <- profile_lineage_combos[order(profile_lineage_combos$sort_by),]
+    profile_lineage_combos <- profile_lineage_combos[!duplicated(profile_lineage_combos$mutations),]
+    profile_lineage_combos <- dplyr::distinct(profile_lineage_combos[, c('mutations',
+                                                                         'pretty_profile',
+                                                                         'N_change')])
+    viruses <- dplyr::left_join(viruses, profile_lineage_combos, by = 'mutations')
+    viruses$mutations <- viruses$pretty_profile
+  }
   
   spike_recent <- unique(viruses$mutations[viruses$sample_date > max(viruses$sample_date) - spike_period])
   
@@ -75,7 +92,7 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
                           Growth = NA,
                           N_change = NA#,
                           #N_change_antigenic = NA
-                          )
+  )
   
   for (i in 1:nrow(spike_tab)) {
     profile <- spike_tab$profile[i]
@@ -88,7 +105,11 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
     spike_tab$N_f3[i] <- sum(viruses_f3$mutations == profile)
     spike_tab$N_f4[i] <- sum(viruses_f4$mutations == profile)
     spike_tab$N_56[i] <- sum(viruses_56$mutations == profile)
-    spike_tab$N_change[i] <- stringr::str_count(profile, ';') + 1
+    if (do_pretty_profiles == F) {
+      spike_tab$N_change[i] <- stringr::str_count(profile, ';') + 1
+    } else {
+      spike_tab$N_change[i] <- viruses$N_change[viruses$mutations == profile][1]
+    }
     #spike_tab$N_change_antigenic[i] <- stringr::str_count(viruses$muts_ab[viruses$mutations == profile][1], ';') + 1
   }
   
@@ -147,6 +168,7 @@ spike_profiles_nations <- function(viruses = NA) {
   spike_profiles_nations
   
 }
+
 
 get_pretty_profiles <- function(x = NA) {
   profile_delta <- c('T19R', 'G142D', 'L452R', 'T478K', 'D614G', 'P681R', 'D950N')
