@@ -147,3 +147,69 @@ spike_profiles_nations <- function(viruses = NA) {
   spike_profiles_nations
   
 }
+
+get_pretty_profiles <- function(x = NA) {
+  profile_delta <- c('T19R', 'G142D', 'L452R', 'T478K', 'D614G', 'P681R', 'D950N')
+  N_change_delta <- 8
+  profile_omicron <- c('A67V', 'T95I', 'G142D', 'G339D', 'S371L', 'S373P', 'S375F',
+                       'K417N', 'N440K', 'G446S', 'S477N', 'T478K', 'E484A', 'Q493R', 'G496S',
+                       'Q498R', 'N501Y', 'Y505H', 'T547K', 'D614G', 'H655Y', 'N679K',
+                       'P681H', 'N764K', 'D796Y', 'N856K', 'Q954H', 'N969K', 'L981F')
+  N_change_omicron <- 30
+  
+  x$pretty_profile <- NA
+  x$N_change <- NA
+  for (i in 1:nrow(x)) {
+    if (grepl('AY.', x$lineage[i]) |
+        grepl('B.1.617.2', x$lineage[i])) {
+      
+      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      
+      voc_extra <- setdiff(profile, profile_delta)
+      voc_absent <- setdiff(profile_delta, profile)
+      # Correction to account for most common amplicon dropout
+      voc_absent <- setdiff(voc_absent, 'G142D')
+      
+      # use collected info to generate 'pretty_profile'
+      pretty_profile <- 'Delta'
+      pretty_profile <- ifelse(length(voc_extra) > 0,
+                               paste0(pretty_profile, ' +', paste(voc_extra, collapse = ',')),
+                               pretty_profile)
+      pretty_profile <- ifelse(length(voc_absent) > 0,
+                               paste0(pretty_profile, ' -', paste(voc_absent, collapse = ',')),
+                               pretty_profile)
+      x$pretty_profile[i] <- pretty_profile
+      x$N_change[i] <- N_change_delta + length(voc_extra) - length(voc_absent)
+      
+    } else if (grepl('BA.1', x$lineage[i]) |
+               grepl('B.1.1.529', x$lineage[i])){
+      
+      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      voc_extra <- setdiff(profile, profile_omicron)
+      voc_absent <- setdiff(profile_omicron, profile)
+      # Correction to account for most common amplicon dropout errors
+      voc_absent <- setdiff(voc_absent, 'G142D')
+      voc_absent <- setdiff(voc_absent, 'K417N')
+      voc_absent <- setdiff(voc_absent, 'N440K')
+      voc_absent <- setdiff(voc_absent, 'G446S')
+      
+      # use collected info to generate 'pretty_profile'
+      pretty_profile <- 'Omicron'
+      pretty_profile <- ifelse(length(voc_extra) > 0,
+                               paste0(pretty_profile, ' +', paste(voc_extra, collapse = ',')),
+                               pretty_profile)
+      pretty_profile <- ifelse(length(voc_absent) > 0,
+                               paste0(pretty_profile, ' -', paste(voc_absent, collapse = ',')),
+                               pretty_profile)
+      x$pretty_profile[i] <- pretty_profile
+      x$N_change[i] <- N_change_omicron + length(voc_extra) - length(voc_absent)
+      
+    } else {
+      x$pretty_profile[i] <- x$mutations[i]
+      x$N_change[i] <- stringr::str_count(x$mutations[i], ';') + 1
+    }
+    
+  }
+  x
+}
+
