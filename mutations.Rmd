@@ -12,6 +12,7 @@ params:
   spike_fasta:      "sequence.fasta"
   vui_voc_csv:      "VUI and VOC.csv"
   remdesivir_dir:   "Remdesivir Mutants" 
+  nirmatrelvir_dir: "Nirmatrelvir Mutants" 
   isaric_csv:       "Isaric_list.csv"
   insertions_tsv:   "cog.insertions.tsv"
   functional_csv:   "tcell_functional_mutations.csv"
@@ -74,11 +75,11 @@ message("Reading ", consortium_csv)
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
-  select(-gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
-         -lineages_version, -country,
-         -received_date, -collection_date, -published_date, -starts_with("scorpio"),
-         -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
-         ) %>% # remove unused columns
+  # select(-gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
+  #        -lineages_version, -country,
+  #        -received_date, -collection_date, -published_date, -starts_with("scorpio"),
+  #        -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
+  #        ) %>% # remove unused columns
   relocate(NUTS1,.after = adm1) %>% 
   type_convert 
 
@@ -635,25 +636,32 @@ mutations_uk %>%
 
 # Therapeutics
 ```{r therapeutics}
+# ORF1ab positions https://www.ncbi.nlm.nih.gov/protein/1796318597
+# nsp12 4393..5324
+# Mpro 3267..3563
 
-rem_data <- 
-  fs::dir_ls(params$remdesivir_dir, glob = "*.csv") %>% # get file names
-  map_dfr(read_csv) 
+therapeutics_data <- function(data_dir, orf1ab_pos){
+  fs::dir_ls(data_dir, glob = "*.csv") %>% # get file names
+    map_dfr(read_csv, col_types = cols(`quantification (fold)` = col_character())) %>% 
+    rename(gene = ORF) %>%
+    rename_with(~str_c(.x, "_protein"), c(position, residue, mutation)) %>% 
+    mutate(gene = recode(gene, "orf1b" = "orf1ab", "ORF1a" = "orf1ab"),
+           position = position_protein + orf1ab_pos - 1, .after = gene) %>% 
+    mutate(variant = str_c(str_sub(mutation_protein, 1, 1), 
+                           position, 
+                           str_sub(mutation_protein, -1, -1) ), 
+           .after = position )
+}
 
-rem_data %<>% 
-  rename(gene = ORF) %>%
-  rename_with(~str_c(.x, "_nsp12"), c(position, residue, mutation)) %>% 
-  mutate(gene = recode(gene, "orf1b" = "orf1ab"),
-         position = position_nsp12 + 4392, .after = gene) %>% 
-  mutate(variant = str_c(str_sub(mutation_nsp12, 1, 1), position, str_sub(mutation_nsp12, -1, -1) ), .after = position )
-
+thera_data <- bind_rows(therapeutics_data(params$remdesivir_dir, 4393), 
+                        therapeutics_data(params$nirmatrelvir_dir, 3267))
 mutations_rem_uk <- 
   mutations_uk %>% 
   filter(gene == "orf1ab") %>% 
   mutate(across(position, as.character)) %>%
   mutate(across(position, as.numeric)) %>%
   mutate(across(c(variant), fct_drop)) %>% 
-  semi_join(rem_data)
+  semi_join(thera_data)
 
 variants_rem_uk <-
   mutations_rem_uk %>%
@@ -666,7 +674,7 @@ variants_rem_uk_28 <-
   filter(sample_date >= sample_date_28) %>%
   dplyr::count(position, variant, name = "UK_28")
 
-rem_data %<>%  
+thera_data %<>%  
   mutate(anchor = str_c("<a href='https://", doi, "'target='_blank'>", citation,"</a>"), .keep = "unused") %>%   # hyperlink to citation DOI
   left_join(variants_rem_uk) %>% 
   left_join(variants_rem_uk_28) %>% 
@@ -675,7 +683,7 @@ rem_data %<>%
     `numSeqs UK 28 days` = UK_28) %>% 
   mutate(across(starts_with( c("numSeqs", "#") ), ~replace_na(.x, 0L))) 
 
-rem_data %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/therapeutics.rds"))
+thera_data %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/therapeutics.rds"))
 ```
 
 # T cell
