@@ -24,7 +24,24 @@ virus_profiles <- function(mutation_df = NA, filter_date = NULL) {
 }
 
 ## Function: take virus_df, a dataframe with list of mutations separated by ';' and sample dates
-spike_profiles <- function(viruses = NA, spike_period = 7) {
+spike_profiles <- function(viruses = NA, spike_period = 7,
+                           do_pretty_profiles = T) {
+  
+  if (do_pretty_profiles == T) {
+    viruses <- viruses[viruses$sample_date > (max(viruses$sample_date) - 56), ]
+    profile_lineage_combos <- dplyr::distinct(viruses[, c('lineage', 'mutations')])
+    profile_lineage_combos <- get_pretty_profiles(x = profile_lineage_combos)
+    # Sort to place 'lineage == 'None' later in order so they'll be removed by duplicated()
+    # when they also show up linked to a 
+    profile_lineage_combos$sort_by <- ifelse(profile_lineage_combos$lineage == 'None', 2, 1)
+    profile_lineage_combos <- profile_lineage_combos[order(profile_lineage_combos$sort_by),]
+    profile_lineage_combos <- profile_lineage_combos[!duplicated(profile_lineage_combos$mutations),]
+    profile_lineage_combos <- dplyr::distinct(profile_lineage_combos[, c('mutations',
+                                                                         'pretty_profile',
+                                                                         'N_change')])
+    viruses <- dplyr::left_join(viruses, profile_lineage_combos, by = 'mutations')
+    viruses$mutations <- viruses$pretty_profile
+  }
   
   spike_recent <- unique(viruses$mutations[viruses$sample_date > max(viruses$sample_date) - spike_period])
   
@@ -75,7 +92,7 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
                           Growth = NA,
                           N_change = NA#,
                           #N_change_antigenic = NA
-                          )
+  )
   
   for (i in 1:nrow(spike_tab)) {
     profile <- spike_tab$profile[i]
@@ -88,7 +105,11 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
     spike_tab$N_f3[i] <- sum(viruses_f3$mutations == profile)
     spike_tab$N_f4[i] <- sum(viruses_f4$mutations == profile)
     spike_tab$N_56[i] <- sum(viruses_56$mutations == profile)
-    spike_tab$N_change[i] <- stringr::str_count(profile, ';') + 1
+    if (do_pretty_profiles == F) {
+      spike_tab$N_change[i] <- stringr::str_count(profile, ';') + 1
+    } else {
+      spike_tab$N_change[i] <- viruses$N_change[viruses$mutations == profile][1]
+    }
     #spike_tab$N_change_antigenic[i] <- stringr::str_count(viruses$muts_ab[viruses$mutations == profile][1], ';') + 1
   }
   
@@ -126,3 +147,91 @@ spike_profiles <- function(viruses = NA, spike_period = 7) {
                         'Expansion')
   spike_tab
 }
+
+
+spike_profiles_nations <- function(viruses = NA) {
+  spike_tab_uk <- spike_profiles(viruses)
+  spike_tab_eng <- spike_profiles(viruses[viruses$adm1 == 'England',])
+  spike_tab_nir <- spike_profiles(viruses[viruses$adm1 == 'Northern_Ireland',])
+  spike_tab_sco <- spike_profiles(viruses[viruses$adm1 == 'Scotland',])
+  spike_tab_wal <- spike_profiles(viruses[viruses$adm1 == 'Wales',])
+  
+  spike_tab_uk$Geography <- 'United Kingdom'
+  spike_tab_eng$Geography <- 'England'
+  spike_tab_nir$Geography <- 'Northern Ireland'
+  spike_tab_sco$Geography <- 'Scotland'
+  spike_tab_wal$Geography <- 'Wales'
+  
+  spike_profiles_nations <- rbind(spike_tab_uk, spike_tab_eng,
+                                  spike_tab_nir, spike_tab_sco,
+                                  spike_tab_wal)
+  spike_profiles_nations
+  
+}
+
+
+get_pretty_profiles <- function(x = NA) {
+  profile_delta <- c('T19R', 'G142D', 'L452R', 'T478K', 'D614G', 'P681R', 'D950N')
+  N_change_delta <- 8
+  profile_omicron <- c('A67V', 'T95I', 'G142D', 'G339D', 'S371L', 'S373P', 'S375F',
+                       'K417N', 'N440K', 'G446S', 'S477N', 'T478K', 'E484A', 'Q493R', 'G496S',
+                       'Q498R', 'N501Y', 'Y505H', 'T547K', 'D614G', 'H655Y', 'N679K',
+                       'P681H', 'N764K', 'D796Y', 'N856K', 'Q954H', 'N969K', 'L981F')
+  N_change_omicron <- 30
+  
+  x$pretty_profile <- NA
+  x$N_change <- NA
+  for (i in 1:nrow(x)) {
+    if (grepl('AY.', x$lineage[i]) |
+        grepl('B.1.617.2', x$lineage[i])) {
+      
+      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      
+      voc_extra <- setdiff(profile, profile_delta)
+      voc_absent <- setdiff(profile_delta, profile)
+      # Correction to account for most common amplicon dropout
+      voc_absent <- setdiff(voc_absent, 'G142D')
+      
+      # use collected info to generate 'pretty_profile'
+      pretty_profile <- 'Delta'
+      pretty_profile <- ifelse(length(voc_extra) > 0,
+                               paste0(pretty_profile, ' +', paste(voc_extra, collapse = ',')),
+                               pretty_profile)
+      pretty_profile <- ifelse(length(voc_absent) > 0,
+                               paste0(pretty_profile, ' -', paste(voc_absent, collapse = ',')),
+                               pretty_profile)
+      x$pretty_profile[i] <- pretty_profile
+      x$N_change[i] <- N_change_delta + length(voc_extra) - length(voc_absent)
+      
+    } else if (grepl('BA.1', x$lineage[i]) |
+               grepl('B.1.1.529', x$lineage[i])){
+      
+      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      voc_extra <- setdiff(profile, profile_omicron)
+      voc_absent <- setdiff(profile_omicron, profile)
+      # Correction to account for most common amplicon dropout errors
+      voc_absent <- setdiff(voc_absent, 'G142D')
+      voc_absent <- setdiff(voc_absent, 'K417N')
+      voc_absent <- setdiff(voc_absent, 'N440K')
+      voc_absent <- setdiff(voc_absent, 'G446S')
+      
+      # use collected info to generate 'pretty_profile'
+      pretty_profile <- 'Omicron'
+      pretty_profile <- ifelse(length(voc_extra) > 0,
+                               paste0(pretty_profile, ' +', paste(voc_extra, collapse = ',')),
+                               pretty_profile)
+      pretty_profile <- ifelse(length(voc_absent) > 0,
+                               paste0(pretty_profile, ' -', paste(voc_absent, collapse = ',')),
+                               pretty_profile)
+      x$pretty_profile[i] <- pretty_profile
+      x$N_change[i] <- N_change_omicron + length(voc_extra) - length(voc_absent)
+      
+    } else {
+      x$pretty_profile[i] <- x$mutations[i]
+      x$N_change[i] <- stringr::str_count(x$mutations[i], ';') + 1
+    }
+    
+  }
+  x
+}
+
