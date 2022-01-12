@@ -1,4 +1,4 @@
-# COG-UK-Dashboard
+# COG-UK Mutation Explorer
 
 ## Pipeline
 The R Markdown file mutations.Rmd forms the pipeline that takes the large CSV files containing sequence metadata, mutations and deletions from the MSA daily dataset on CLIMB and prepares the pre-computed data files that back the COG-ME dashboard.
