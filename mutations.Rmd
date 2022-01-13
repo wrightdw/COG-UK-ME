@@ -75,11 +75,11 @@ message("Reading ", consortium_csv)
 consortium_uk <- 
   read_csv((consortium_csv), col_types = cols(.default = col_character())) %>% 
   filter(country == "UK" & !is.na(adm1) & adm1 %in% (c("England", "Scotland", "Wales", "Northern_Ireland"))) %>% # exclude Crown dependencies and British Overseas Territories
-  # select(-gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
-  #        -lineages_version, -country,
-  #        -received_date, -collection_date, -published_date, -starts_with("scorpio"),
-  #        -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
-  #        ) %>% # remove unused columns
+  select(-gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
+         -lineages_version, -country,
+         -received_date, -collection_date, -published_date, -starts_with("scorpio"),
+         -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
+         ) %>% # remove unused columns
   relocate(NUTS1,.after = adm1) %>% 
   type_convert 
 
@@ -96,8 +96,14 @@ dodgy_delta <-
   consortium_uk %>% 
   filter(lineage == "B.1.617.2" & epi_week %in% c(16, 17))
 
+# Exclude Omicron sequences with erroneous dates before November 2021
+dodgy_omicron <- 
+  consortium_uk %>% 
+  filter(lineage == "BA.1" & sample_date < "2021-11-01")
+
 consortium_uk %<>% 
   anti_join(dodgy_delta) %>% 
+  anti_join(dodgy_omicron) %>% 
   mutate( 
     NUTS1 = case_when(
       adm1 == "Scotland" ~ "Scotland",
