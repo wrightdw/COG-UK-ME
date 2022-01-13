@@ -463,7 +463,7 @@ dashboardPage(
                                           names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
                                           picks
                                         })(),
-                                        selected = "B.1.617.2"
+                                        selected = "BA.1"
                                     )
                                 ), 
                                 column(width = 10,                                      
