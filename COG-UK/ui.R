@@ -756,7 +756,7 @@ dashboardPage(
                                                      picks %>% c("Delta non-AY.4" = "Delta_minus_AY.4",
                                                                  "Delta non-AY.4.2" = "Delta_minus_AY.4.2")
                                                  })(),
-                                                 selected = "AY.4.2",
+                                                 selected = "BA.1",
                                              ),
                                              
                                              # selectizeInput(
