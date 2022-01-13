@@ -1122,8 +1122,7 @@ shinyServer(function(input, output, session) {
                                      '</br>Lineage(s) = ', `lineage(s)`))) +
                geom_point() +
                scale_x_continuous(trans = 'log', breaks = c(1, 10, 100, 1000, 10000, 100000)) +
-               scale_y_continuous(limits = c(col_min, col_max),
-                                  breaks = seq(-10, 10, ifelse(col_max - col_min > 1.5, 0.1, 0.05))) +
+               scale_y_continuous(breaks = seq(-20, 20, ifelse(col_max - col_min > 2, 0.2, 0.1))) +
                scale_color_gradientn(limits = c(col_min, col_max),
                                      values = c(0, zero_percentile - 0.02, zero_percentile, zero_percentile + 0.02, 1),
                                      colours = c('dodgerblue4', 'lightblue1', 'grey90', 'coral', 'firebrick4')) +
