@@ -688,7 +688,10 @@ dashboardPage(
                             ),
                             
                             plotlyOutput("spikePlot_count28", height = 550),
-                            p("The absolute value for 'Expansion/contraction' is calculated using the observed frequency in each of the 4 most recent 2-week periods and an expectation that there is no change in frequency across this period."),
+                            br(),
+                            "For each profile, i, the absolute value for the 'Expansion/contraction' statistic is calculated using the observed frequency in each of the most recent 2-week periods, j, according to:", tags$div(
+                                HTML(paste("Sum{(O", tags$sub("i,j"), " - E", tags$sub("i"), ")", tags$sup("2"), "/ E", tags$sub("i"), "}", sep = ""))
+                            ), "where E_i is the frequency of profile i over the full 8-week period. This value is portrayed as negative or positive according to direction of change and represents both the rate of change in profile frequency and the magnitude of the change.",
                             p("Substitutions in VOC core profiles that are often not identified as present in VOC sequences (due to amplicon dropout during sequencing) are not listed as abesnt. For Delta profiles, G142D, and for Omicron, K417N, N440K and G446S are assumed to be present."))
                         
                     )
