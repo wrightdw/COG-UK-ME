@@ -214,6 +214,7 @@ get_pretty_profiles <- function(x = NA) {
       voc_absent <- setdiff(voc_absent, 'K417N')
       voc_absent <- setdiff(voc_absent, 'N440K')
       voc_absent <- setdiff(voc_absent, 'G446S')
+      voc_absent <- setdiff(voc_absent, 'N764K')
       
       # use collected info to generate 'pretty_profile'
       pretty_profile <- 'Omicron'
