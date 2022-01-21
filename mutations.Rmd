@@ -643,8 +643,9 @@ mutations_uk %>%
 # Therapeutics
 ```{r therapeutics}
 # ORF1ab positions https://www.ncbi.nlm.nih.gov/protein/1796318597
+# see mat_peptide annotation
 # nsp12 4393..5324
-# Mpro 3267..3563
+# Mpro 3264..3569
 
 therapeutics_data <- function(data_dir, orf1ab_pos){
   fs::dir_ls(data_dir, glob = "*.csv") %>% # get file names
@@ -659,8 +660,8 @@ therapeutics_data <- function(data_dir, orf1ab_pos){
            .after = position )
 }
 
-thera_data <- bind_rows(therapeutics_data(params$remdesivir_dir, 4393), 
-                        therapeutics_data(params$nirmatrelvir_dir, 3267))
+thera_data <- bind_rows(therapeutics_data(params$remdesivir_dir, 4393), # nsp12 
+                        therapeutics_data(params$nirmatrelvir_dir, 3264)) # Mpro
 mutations_rem_uk <- 
   mutations_uk %>% 
   filter(gene == "orf1ab") %>% 
