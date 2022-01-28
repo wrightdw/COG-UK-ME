@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2022-01-25" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -99,7 +99,7 @@ dodgy_delta <-
 # Exclude Omicron sequences with erroneous dates before November 2021
 dodgy_omicron <- 
   consortium_uk %>% 
-  filter(lineage == "BA.1" & sample_date < "2021-11-01")
+  filter(lineage == "BA.1" & sample_date < "2021-11-20")
 
 consortium_uk %<>% 
   anti_join(dodgy_delta) %>% 
@@ -179,7 +179,7 @@ consortium_uk
 mutations_uk %<>%    
   separate_rows(mutations, sep = '\\|') %>% 
   separate(mutations, into = c("gene", "variant"), sep = ':') %>% 
-  drop_na() %>%
+  drop_na(-NUTS1) %>% # don't drop missing geographical data
   filter(gene != "synSNP") %>%
   mutate(position = parse_number(variant)) %>% 
   mutate(across(c(gene, position, variant), as_factor)) %T>% 
