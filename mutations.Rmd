@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2022-01-25" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
+  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -29,6 +29,13 @@ library(htmltools)
 suppressPackageStartupMessages(library(jsonlite))
 # also require seqinr - loaded later on to avoid name clash of dplyr count function
 library(UpSetR)
+
+# Helper function
+# Construct a regular expression for replacement of the sublineages of a lineage using gsub
+sublineage_regex_gsub <- function(lineage){
+  str_replace_all(lineage, "\\.", "\\\\\\.") %>% 
+    paste0("^", ., "\\..*")
+}
 ```
 ```{r climb}
 Sys.setenv(TZ="Europe/London")
@@ -99,7 +106,7 @@ dodgy_delta <-
 # Exclude Omicron sequences with erroneous dates before November 2021
 dodgy_omicron <- 
   consortium_uk %>% 
-  filter(lineage == "BA.1" & sample_date < "2021-11-20")
+  filter( (lineage == "BA.1" | str_starts(lineage, fixed("BA.1."))) & sample_date < "2021-11-20")
 
 consortium_uk %<>% 
   anti_join(dodgy_delta) %>% 
@@ -1284,7 +1291,7 @@ df
 vui_voc <-
   read_csv(params$vui_voc_csv) %>% 
   select(-gene, -details_gene, -non_syn) %>% 
-  mutate(across(c(lineage, lineage_display), as_factor)) 
+  mutate(across(c(lineage, lineage_display), fct_inorder))
 
 vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
 ```
@@ -1302,9 +1309,6 @@ lineages_weeks_uk <-
   bind_rows(lineages_weeks_nations) %>% 
   arrange(lineage, adm1, epi_week)
     
-# lineages_weeks_uk %T>% 
-#   write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk.rds"))
-
 lineages_weeks_uk %>%
   filter(adm1 == "UK" & lineage %in% levels(vui_voc$lineage) & lineage != "B.1.1.7") %>%
   ggplot(aes(x=epi_week, y=n, group=lineage, color=lineage)) + 
@@ -1312,7 +1316,6 @@ lineages_weeks_uk %>%
   geom_point() +
   scale_x_discrete(drop = FALSE) + # include all epi_week factor levels
   theme_classic()
-
 ```
 ### Constellations UpSet plot
 ```{r upset, eval=FALSE, include=FALSE}
@@ -1327,11 +1330,14 @@ mutations_s_uk_wide
 ```
 ### VUI/VOC/other
 ```{r vui_voc_other}
-consortium_uk_delta_parent <-
+# convert Delta and Omicron sublineages to parent for counting
+consortium_uk_parent <-
   bind_rows(
-    # convert AY.x sublineages  to parent B.1.617.2
+    # convert AY.x sublineages to parent B.1.617.2
+    # convert BA.1.x sublineages to parent BA.1
     consortium_uk %>%
-      mutate(lineage = gsub("AY\\..*", "B.1.617.2", lineage)), 
+      mutate(lineage = gsub(sublineage_regex_gsub("AY"), "B.1.617.2", lineage)) %>% # convert AY.x to B.1.617.2
+      mutate(lineage = gsub(sublineage_regex_gsub("BA.1"), "BA.1", lineage)), # convert BA.1.x to BA.1
   
     # filter AY.4 and sublineages then convert AY.4.x sublineages to parent AY.4 
     consortium_uk %>% 
@@ -1359,10 +1365,10 @@ consortium_uk_delta_parent <-
 # count sequences by day
 lineages_days_uk_all <- 
   bind_rows(
-    consortium_uk_delta_parent %>% 
+    consortium_uk_parent %>% 
       dplyr::count(lineage, sample_date, adm1, name = "n_day"),
     
-    consortium_uk_delta_parent %>% 
+    consortium_uk_parent %>% 
       dplyr::count(lineage, sample_date, name = "n_day") %>% 
       mutate(adm1 = "UK") %>% 
       mutate(across(adm1, as_factor))
@@ -1370,10 +1376,10 @@ lineages_days_uk_all <-
 
 # by week
 lineages_weeks_uk_all <- bind_rows(
- consortium_uk_delta_parent %>% 
+ consortium_uk_parent %>% 
    dplyr::count(lineage, epi_date, adm1, name = "n_week"),
  
- consortium_uk_delta_parent %>% dplyr::count(lineage, epi_date, name = "n_week") %>% 
+ consortium_uk_parent %>% dplyr::count(lineage, epi_date, name = "n_week") %>% 
    mutate(adm1 = "UK") %>% 
    mutate(across(adm1, as_factor))
 )
@@ -1490,13 +1496,6 @@ antigenic_mutations_gisaid_all
 ```
 ## Geo
 ```{r geo}
-# Construct a regular expression for replacement of the sublineages of a lineage using gsub
-sublineage_regex_gsub <- function(lineage){
-  str_replace_all(lineage, "\\.", "\\\\\\.") %>% 
-    paste0("^", ., "\\..*")
-}
-
-
 # TOPOJSON objectid
 # 1 North East (England)
 # 2 "North West (England)"
@@ -1544,10 +1543,11 @@ geo <-
 
 # regional counts for all variants with NUTS1 data
 geo_variants <- bind_rows(
-  # Delta
+  # Delta and Omicron
   consortium_uk %>%
   filter(!is.na(NUTS1)) %>% 
   mutate(lineage = gsub(sublineage_regex_gsub("AY"), "B.1.617.2", lineage)) %>%  # convert AY.x lineages to B.617.2
+  mutate(lineage = gsub(sublineage_regex_gsub("BA.1"), "BA.1", lineage)) %>%  # convert BA.1.x lineages to BA.1  
   mutate(across(lineage, as_factor)) %>%
   mutate(lineage = fct_other(lineage, 
                              keep = 

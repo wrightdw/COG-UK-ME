@@ -147,32 +147,23 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
 antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){
   nation = match.arg(nation)
   
-  # include B.1.617.2 sublineages
-  if(lineage == "B.1.617.2"){
+  if(lineage %in% c("AY.4", "AY.4.2", "BA.1")) { # alias lineage name - include sublineages of alias name
     mutations_s_uk %<>% 
-      filter((lineage == !!lineage | str_starts(lineage, fixed("AY."))) & !(variant %in% !!defining))
+      filter( (lineage == !!lineage | str_starts(lineage, fixed(str_c(!!lineage, "."))) ) & !(variant %in% !!defining))
     
     consortium_uk %<>% 
-      filter(lineage == !!lineage | str_starts(lineage, fixed("AY.")))
-      
-  } else if(lineage %in% c("AY.4", "AY.4.2")) {
+      filter( lineage == !!lineage | str_starts(lineage, fixed(str_c(!!lineage, "."))) )
+  } else { # lineage name is not an alias - include sublineages by full lineage name
     mutations_s_uk %<>% 
-      filter((lineage == !!lineage | str_starts(lineage, fixed(str_c(lineage, ".")))) & !(variant %in% !!defining))
+      filter((lineage == !!lineage | str_starts(lineage_full, fixed(str_c(!!lineage, "."))) )& !(variant %in% !!defining))
     
     consortium_uk %<>% 
-      filter(lineage == !!lineage | str_starts(lineage, fixed(str_c(lineage, "."))))
-  }
-  else{
-    mutations_s_uk %<>% 
-      filter(lineage == !!lineage & !(variant %in% !!defining))
+      filter( lineage == !!lineage | str_starts(lineage_full, fixed(str_c(!!lineage, "."))) )
     
-    consortium_uk %<>% 
-      filter(lineage == !!lineage)
-  }
-  
+  } 
+
   if(nation != "UK"){
     mutations_s_uk %<>% 
-      # mutate(adm1 = fct_recode(adm1, !!!levels_adm1)) %>% 
       filter(adm1 == nation) 
     
     consortium_uk %<>%
@@ -222,12 +213,6 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
     complete(epi_week, nesting(variant), fill = list(n = 0, n_sequences_lineage = 0, percentage = 0)) %>%
     mutate(epi_week = epi_week %>% as.character %>% as.integer)
 
-  # Temporary fixes - exclude duplicate Delta sequences with incorrect dates in April 2020
-  if(lineage == "B.1.617.2"){
-    antigenic_mutations_lineages %<>% 
-      filter(!epi_week %in% c(16, 17))
-  }
-  
   # remove epiweeks before first occurrence
   first_occurrence <- 
     antigenic_mutations_lineages %>% 
