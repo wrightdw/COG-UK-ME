@@ -460,7 +460,7 @@ dashboardPage(
                                         label = "Lineage:",
                                         choices = (function(){
                                           picks <- vui_voc %$% levels(lineage)
-                                          names(picks) <- str_replace(picks, "B\\.1\\.617\\.2", "B.1.617.2/AY.x")
+                                          names(picks) <- vui_voc %$% levels(lineage_display)
                                           picks
                                         })(),
                                         selected = "BA.1"
@@ -469,7 +469,6 @@ dashboardPage(
                                 column(width = 10,                                      
                                        h4(textOutput("title_heatmap", inline = TRUE), class = "text-center"),
                                        plotOutput("antibody_heatmap", height = "auto")))
-                            
                         )
                     )
             ), # end tabItem
