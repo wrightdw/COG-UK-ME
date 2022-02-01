@@ -22,10 +22,10 @@ get_dataset_date <- function(rollover = 7){
 # Dataset directories are named according to date e.g. "2021-11-24".
 # if after midnight, use yesterday
 # else before midnight, use 2 days ago
-# dataset_date <- get_dataset_date(0)
+dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-dataset_date <- as.Date("2022-02-01")
+# dataset_date <- as.Date("2022-02-01")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -118,7 +118,7 @@ n_uk_lineages_all <-
 # remove VOCs/VUIs with zero counts
 vui_voc %<>% 
   semi_join(n_uk_lineages_all %>% filter(variant == "sequences" & n_sequences_UK > 0), by = "lineage") %>% 
-  mutate(lineage = fct_drop(lineage))
+  mutate(across(c(lineage, lineage_display), fct_drop)) 
 
 # VUI/VOC lineages with AY.x removed
 vui_voc_lineages <- 
