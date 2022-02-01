@@ -111,7 +111,7 @@ table_3 <- function(){
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
       mutate(reason = "As B.1.324.1, with the addition of E484K.")
   ) %>% 
-    mutate(across(everything(), ~replace_na(.x, 0L))) %>% 
+    mutate(across(where(is.numeric), ~replace_na(.x, 0L))) %>% 
     filter(n_sequences_UK > 0) %>%
     relocate(n_sequences_UK, .after = reason) %>% 
     mutate(`UK (%)` = n_sequences_UK / total_sequences,
