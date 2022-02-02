@@ -542,7 +542,7 @@ shinyServer(function(input, output, session) {
         mutation
       
       antigenic_mutations <- antigenic_mutations_lineages(nation = input$nation_antigenic, lineage = input$lineage_antigenic, defining = defining)
-      
+
       if(is.null(antigenic_mutations)){
         values$antigenic <- NULL
         values$antigenic_title <- str_c(input$lineage_antigenic, " (", input$nation_antigenic %>% str_replace_all("_", " "), ")", ": no antigenic mutations")
@@ -550,7 +550,7 @@ shinyServer(function(input, output, session) {
         values$antigenic_title <- str_c("Antigenic mutations on the top of ", input$lineage_antigenic, " defining mutations (", 
                                         input$nation_antigenic %>% str_replace_all("_", " "), ")")
         values$antigenic <- 
-          antibody_complex_heatmap(antigenic_mutations)
+          antibody_complex_heatmap(antigenic_mutations, input$scale_heatmap)
       }
     })
     

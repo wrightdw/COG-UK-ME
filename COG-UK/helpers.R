@@ -20,7 +20,7 @@ quantile_breaks <- function(xs, n = 10) {
 }
 
 
-antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
+antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, scale_heatmap){
   
   RBD1_class <- c(403, 405, 406, 408, 409, 414, 415, 416, 417, 420, 421, 449, 453, 455, 456, 457, 458, 459, 460, 473, 474, 475, 476, 477, 484, 486, 487, 489, 490, 492, 493, 494, 495, 496, 498, 500, 501, 502, 503, 504, 505)
   RBD2_class <- c(338, 339, 342, 343, 346, 351, 368, 371, 372, 373, 374, 403, 405, 406, 417, 436, 444, 445, 446, 447, 448, 449, 450, 452, 453, 455, 456, 470, 472, 473, 475, 478, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505)
@@ -45,16 +45,13 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     select(-(position:domain)) %>% 
     unlist(use.names = FALSE) %>% 
     quantile_breaks(101) 
-  
+
   max.val<-horz_heat %>% 
     select(-(position:domain)) %>% 
     unlist(use.names = FALSE) %>%
     max()
   
-  col_fun <- colorRamp2(qb, sequential_hcl(qb %>% length, palette = "Greens 3", rev = TRUE))
-  col_fun2 = colorRamp2(c(0, 0.001, max.val), c("white", "darkseagreen1","green4"))
-  
-    
+ 
   horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
   horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
   horz_heat$RBD3 <- ifelse(horz_heat$position %in% RBD3_class, TRUE, NA)
@@ -122,13 +119,23 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   
   input <- subset(input, select = -c(position:NTD.1))
   
-  heatmap <- Heatmap(
+  
+  if (scale_heatmap=="Linear"){ 
+    col_fun2 = colorRamp2(c(0, 0.001, max.val), c("white", "darkseagreen1","green4"))
+    }   else {
+      col_fun2 <- colorRamp2(qb, sequential_hcl(qb %>% length, palette = "Greens 3", rev = TRUE))
+      
+    }
+  
+  # lgd = Legend(col_fun = col_fun2, legend_height = unit(6, "cm"))
+  
+  heatmap<- Heatmap(
     input,
     name = "Percentage %",
     column_title = "Sample date",
     column_title_side = "bottom",
     column_title_gp = gpar(fontsize = 20),
-    
+    # show_heatmap_legend = FALSE,
     use_raster = TRUE,
     raster_device = "CairoPNG",
     raster_by_magick = TRUE,
@@ -143,6 +150,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     width = ncol(input) * unit(4.5, "mm"),
     height = nrow(input) * unit(4.5, "mm"),
     col = col_fun2,
+    
     na_col = 'white',
     column_names_gp = grid::gpar(fontsize = 9),
     row_names_gp = grid::gpar(fontsize = 11),
@@ -150,6 +158,9 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     left_annotation = row_ha2
   )
   heatmap
+  # draw(heatmap, heatmap_legend_list = list(lgd), heatmap_legend_side = "right")
+  
+  
 }
 
 antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){

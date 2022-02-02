@@ -464,6 +464,12 @@ dashboardPage(
                                           picks
                                         })(),
                                         selected = "BA.1"
+                                    ),
+                                    pickerInput(
+                                        inputId = "scale_heatmap",
+                                        label = "Scale:",
+                                        choices = c("Linear","Quantile"),
+                                        selected = "Linear"
                                     )
                                 ), 
                                 column(width = 10,                                      
