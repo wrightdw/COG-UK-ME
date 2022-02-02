@@ -19,6 +19,7 @@ quantile_breaks <- function(xs, n = 10) {
   breaks[!duplicated(breaks)]
 }
 
+
 antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
   
   RBD1_class <- c(403, 405, 406, 408, 409, 414, 415, 416, 417, 420, 421, 449, 453, 455, 456, 457, 458, 459, 460, 473, 474, 475, 476, 477, 484, 486, 487, 489, 490, 492, 493, 494, 495, 496, 498, 500, 501, 502, 503, 504, 505)
@@ -45,7 +46,14 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     unlist(use.names = FALSE) %>% 
     quantile_breaks(101) 
   
+  max.val<-horz_heat %>% 
+    select(-(position:domain)) %>% 
+    unlist(use.names = FALSE) %>%
+    max()
+  
   col_fun <- colorRamp2(qb, sequential_hcl(qb %>% length, palette = "Greens 3", rev = TRUE))
+  col_fun2 = colorRamp2(c(0, 0.001, max.val), c("white", "darkseagreen1","green4"))
+  
     
   horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
   horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
@@ -134,7 +142,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks){
     border = TRUE,
     width = ncol(input) * unit(4.5, "mm"),
     height = nrow(input) * unit(4.5, "mm"),
-    col = col_fun,
+    col = col_fun2,
     na_col = 'white',
     column_names_gp = grid::gpar(fontsize = 9),
     row_names_gp = grid::gpar(fontsize = 11),
