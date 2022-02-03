@@ -451,7 +451,7 @@ dashboardPage(
                         icon = icon("chart-bar")
                     )),
                     fluidRow(
-                        box(title = "Amino acid replacements detected in the UK data: frequency, nations and date of first detection", closable = FALSE, width = 12,
+                        box(title = "Amino acid replacements detected in the UK data: counts, percentages, nations and date of first detection", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),   
                             
                             p("Individual amino acid replacements detected in UK genomes are shown (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
