@@ -121,7 +121,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, scale_heatmap
   
   
   if (scale_heatmap=="Linear"){ 
-    col_fun2 = colorRamp2(c(0, 0.001, max.val), c("white", "darkseagreen1","green4"))
+    col_fun2 = colorRamp2(c(0, 0.001, 0.01, 0.05, max.val), c("white", "darkseagreen1","darkolivegreen1","darkolivegreen2","green4"))
     }   else {
       col_fun2 <- colorRamp2(qb, sequential_hcl(qb %>% length, palette = "Greens 3", rev = TRUE))
       
@@ -158,9 +158,9 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, scale_heatmap
     left_annotation = row_ha2
   )
   heatmap
-  # draw(heatmap, heatmap_legend_list = list(lgd), heatmap_legend_side = "right")
-  
-  
+  # draw(heatmap, heatmap_legend_side = "right")
+  # lgd = Legend(col_fun = col_fun2, title = "Prop", break_dist = 1, at = c(0, 0.001, 0.01, 0.05, 40), legend_height = unit(4, "cm"))
+  # draw(lgd)
 }
 
 antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){
