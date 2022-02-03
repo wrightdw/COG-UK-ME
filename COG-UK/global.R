@@ -25,7 +25,7 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2022-01-31")
+# dataset_date <- as.Date("2022-02-01")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -118,12 +118,12 @@ n_uk_lineages_all <-
       rename(n_sequences_28 = n_sequences)
   ) %>% 
   pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
-  mutate(across(everything(), ~replace_na(.x, 0L)))
+  mutate(across(where(is.numeric), ~replace_na(.x, 0L)))
 
 # remove VOCs/VUIs with zero counts
 vui_voc %<>% 
   semi_join(n_uk_lineages_all %>% filter(variant == "sequences" & n_sequences_UK > 0), by = "lineage") %>% 
-  mutate(lineage = fct_drop(lineage))
+  mutate(across(c(lineage, lineage_display), fct_drop)) 
 
 # VUI/VOC lineages with AY.x removed
 vui_voc_lineages <- 

@@ -35,10 +35,11 @@ dashboardPage(
         sidebarMenu(
             id = "sidebar_menu",
             menuItem("VOCs/VUIs in the UK", tabName = "vui_voc", selected = TRUE, icon = icon("viruses")),
+            menuItem("VOC Spike Structures", tabName = "strucure_voc", icon = icon("virus")),
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
-            menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
+            # menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Spike Profiles", icon = icon("chart-line"), tabName = "spike_profiles"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
@@ -157,6 +158,90 @@ dashboardPage(
         ),
         
         tabItems(
+            tabItem(tabName = "strucure_voc",
+                    fluidRow(
+                          box(title = "Spike protein mutations (Omicron: BA.1)", 
+                                   closable = FALSE, 
+                                   width = 6, 
+                                   status = "orange", 
+                                   collapsible = TRUE, 
+                                   icon = icon("microscope"),
+                                   height = 480,
+                                   tags$a(
+                                       href = "mutants_BA.1_ME_web.png",
+                                       `data-lightbox` = "structure",
+                                       `data-title` = "Spike protein mutations (Omicron: BA.1)",
+                                       `data-alt` = "Omicron BA.1 spike structure with mutations",
+                                       img(src = "mutants_BA.1_ME_web.png",
+                                           class = "center-block img-responsive", 
+                                           alt = "Omicron BA.1 spike structure with mutations")
+                                   )),
+                          
+                          box(title = "Spike protein mutations (Delta: B.1.617.2)", closable = FALSE, width = 6, 
+                              status = "orange", collapsible = TRUE, icon = icon("microscope"),
+                              tags$a(
+                                  href = "mutants_B.1.617.2_ME_web.png",
+                                  `data-lightbox` = "structure",
+                                  `data-title` = "Spike protein mutations (Delta: B.1.617.2)",
+                                  `data-alt` = "Delta B.1.617.2 spike structure with mutations",
+                                  img(src = "mutants_B.1.617.2_ME_web.png", 
+                                      class = "center-block img-responsive", 
+                                      alt = "Delta B.1.617.2 spike structure with mutations")
+                              ))
+                        ),
+                    
+                    fluidRow(
+                        box(title = "Spike protein mutations (Alpha: B.1.1.7)", 
+                            closable = FALSE, 
+                            width = 6, 
+                            status = "orange", 
+                            collapsible = TRUE, 
+                            icon = icon("microscope"),
+                            tags$a(
+                                href = "mutants_B.1.1.7_ME_web.png",
+                                `data-lightbox` = "structure",
+                                `data-title` = "Spike protein mutations (Alpha: B.1.1.7)",
+                                `data-alt` = "Alpha B.1.1.7 spike structure with mutations",
+                                img(src = "mutants_B.1.1.7_ME_web.png", 
+                                    class = "center-block img-responsive", 
+                                    alt = "Alpha B.1.1.7 spike structure with mutations")
+                            )),
+                        
+                        box(title = "Spike protein mutations (Gamma: P.1)", 
+                            closable = FALSE, 
+                            width = 6, 
+                            status = "orange", 
+                            collapsible = TRUE, 
+                            icon = icon("microscope"),
+                            tags$a(
+                                href = "mutants_P.1_ME_web.png",
+                                `data-lightbox` = "structure",
+                                `data-title` = "Spike protein mutations (Gamma: P.1)",
+                                `data-alt` = "Gamma P.1 spike structure with mutations",
+                                img(src = "mutants_P.1_ME_web.png", 
+                                    class = "center-block img-responsive", 
+                                    alt = "Gamma P.1 spike structure with mutations")
+                            ))
+                    ), 
+                    
+                    fluidRow(
+                        box(title = "Spike protein mutations (Beta: B.1.351)", 
+                            closable = FALSE, 
+                            width = 6, 
+                            status = "orange", 
+                            collapsible = TRUE, 
+                            icon = icon("microscope"), 
+                            
+                            tags$a(
+                                href = "mutants_B.1.351_ME_web.png",
+                                `data-lightbox` = "structure",
+                                `data-title` = "Spike protein mutations (Beta: B.1.351)",
+                                `data-alt` = "Beta B.1.351 spike structure with mutations",
+                                img(src = "mutants_B.1.351_ME_web.png", 
+                                    class = "center-block img-responsive", 
+                                    alt = "Beta B.1.351 spike structure with mutations")
+                            ))
+                    )),
             tabItem(tabName = "about",
                     fluidRow(
                         box(title = "About COG-UK/Mutation Explorer", closable = FALSE, width = 12,
@@ -289,97 +374,84 @@ dashboardPage(
                                    status = "info", collapsible = FALSE, icon = icon("file-download"), 
                                    p("Download a CSV file comprising complete table data."),
                                    downloadButton("downloadTable3", "Download", class = "btn-info"))
-                        ),
-                        
-                        column(width = 6,
-                               box(title = "Spike protein mutations (Omicron: BA.1)", 
-                                   closable = FALSE, 
-                                   width = NULL, 
-                                   status = "orange", 
-                                   collapsible = TRUE, 
-                                   icon = icon("microscope"),
-                                   height = 480,
-                                   tags$a(
-                                       href = "mutants_BA.1_ME_web.png",
-                                       `data-lightbox` = "structure",
-                                       `data-title` = "Spike protein mutations (Omicron: BA.1)",
-                                       `data-alt` = "Omicron BA.1 spike structure with mutations",
-                                       img(src = "mutants_BA.1_ME_web.png",
-                                           class = "center-block img-responsive", 
-                                           alt = "Omicron BA.1 spike structure with mutations")
-                                   ))
-                        )
-                    ),
-                    
-                    fluidRow(
-                        box(title = "Spike protein mutations (Alpha: B.1.1.7)", 
-                            closable = FALSE, 
-                            width = 6, 
-                            status = "orange", 
-                            collapsible = TRUE, 
-                            icon = icon("microscope"),
-                            tags$a(
-                                href = "mutants_B.1.1.7_ME_web.png",
-                                `data-lightbox` = "structure",
-                                `data-title` = "Spike protein mutations (Alpha: B.1.1.7)",
-                                `data-alt` = "Alpha B.1.1.7 spike structure with mutations",
-                                img(src = "mutants_B.1.1.7_ME_web.png", 
-                                    class = "center-block img-responsive", 
-                                    alt = "Alpha B.1.1.7 spike structure with mutations")
-                            )),
-                        
-                        box(title = "Spike protein mutations (Delta: B.1.617.2)", closable = FALSE, width = 6, 
-                            status = "orange", collapsible = TRUE, icon = icon("microscope"),
-                            tags$a(
-                                href = "mutants_B.1.617.2_ME_web.png",
-                                `data-lightbox` = "structure",
-                                `data-title` = "Spike protein mutations (Delta: B.1.617.2)",
-                                `data-alt` = "Delta B.1.617.2 spike structure with mutations",
-                                img(src = "mutants_B.1.617.2_ME_web.png", 
-                                    class = "center-block img-responsive", 
-                                    alt = "Delta B.1.617.2 spike structure with mutations")
-                            ))
-                    ), 
-                    
-                    fluidRow(
-                        box(title = "Spike protein mutations (Beta: B.1.351)", 
-                            closable = FALSE, 
-                            width = 6, 
-                            status = "orange", 
-                            collapsible = TRUE, 
-                            icon = icon("microscope"), 
-                            
-                            tags$a(
-                                href = "mutants_B.1.351_ME_web.png",
-                                `data-lightbox` = "structure",
-                                `data-title` = "Spike protein mutations (Beta: B.1.351)",
-                                `data-alt` = "Beta B.1.351 spike structure with mutations",
-                                img(src = "mutants_B.1.351_ME_web.png", 
-                                    class = "center-block img-responsive", 
-                                    alt = "Beta B.1.351 spike structure with mutations")
-                            )),
-                        
-                        box(title = "Spike protein mutations (Gamma: P.1)", 
-                            closable = FALSE, 
-                            width = 6, 
-                            status = "orange", 
-                            collapsible = TRUE, 
-                            icon = icon("microscope"),
-                            tags$a(
-                                href = "mutants_P.1_ME_web.png",
-                                `data-lightbox` = "structure",
-                                `data-title` = "Spike protein mutations (Gamma: P.1)",
-                                `data-alt` = "Gamma P.1 spike structure with mutations",
-                                img(src = "mutants_P.1_ME_web.png", 
-                                    class = "center-block img-responsive", 
-                                    alt = "Gamma P.1 spike structure with mutations")
-                            ))
-                    )
+                        ))
             ),
             
             tabItem(tabName = "report",
+                    
+            ), # end tabItem
+            
+            tabItem(tabName = "figure_1", 
                     fluidRow(
-                        box(title = "Amino acid replacements detected in the UK data: frequency, nations and date of first detection", closable = FALSE, width = 12,
+                        box(width = 12, closable = FALSE,  status = "warning", collapsible = FALSE, icon = icon("fire-alt"),
+                            title = "Antigenic amino acid replacements in variants of concern (VOC) and variants under investigation (VUI) in addition to their defining mutations",
+                            fluidRow(
+                                column(
+                                    width = 2,
+                                    prettyRadioButtons(
+                                        inputId = "nation_antigenic",
+                                        label = "UK nation:",
+                                        choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"),
+                                        inline = FALSE,
+                                        status = "info",
+                                        fill = TRUE,
+                                        selected = "UK"
+                                    ),
+                                    
+                                    pickerInput(
+                                        inputId = "lineage_antigenic",
+                                        label = "Lineage:",
+                                        choices = (function(){
+                                          picks <- vui_voc %$% levels(lineage)
+                                          names(picks) <- vui_voc %$% levels(lineage_display)
+                                          picks
+                                        })(),
+                                        selected = "BA.1"
+                                    ),
+                                    pickerInput(
+                                        inputId = "scale_heatmap",
+                                        label = "Scale:",
+                                        choices = c("Linear","Quantile"),
+                                        selected = "Linear"
+                                    )
+                                ), 
+                                column(width = 10,                                      
+                                       h4(textOutput("title_heatmap", inline = TRUE), class = "text-center"),
+                                       plotOutput("antibody_heatmap", height = "auto")))
+                        )
+                    )
+            ), # end tabItem
+            
+            tabItem(tabName = "dashboard",
+                    fluidRow(box(
+                        plotlyOutput("mutation_time", height = "80vh"), 
+                        
+                        sliderInput(
+                          inputId = "mutation_range", 
+                          label = "Date range:",
+                          min = mutations_uk %$% min(epi_date), 
+                          max = mutations_uk %$% max(epi_date), 
+                          value = c(mutations_uk %$% min(epi_date),
+                                    mutations_uk %$% max(epi_date)),
+                          step = 7,
+                          ticks = FALSE,
+                          animate = TRUE,
+                          timeFormat = "%d %b %y"
+                        ),
+                        
+                        p("Mutation counts are grouped by week, starting on Sunday.
+                              The most recent sequence data (approx. the last two weeks) have low sample numbers
+                              so are highlighted with a grey box."),
+                        
+                        width = 12,
+                        status = "info",
+                        collapsible = FALSE,
+                        closable = FALSE, 
+                        title = "Amino acid replacement frequencies by week in the UK data",
+                        icon = icon("chart-bar")
+                    )),
+                    fluidRow(
+                        box(title = "Amino acid replacements detected in the UK data: counts, percentages, nations and date of first detection", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),   
                             
                             p("Individual amino acid replacements detected in UK genomes are shown (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
@@ -436,71 +508,7 @@ dashboardPage(
                             )
                         )
                     )
-            ), # end tabItem
-            
-            tabItem(tabName = "figure_1", 
-                    fluidRow(
-                        box(width = 12, closable = FALSE,  status = "warning", collapsible = FALSE, icon = icon("fire-alt"),
-                            title = "Antigenic amino acid replacements in variants of concern (VOC) and variants under investigation (VUI) in addition to their defining mutations",
-                            fluidRow(
-                                column(
-                                    width = 2,
-                                    prettyRadioButtons(
-                                        inputId = "nation_antigenic",
-                                        label = "UK nation:",
-                                        choices = c("UK", "England", "Northern Ireland" = "Northern_Ireland", "Scotland", "Wales"),
-                                        inline = FALSE,
-                                        status = "info",
-                                        fill = TRUE,
-                                        selected = "UK"
-                                    ),
-                                    
-                                    pickerInput(
-                                        inputId = "lineage_antigenic",
-                                        label = "Lineage:",
-                                        choices = (function(){
-                                          picks <- vui_voc %$% levels(lineage)
-                                          names(picks) <- vui_voc %$% levels(lineage_display)
-                                          picks
-                                        })(),
-                                        selected = "BA.1"
-                                    )
-                                ), 
-                                column(width = 10,                                      
-                                       h4(textOutput("title_heatmap", inline = TRUE), class = "text-center"),
-                                       plotOutput("antibody_heatmap", height = "auto")))
-                        )
-                    )
-            ), # end tabItem
-            
-            tabItem(tabName = "dashboard",
-                    fluidRow(box(
-                        plotlyOutput("mutation_time", height = "80vh"), 
-                        
-                        sliderInput(
-                          inputId = "mutation_range", 
-                          label = "Date range:",
-                          min = mutations_uk %$% min(epi_date), 
-                          max = mutations_uk %$% max(epi_date), 
-                          value = c(mutations_uk %$% min(epi_date),
-                                    mutations_uk %$% max(epi_date)),
-                          step = 7,
-                          ticks = FALSE,
-                          animate = TRUE,
-                          timeFormat = "%d %b %y"
-                        ),
-                        
-                        p("Mutation counts are grouped by week, starting on Sunday.
-                              The most recent sequence data (approx. the last two weeks) have low sample numbers
-                              so are highlighted with a grey box."),
-                        
-                        width = 12,
-                        status = "info",
-                        collapsible = FALSE,
-                        closable = FALSE, 
-                        title = "Amino acid replacement frequencies by week in the UK data",
-                        icon = icon("chart-bar")
-                    ))),
+                    ),
             
             tabItem(tabName = "immunology",
                     value = "antibody",
@@ -747,12 +755,7 @@ dashboardPage(
                                                          vui_voc %$% 
                                                          levels(lineage)
                                                      
-                                                     names(picks) <- 
-                                                         picks %>% 
-                                                         str_replace(fixed("B.1.617.2"), "B.1.617.2/AY.x (Delta)") %>% 
-                                                         str_replace("^AY\\.4\\.2$", "AY.4.2/AY.4.2.x (Delta)") %>% 
-                                                         str_replace("^AY\\.4$", "AY.4/AY.4.x (Delta)") %>% 
-                                                         str_replace(fixed("B.1.1.529"), "B.1.1.529 (Omicron)")
+                                                     names(picks) <- vui_voc %$% levels(lineage_display)
                                                      
                                                      picks %>% c("Delta non-AY.4" = "Delta_minus_AY.4",
                                                                  "Delta non-AY.4.2" = "Delta_minus_AY.4.2")

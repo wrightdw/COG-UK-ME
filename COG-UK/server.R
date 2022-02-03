@@ -111,7 +111,7 @@ table_3 <- function(){
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
       mutate(reason = "As B.1.324.1, with the addition of E484K.")
   ) %>% 
-    mutate(across(everything(), ~replace_na(.x, 0L))) %>% 
+    mutate(across(where(is.numeric), ~replace_na(.x, 0L))) %>% 
     filter(n_sequences_UK > 0) %>%
     relocate(n_sequences_UK, .after = reason) %>% 
     mutate(`UK (%)` = n_sequences_UK / total_sequences,
@@ -542,7 +542,7 @@ shinyServer(function(input, output, session) {
         mutation
       
       antigenic_mutations <- antigenic_mutations_lineages(nation = input$nation_antigenic, lineage = input$lineage_antigenic, defining = defining)
-      
+
       if(is.null(antigenic_mutations)){
         values$antigenic <- NULL
         values$antigenic_title <- str_c(input$lineage_antigenic, " (", input$nation_antigenic %>% str_replace_all("_", " "), ")", ": no antigenic mutations")
@@ -550,7 +550,7 @@ shinyServer(function(input, output, session) {
         values$antigenic_title <- str_c("Antigenic mutations on the top of ", input$lineage_antigenic, " defining mutations (", 
                                         input$nation_antigenic %>% str_replace_all("_", " "), ")")
         values$antigenic <- 
-          antibody_complex_heatmap(antigenic_mutations)
+          antibody_complex_heatmap(antigenic_mutations, input$scale_heatmap)
       }
     })
     
@@ -983,7 +983,9 @@ shinyServer(function(input, output, session) {
     observeEvent(input$ronapreve_28, {
       css_class <- "center-block img-responsive"
       if(input$ronapreve_28){
-        output$title_ronapreve <- renderText("28 days to latest UK sequence date")
+        x<-paste("28 days to latest UK sequence date (# sequences:", total_sequences_28,")")
+        output$title_ronapreve <- renderText(x
+          )
         output$ronapreve_plot <- renderImage({
           list(src = str_c(dataset_date, "/Ronapreve_28.png"),
                alt = "Ronapreve plot 28 days",
