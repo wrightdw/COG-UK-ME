@@ -983,7 +983,9 @@ shinyServer(function(input, output, session) {
     observeEvent(input$ronapreve_28, {
       css_class <- "center-block img-responsive"
       if(input$ronapreve_28){
-        output$title_ronapreve <- renderText("28 days to latest UK sequence date")
+        x<-paste("28 days to latest UK sequence date (# sequences:", total_sequences_28,")")
+        output$title_ronapreve <- renderText(x
+          )
         output$ronapreve_plot <- renderImage({
           list(src = str_c(dataset_date, "/Ronapreve_28.png"),
                alt = "Ronapreve plot 28 days",
