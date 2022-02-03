@@ -703,7 +703,7 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                  "BA.1" = "BA.1 (Omicron)",
+                                  "BA.1" = "BA.1/BA.1.x (Omicron)",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -843,7 +843,7 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                         "BA.1" = "BA.1 (Omicron)",
+                                         "BA.1" = "BA.1/BA.1.x (Omicron)",
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
