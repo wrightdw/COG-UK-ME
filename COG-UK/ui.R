@@ -447,7 +447,7 @@ dashboardPage(
                         status = "info",
                         collapsible = FALSE,
                         closable = FALSE, 
-                        title = "Amino acid replacement frequencies by week in the UK data",
+                        title = "Amino acid replacement counts and percentages by week in the UK data",
                         icon = icon("chart-bar")
                     )),
                     fluidRow(
