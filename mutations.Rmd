@@ -16,6 +16,7 @@ params:
   isaric_csv:       "Isaric_list.csv"
   insertions_tsv:   "cog.insertions.tsv"
   functional_csv:   "tcell_functional_mutations.csv"
+  deletions_mapping_csv: "deletion_mapping.csv"
 ---
 # Setup
 ```{r setup}
@@ -189,7 +190,8 @@ mutations_uk %<>%
   drop_na(-NUTS1) %>% # don't drop missing geographical data
   filter(gene != "synSNP") %>%
   mutate(position = parse_number(variant)) %>% 
-  mutate(across(c(gene, position, variant), as_factor)) %T>% 
+  mutate(across(c(gene, position, variant), as_factor)) %>% 
+  mutate(gene = fct_recode(gene, ORF1ab = "orf1ab")) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
 
 mutations_uk
@@ -337,188 +339,7 @@ update_geom_defaults("line", list(color = pal[5]))
  ggsave("N501Y.png")
 
 ```
-```{r eval=FALSE, include=FALSE}
-update_geom_defaults("point", list(color = pal[3]))
-update_geom_defaults("line", list(color = pal[3]))
 
- ggplot(n_uk, aes(x = epi_week, y = DEL_69_70 / sequences)) + 
-  geom_line() + geom_point() + labs(x = "Epidemic week", y = "Deletion 69-70 (normalised)", title = "Deletion 69-70") + ylim(0,1)
-ggsave("DEL_69_70.png")
-```
-```{r eval=FALSE, include=FALSE}
-n_uk_long <- 
-  n_uk %>% 
-  select(-c(sequences, D614G)) %>% 
-  gather(key = "variant", value = "seq_raw", -epi_week) 
-n_uk_long
-```
-```{r eval=FALSE, include=FALSE}
-n_uk_long_norm <- 
-  n_uk %>% 
-  mutate_at(vars(D614G:DEL_69_70), funs((. / sequences) * 100)) %>%
-  select(-c(sequences, D614G)) %>% 
-  gather(key = "variant", value = "seq_norm", -epi_week) 
-n_uk_long_norm
-```
-
-```{r eval=FALSE, include=FALSE}
-theme_set(theme_classic())
-n_uk_long %>% 
-  ggplot(aes(x = epi_week, y = seq_raw)) + 
-  geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
-  labs(x = "Epidemic week", y = "Sequences", title = "Variant Viral Sequences per Week")  +  
-  # ylim(0,100) + 
-  theme(legend.title = element_blank()) + scale_color_manual(values = pal) 
-ggsave("variants_overlay.png")
-```
-```{r eval=FALSE, include=FALSE}
-theme_set(theme_classic())
-n_uk_long_norm %>% 
-ggplot(aes(x = epi_week, y = seq_norm)) + 
-  geom_line(aes(color = variant)) + geom_point(aes(color = variant), size = 0.25) +
-  labs(x = "Epidemic week", y = "% Sequences (normalised)", title = "Variant Viral Sequences per Week (Normalised)")  +  
-  # ylim(0,100) + 
-  theme(legend.title = element_blank()) + scale_color_manual(values = pal) 
-ggsave("variants_overlay_norm.png")
-```
-
-
-```{r eval=FALSE, include=FALSE}
-consortium_uk %>% 
-  dplyr::count(n501y, del_21765_6)
-```
-
-```{r eval=FALSE, include=FALSE}
-consortium_uk %>%  
-  filter(sample_date >= sample_date_28) %>% 
-  dplyr::count(n501y, del_21765_6)
-
-```
-```{r eval=FALSE, include=FALSE}
-consortium_uk %>%  
-  dplyr::count(n439k, del_21765_6)
-
-```
-```{r eval=FALSE, include=FALSE}
-consortium_uk %>%  
-  filter(sample_date >= sample_date_28) %>% 
-  dplyr::count(n439k, del_21765_6)
-
-```
-```{r eval=FALSE, include=FALSE}
-
-consortium_uk %>% 
-  filter(n501y == "Y" & del_21765_6 == "del")  %>% 
-  dplyr::count(lineage) %>% 
-  arrange(desc(n))
-```
-```{r eval=FALSE, include=FALSE}
-
-consortium_uk %>% 
-  filter(sample_date >= sample_date_28 & n501y == "Y" & del_21765_6 == "del")  %>% 
-  dplyr::count(lineage) %>% 
-  arrange(desc(n))
-```
-```{r eval=FALSE, include=FALSE}
-consortium_uk %>% 
-  filter(n439k == "K" & del_21765_6 == "del")  %>% 
-  dplyr::count(lineage) %>% 
-  arrange(desc(n))
-```
-```{r eval=FALSE, include=FALSE}
-
-consortium_uk %>% 
-  filter(sample_date >= sample_date_28 & n439k == "K" & del_21765_6 == "del")  %>% 
-  dplyr::count(lineage) %>% 
-  arrange(desc(n))
-```
-```{r eval=FALSE, include=FALSE}
-mutations %>% 
-  filter(country == "UK" & gene == "S") %>% 
-  summarise(n(), n_distinct(sequence_name))
-```
-```{r eval=FALSE, include=FALSE}
-mutations %>% filter(country == "UK" & gene == "S") %>% 
-  dplyr::count(variant) %>% 
-  filter(n >1) %>% 
-  summarise(sum(n))
-```
-
-```{r eval=FALSE, include=FALSE}
-mutations %>% 
-  filter(country == "UK" & gene == "S") %>% 
-  dplyr::count(variant) %>% filter(n >100) %>% 
-  summarise(sum(n))
-```
-```{r eval=FALSE, include=FALSE}
- # awk '/S:P681H/
- #  && /S:N501Y/
- #   && /orf1ab:T1001I/
- #   && /orf1ab:A1708D/
- #   && /orf1ab:I2230T/
- #   && /S:A570D/
- #   && /S:T716I/
- #   && /S:S982A/
- #   && /S:D1118H/
- #   && /ORF8:Q27*/
- #   && /ORF8:R52I/
- #   && /ORF8:Y73C/
- #   && /N:D3L/
- #   && /N:S235F/ { print;}' /cephfs/covid/bham/results/phylogenetics/20201215/metadata/cog_global_2020-12-20_mutations.csv
- # 
-
- # awk '/S:P681H/  && /S:N501Y/ && /orf1ab:T1001I/   && /orf1ab:A1708D/   && /orf1ab:I2230T/   && /S:A570D/   && /S:T716I/   && /S:S982A/   && /S:D1118H/ && /ORF8:Q27*/   && /ORF8:R52I/   && /ORF8:Y73C/   && /N:D3L/   && /N:S235F/ { print;}' cog_global_2020-12-20_mutations.csv 
- # 
- # 
- #  awk '/S:P681H/  && /S:N501Y/ && /orf1ab:T1001I/   && /orf1ab:A1708D/   && /orf1ab:I2230T/   && /S:A570D/   && /S:T716I/   && /S:S982A/   && /S:D1118H/ && /ORF8:Q27*/   && /ORF8:R52I/   && /ORF8:Y73C/   && /N:D3L/   && /N:S235F/ { print;}' cog_global_2020-12-21_mutations.csv > mutations_v_020-12-21.csv
-
-
-mutations_v <- mutations %>% filter(country == "UK" & lineage == "B.1.1.7"
-                     & sample_date >= "2020-11-24"
-                     & (
-  (gene == "S" & variant == "P681H") | 
-  (gene == "S" & variant == "N501Y") | 
-  (gene == "orf1ab" & variant == "T1001I") | 
-  (gene == "orf1ab" & variant == "A1708D") | 
-  (gene == "orf1ab" & variant == "I2230T") | 
-  (gene == "S" & variant == "A570D") | 
-  (gene == "S" & variant == "T716I") | 
-  (gene == "S" & variant == "S982A") | 
-  (gene == "S" & variant == "D1118H") | 
-  (gene == "ORF8" & variant == "Q27*") |  
-  (gene == "ORF8" & variant == "R52I") |
-  (gene == "ORF8" & variant == "Y73C") | 
-  (gene == "N" & variant == "D3L") | 
-  (gene == "N" & variant == "S235F") 
-  )) %>% dplyr::count(sequence_name, lineage) %>% filter(n == 14) #%>% select(-n)
-
-mutations_v
-```
-
-```{r eval=FALSE, include=FALSE}
-mutations %>% filter(country == "UK" 
-                     # & sample_date >= "2020-11-13" 
-                     & (
-  (gene == "S" & variant == "K417N") | 
-  (gene == "S" & variant == "E484K") | 
-  (gene == "S" & variant == "N501Y") 
-  )) %>% dplyr::count(sequence_name) %>% filter(n == 3)
-
-
-```
-```{r cluster5, eval=FALSE, include=FALSE}
-# Cluster 5 is Y453F, 69-70del, I692V and M1229I
-# 
-mutations %>% filter(country == "UK" 
-                     # & sample_date >= "2020-11-13" 
-                     & (
-  (gene == "S" && variant == "Y453F") | 
-  (gene == "S" & variant == "I692V") | 
-  (gene == "S" & variant == "M1229I") 
-  )) %>% dplyr::count(sequence_name) %>% filter(n == 3)
-
-
-```
 # Deletions
 ```{r deletions}
 deletions <- 
@@ -528,6 +349,19 @@ deletions <-
 message("Writing deletions.rds")
 deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
 ```
+```{r}
+deletions_mapping <- 
+  read_csv(params$deletions_mapping_csv) %>% 
+  mutate(across(c(gene), as_factor)) %>% 
+  right_join(deletions)
+
+deletions_mapping <- consortium_uk %>% 
+  select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
+  inner_join(deletions_mapping,  by = c("sequence_name" = "samples"))
+
+deletions_mapping
+```
+
 # Insertions
 ```{r}
 insertions <- 
@@ -537,6 +371,39 @@ insertions <-
 message("Writing insertions.rds")
 insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 ```
+```{r database_deletions}
+deletions_uk <-
+  deletions_mapping %>% 
+  group_by(gene, del_start, del_end, del_id) %>% 
+  summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
+
+deletions_nations <- 
+  deletions_mapping %>% 
+  dplyr::count(gene, del_start, del_end, del_id, adm1) %>% 
+  pivot_wider(names_from = adm1, values_from = n)
+
+deletions_uk_28 <- 
+  deletions_mapping %>% 
+  filter(sample_date >= sample_date_28) %>% 
+  dplyr::count(gene, del_start, del_end, del_id, name = "UK_28")
+
+deletions_nations_28 <-
+  deletions_mapping %>% 
+    filter(sample_date >= sample_date_28) %>% 
+    dplyr::count(gene, del_start, del_end, del_id, adm1) %>% 
+    pivot_wider(names_from = adm1, values_from = n) %>% 
+    rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
+
+database_deletions <- 
+  deletions_uk %>% 
+  inner_join(deletions_nations) %>% 
+  left_join(deletions_uk_28) %>% 
+  left_join(deletions_nations_28)
+
+database_deletions %>% 
+  write_rds(str_c("COG-UK/", params$dataset_date, "/database_deletions.rds"))
+```
+
 
 # Database
 ```{r database_genome}
@@ -633,18 +500,6 @@ database_genome %<>%
   mutate(support = fct_relevel(support, "lower", "medium", "high"))
 
 database_genome %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_genome.rds"))
-```
-## nsp12
-```{r nsp12, eval=FALSE, include=TRUE}
-mutations_uk %>% 
-  mutate(across(position, as.character)) %>% 
-  mutate(across(position, as.numeric)) %>% 
-  filter(gene == "orf1ab" & between(position, 4393, 5324)) %>% 
-  mutate(nsp12_variant = str_c(str_sub(variant, 1, 1), position - 4392, str_sub(variant, -1, -1) ) ) %>% 
-  group_by(gene, variant, nsp12_variant) %>% 
-  summarise(sequences = n_distinct(sequence_name)) %>% 
-  ungroup %>%  
-  slice_max(sequences, n = 15) %T>% write_csv("nsp12_top15.csv")
 ```
 
 # Therapeutics
@@ -872,39 +727,6 @@ n_uk_lineages <-
   )
 
 n_uk_lineages
-```
-#### B.1
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% 
-  filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% 
-  select(-lineage) %>% 
-  summarise_all(funs(sum))
-```
-
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% 
-  filter(lineage == "B.1" |str_detect(lineage, "^B\\.1\\.")) %>% 
-  mutate(lineage_top = "B.1") 
-```
-#### B.1.177
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% 
-  filter(lineage == "B.1.177" | str_detect(lineage, "^B\\.1\\.177\\.")) %>% 
-  select(-lineage) %>% 
-  summarise_all(funs(sum))
-```
-#### B.1.141
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% filter(lineage == "B.1.141" | str_detect(lineage, "^B\\.1\\.141\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-```
-#### B.1.258
-
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% filter(lineage == "B.1.258" | str_detect(lineage, "^B\\.1\\.258\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-```
-#### B.1.1
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
 ```
 
 #### B.1.1.7
