@@ -193,8 +193,10 @@ spike_table <- spike_tab
 spike_tab$Profile <- gsub('Y505H, T547K', 'Y505H,\nT547K', spike_tab$Profile)
 
 # identify where 0 is in range of expansion
-col_min <- min(c(-0.02, plyr::round_any(min(spike_tab$Expansion), 0.005, floor)))
-col_max <- max(c(0.02, plyr::round_any(max(spike_tab$Expansion), 0.005, ceiling)))
+# col_min <- min(c(-0.02, plyr::round_any(min(spike_tab$Expansion), 0.005, floor)))
+# col_max <- max(c(0.02, plyr::round_any(max(spike_tab$Expansion), 0.005, ceiling)))
+col_max <- max(c(0.02, plyr::round_any(max(abs(spike_tab$Expansion)), 0.005, ceiling)))
+col_min <- -col_max
 zero_percentile <- (0 - col_min) / (col_max - col_min)
 
 # rounding for table
