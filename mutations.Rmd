@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2022-02-01" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
+  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -351,25 +351,16 @@ deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds")
 ```
 ```{r}
 deletions_mapping <- 
-  read_csv(params$deletions_mapping_csv) %>% 
+  read_csv(params$deletions_mapping_csv) %>%
   mutate(across(c(gene), as_factor)) %>% 
-  right_join(deletions)
+  inner_join(deletions)
 
-deletions_mapping <- consortium_uk %>% 
+deletions_mapping <- 
+  consortium_uk %>% 
   select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
   inner_join(deletions_mapping,  by = c("sequence_name" = "samples"))
 
 deletions_mapping
-```
-
-# Insertions
-```{r}
-insertions <- 
-  read_tsv(params$insertions_tsv) %>% 
-  separate_rows(samples, sep = '\\|')
-
-message("Writing insertions.rds")
-insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 ```
 ```{r database_deletions}
 deletions_uk <-
@@ -404,6 +395,15 @@ database_deletions %T>%
   write_rds(str_c("COG-UK/", params$dataset_date, "/database_deletions.rds"))
 ```
 
+# Insertions
+```{r}
+insertions <- 
+  read_tsv(params$insertions_tsv) %>% 
+  separate_rows(samples, sep = '\\|')
+
+message("Writing insertions.rds")
+insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
+```
 
 # Database
 ```{r database_genome}

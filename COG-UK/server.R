@@ -63,6 +63,24 @@ lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = 
 # 
 # Mutations
 table_1 <- function(){
+  
+  database_deletions %>% filter(is.na(gene)) %>% print
+  
+  database_deletions %<>% 
+    rename(
+      mutation = del_id,
+      `numSeqs UK` = UK,
+      `numSeqs UK 28 days` = UK_28,
+      `numSeqs Eng 28 days` = England_28,
+      `numSeqs Scotland 28 days` = Scotland_28,
+      `numSeqs Wales 28 days` = Wales_28, 
+      `numSeqs NI 28 days` = Northern_Ireland_28) %>% 
+    select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest)
+  
+  # database_genome %>% print
+  
+  
+  
   database_genome %>% 
     select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
     bind_rows(database_deletions) %>% 
@@ -81,7 +99,7 @@ table_1 <- function(){
            `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
            `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
            `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
-           `Date of first detection in UK` = earliest) 
+           `Date of first detection in UK` = earliest) #%T>% print
 }
 
 # Variants
