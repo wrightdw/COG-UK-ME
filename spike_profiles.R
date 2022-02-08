@@ -171,13 +171,23 @@ spike_profiles_nations <- function(viruses = NA) {
 
 
 get_pretty_profiles <- function(x = NA) {
+  
+  # Delta
   profile_delta <- c('T19R', 'G142D', 'L452R', 'T478K', 'D614G', 'P681R', 'D950N')
   N_change_delta <- 8
+  # Omicron BA.1/B.1.1.529
   profile_omicron <- c('A67V', 'T95I', 'G142D', 'G339D', 'S371L', 'S373P', 'S375F',
                        'K417N', 'N440K', 'G446S', 'S477N', 'T478K', 'E484A', 'Q493R', 'G496S',
                        'Q498R', 'N501Y', 'Y505H', 'T547K', 'D614G', 'H655Y', 'N679K',
                        'P681H', 'N764K', 'D796Y', 'N856K', 'Q954H', 'N969K', 'L981F')
   N_change_omicron <- 30
+  # Omicron BA.2
+  profile_omicron_ba2 <- c('T19I', 'G142D', 'V213G', 'G339D', 'S371F', 'S373P', 'S375F',
+                           'T376A', 'D405N', 'R408S', 'K417N', 'N440K', 'S477N', 'T478K',
+                           'E484A', 'Q493R', 'Q498R', 'N501Y', 'Y505H', 'D614G', 'H655Y',
+                           'N679K', 'P681H', 'N764K', 'D796Y', 'Q954H', 'N969K')
+  N_change_omicron_ba2 <- 28
+  
   
   x$pretty_profile <- NA
   x$N_change <- NA
@@ -217,7 +227,7 @@ get_pretty_profiles <- function(x = NA) {
       voc_absent <- setdiff(voc_absent, 'N764K')
       
       # use collected info to generate 'pretty_profile'
-      pretty_profile <- 'Omicron'
+      pretty_profile <- 'Omicron (BA.1)'
       pretty_profile <- ifelse(length(voc_extra) > 0,
                                paste0(pretty_profile, ' +', paste(voc_extra, collapse = ',')),
                                pretty_profile)
@@ -226,6 +236,23 @@ get_pretty_profiles <- function(x = NA) {
                                pretty_profile)
       x$pretty_profile[i] <- pretty_profile
       x$N_change[i] <- N_change_omicron + length(voc_extra) - length(voc_absent)
+      
+    } else if (grepl('BA.2', x$lineage[i])){
+      
+      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      voc_extra <- setdiff(profile, profile_omicron_ba2)
+      voc_absent <- setdiff(profile_omicron_ba2, profile)
+      
+      # use collected info to generate 'pretty_profile'
+      pretty_profile <- 'Omicron (BA.2)'
+      pretty_profile <- ifelse(length(voc_extra) > 0,
+                               paste0(pretty_profile, ' +', paste(voc_extra, collapse = ',')),
+                               pretty_profile)
+      pretty_profile <- ifelse(length(voc_absent) > 0,
+                               paste0(pretty_profile, ' -', paste(voc_absent, collapse = ',')),
+                               pretty_profile)
+      x$pretty_profile[i] <- pretty_profile
+      x$N_change[i] <- N_change_omicron_ba2 + length(voc_extra) - length(voc_absent)
       
     } else {
       x$pretty_profile[i] <- x$mutations[i]
