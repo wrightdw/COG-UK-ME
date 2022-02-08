@@ -1125,7 +1125,9 @@ shinyServer(function(input, output, session) {
                                      '</br>Count 28 days = ', `Count in latest 28 days`,
                                      '</br>Lineage(s) = ', `lineage(s)`))) +
                geom_point() +
-               scale_x_continuous(trans = 'log', breaks = c(1, 10, 100, 1000, 10000, 100000)) +
+               scale_x_continuous(trans = 'log',
+                                  breaks = c(1, 10, 100, 1000, 10000, 100000),
+                                  labels = c("1", "10", "100", "1,000", "10k", "100k")) +
                scale_y_continuous(breaks = seq(-20, 20, ifelse(col_max - col_min > 2, 0.2, 0.1))) +
                scale_color_gradientn(limits = c(col_min, col_max),
                                      values = c(0, zero_percentile - 0.02, zero_percentile, zero_percentile + 0.02, 1),
