@@ -681,7 +681,8 @@ dashboardPage(
                             p("Hover the cursor over a point to reveal the substitutions defining a spike profile, count in the latest 28-day period and the associated pango lineages."),
                             p("For profiles associated with the Delta or Omicron variants of concern (VOCs), profiles are described as amino acid substitutions relative to the core profiles below with '+' indicating a substitution not in the VOC core profile and '-' marking the absence of a substitution that is present in the core profile."),
                             p("Delta core profile: T19R, G142D, Δ156-157/R158G, L452R, T478K, D614G, P681R, D950N"),
-                            p("Omicron core profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F"),
+                            p("Omicron (BA.1) core profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F"),
+                            p("Omicron (BA.2) core profile: T19I, L24S/Δ25-27, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K"),
                             
                             prettyRadioButtons(
                                 inputId = "spike_geo",
