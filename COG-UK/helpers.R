@@ -20,7 +20,10 @@ quantile_breaks <- function(xs, n = 10) {
 }
 
 
-antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, scale_heatmap){
+antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_range){
+  scale_heatmap = "Linear"
+  # mutations_lineages_epi_weeks <-mutations_lineages_epi_weeks %>% 
+  #   filter(across(everything(-1), ~ . <= percentage_range[2]))
   
   RBD1_class <- c(403, 405, 406, 408, 409, 414, 415, 416, 417, 420, 421, 449, 453, 455, 456, 457, 458, 459, 460, 473, 474, 475, 476, 477, 484, 486, 487, 489, 490, 492, 493, 494, 495, 496, 498, 500, 501, 502, 503, 504, 505)
   RBD2_class <- c(338, 339, 342, 343, 346, 351, 368, 371, 372, 373, 374, 403, 405, 406, 417, 436, 444, 445, 446, 447, 448, 449, 450, 452, 453, 455, 456, 470, 472, 473, 475, 478, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505)
@@ -50,7 +53,13 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, scale_heatmap
     select(-(position:domain)) %>% 
     unlist(use.names = FALSE) %>%
     max()
-  
+  min.val<-0
+  if (max.val>percentage_range[2]){
+    max.val==percentage_range[2]
+  }else{}
+  if (min.val<percentage_range[1]){
+    min.val==percentage_range[1]
+  }else{} 
  
   horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
   horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
@@ -119,7 +128,6 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, scale_heatmap
   
   input <- subset(input, select = -c(position:NTD.1))
   
-  
   if (scale_heatmap=="Linear"){ 
     col_fun2 = colorRamp2(c(0, 0.001, 0.01, 0.05, max.val), c("white", "darkseagreen1","darkolivegreen1","darkolivegreen2","green4"))
     }   else {
@@ -163,7 +171,8 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, scale_heatmap
   # draw(lgd)
 }
 
-antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y"){
+antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y", percentage_range)
+  {
   nation = match.arg(nation)
   
   if(lineage %in% c("AY.4", "AY.4.2", "BA.1")) { # alias lineage name - include sublineages of alias name
@@ -225,7 +234,7 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   
   antigenic_mutations_lineages_all <- 
     inner_join(antigenic_mutations, sequences_by_week_lineages) %>% 
-    mutate(percentage = n / n_sequences_lineage * 100 ) 
+    mutate(percentage = n / n_sequences_lineage * 100 ) %>% filter (percentage >= percentage_range[1] & percentage <= percentage_range[2])
   
   antigenic_mutations_lineages <- 
     antigenic_mutations_lineages_all %>% 

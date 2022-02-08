@@ -408,12 +408,18 @@ dashboardPage(
                                         })(),
                                         selected = "BA.1"
                                     ),
-                                    pickerInput(
-                                        inputId = "scale_heatmap",
-                                        label = "Scale:",
-                                        choices = c("Linear","Quantile"),
-                                        selected = "Linear"
-                                    )
+                                    # pickerInput(
+                                    #     inputId = "scale_heatmap",
+                                    #     label = "Scale:",
+                                    #     choices = c("Linear","Quantile"),
+                                    #     selected = "Linear"
+                                    # ),
+                                    sliderInput(
+                                        inputId = "percentage_range",
+                                        label = "Percentage range:",
+                                        min = 0,
+                                        max = 100,
+                                        value = c(0, 100))
                                 ), 
                                 column(width = 10,                                      
                                        h4(textOutput("title_heatmap", inline = TRUE), class = "text-center"),
