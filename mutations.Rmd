@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2022-02-01" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -400,7 +400,7 @@ database_deletions <-
   left_join(deletions_uk_28) %>% 
   left_join(deletions_nations_28)
 
-database_deletions %>% 
+database_deletions %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/database_deletions.rds"))
 ```
 

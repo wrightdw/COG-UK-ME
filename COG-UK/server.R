@@ -64,10 +64,11 @@ lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = 
 # Mutations
 table_1 <- function(){
   database_genome %>% 
+    select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
+    bind_rows(database_deletions) %>% 
     arrange(desc(`numSeqs UK`)) %>% 
     filter(`numSeqs UK` >= 5) %>% 
     mutate(mutation = mutation %>% fct_drop %>% fct_inorder) %>% 
-    select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
     mutate(`Cumulative sequences in UK (%)` = `numSeqs UK` / total_sequences,
            .after = `numSeqs UK`) %>%
     mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
