@@ -80,7 +80,7 @@ table_1 <- function(){
   
   
   database_genome %>% 
-    # select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
+    select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>%
     # bind_rows(database_deletions) %>% 
     arrange(desc(`numSeqs UK`)) %>% 
     filter(`numSeqs UK` >= 5) %>% 
@@ -90,7 +90,7 @@ table_1 <- function(){
     mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
            .after = `numSeqs UK 28 days`) %>%
     rename(Gene = gene,
-           `Amino acid replacement/ deletion` = mutation, 
+           `Amino acid replacement/ deletion/ insertion` = mutation, 
            `Cumulative sequences in UK` = `numSeqs UK`, 
            `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
            `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,

@@ -17,6 +17,7 @@ params:
   insertions_tsv:   "cog.insertions.tsv"
   functional_csv:   "tcell_functional_mutations.csv"
   deletions_mapping_csv: "deletion_mapping.csv"
+  insertions_mapping_csv: "insertion_mapping.csv"
 ---
 # Setup
 ```{r setup}
@@ -403,6 +404,53 @@ insertions <-
 
 message("Writing insertions.rds")
 insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
+
+```
+```{r}
+insertions_mapping <- 
+  read_csv(params$insertions_mapping_csv) %>%
+  mutate(across(c(gene), as_factor)) %>% 
+  inner_join(insertions)
+
+insertions_mapping <- 
+  consortium_uk %>% 
+  select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
+  inner_join(insertions_mapping,  by = c("sequence_name" = "samples"))
+
+insertions_mapping
+```
+```{r database_insertions}
+insertions_uk <-
+  insertions_mapping %>% 
+  group_by(gene, ref_start, insertion, insertion_id) %>% 
+  summarise(UK = n(), earliest = min(sample_date), .groups = "drop")
+
+insertions_nations <- 
+  insertions_mapping %>% 
+  dplyr::count(gene, ref_start, insertion, insertion_id, adm1) %>% 
+  pivot_wider(names_from = adm1, values_from = n)
+
+insertions_uk_28 <- 
+  insertions_mapping %>% 
+  filter(sample_date >= sample_date_28) %>% 
+  dplyr::count(gene, ref_start, insertion, insertion_id, name = "UK_28")
+
+insertions_nations_28 <-
+  insertions_mapping %>% 
+    filter(sample_date >= sample_date_28) %>% 
+    dplyr::count(gene, ref_start, insertion, insertion_id, adm1) %>% 
+    pivot_wider(names_from = adm1, values_from = n) %>% 
+    rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
+
+database_insertions <- 
+  insertions_uk %>% 
+  inner_join(insertions_nations) %>% 
+  left_join(insertions_uk_28) %>% 
+  left_join(insertions_nations_28)
+
+database_insertions %T>% 
+  write_rds(str_c("COG-UK/", params$dataset_date, "/database_insertions.rds"))
+```
 ```
 
 # Database

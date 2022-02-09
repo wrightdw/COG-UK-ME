@@ -472,7 +472,7 @@ dashboardPage(
                             fluidRow(
                                 column(
                                     width = 8,
-                                    p("Download a CSV file, for each amino acid replacement, comprising COG-UK sequence name, sample date, epidemiological week, epidemiological week start date and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
+                                    p("Download a CSV file, for each amino acid replacement/del/ins, comprising COG-UK sequence name, sample date, epidemiological week, epidemiological week start date and global lineage. UK sequences are filtered by a 28 day period up to and including the most recent UK sequence date.")
                                 ),
                                 
                                 (function() { 

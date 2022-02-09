@@ -41,6 +41,7 @@ therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral d
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
 spike_tab <- read_rds(str_c(dataset_date, "/spike_table.rds"))
 database_deletions <- read_rds(str_c(dataset_date, "/database_deletions.rds"))
+database_insertions <- read_rds(str_c(dataset_date, "/database_insertions.rds"))
 
 source("helpers.R")
 
@@ -61,9 +62,21 @@ database_deletions %<>%
     `numSeqs NI 28 days` = Northern_Ireland_28)
 # database_genome %>% print
 
+database_insertions %<>%
+  rename(
+    mutation = insertion_id,
+    `numSeqs UK` = UK,
+    `numSeqs UK 28 days` = UK_28,
+    `numSeqs Eng 28 days` = England_28,
+    `numSeqs Scotland 28 days` = Scotland_28,
+    `numSeqs Wales 28 days` = Wales_28,
+    `numSeqs NI 28 days` = Northern_Ireland_28)
+
+
 database_genome %<>%
   # select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>%
-  bind_rows(database_deletions)
+  bind_rows(database_deletions) %>%
+  bind_rows(database_insertions)
 
 mutations_s_uk <- 
   mutations_uk %>% 
