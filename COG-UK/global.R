@@ -50,6 +50,21 @@ database <-
   select(-gene) %>% 
   mutate(across(where(is.factor), fct_drop))
 
+database_deletions %<>%
+  rename(
+    mutation = del_id,
+    `numSeqs UK` = UK,
+    `numSeqs UK 28 days` = UK_28,
+    `numSeqs Eng 28 days` = England_28,
+    `numSeqs Scotland 28 days` = Scotland_28,
+    `numSeqs Wales 28 days` = Wales_28,
+    `numSeqs NI 28 days` = Northern_Ireland_28)
+# database_genome %>% print
+
+database_genome %<>%
+  # select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>%
+  bind_rows(database_deletions)
+
 mutations_s_uk <- 
   mutations_uk %>% 
   filter(gene == "S") %>% 

@@ -64,26 +64,24 @@ lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = 
 # Mutations
 table_1 <- function(){
   
-  database_deletions %>% filter(is.na(gene)) %>% print
-  
-  database_deletions %<>% 
-    rename(
-      mutation = del_id,
-      `numSeqs UK` = UK,
-      `numSeqs UK 28 days` = UK_28,
-      `numSeqs Eng 28 days` = England_28,
-      `numSeqs Scotland 28 days` = Scotland_28,
-      `numSeqs Wales 28 days` = Wales_28, 
-      `numSeqs NI 28 days` = Northern_Ireland_28) %>% 
-    select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest)
-  
+  # database_deletions %<>% 
+  #   rename(
+  #     mutation = del_id,
+  #     `numSeqs UK` = UK,
+  #     `numSeqs UK 28 days` = UK_28,
+  #     `numSeqs Eng 28 days` = England_28,
+  #     `numSeqs Scotland 28 days` = Scotland_28,
+  #     `numSeqs Wales 28 days` = Wales_28, 
+  #     `numSeqs NI 28 days` = Northern_Ireland_28) %>% 
+  #   select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest)
+  # 
   # database_genome %>% print
   
   
   
   database_genome %>% 
-    select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
-    bind_rows(database_deletions) %>% 
+    # select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>% 
+    # bind_rows(database_deletions) %>% 
     arrange(desc(`numSeqs UK`)) %>% 
     filter(`numSeqs UK` >= 5) %>% 
     mutate(mutation = mutation %>% fct_drop %>% fct_inorder) %>% 
@@ -92,7 +90,7 @@ table_1 <- function(){
     mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
            .after = `numSeqs UK 28 days`) %>%
     rename(Gene = gene,
-           `Amino acid replacement` = mutation, 
+           `Amino acid replacement/ deletion` = mutation, 
            `Cumulative sequences in UK` = `numSeqs UK`, 
            `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
            `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
