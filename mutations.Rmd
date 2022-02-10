@@ -363,8 +363,7 @@ deletions_mapping <-
   select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
   inner_join(deletions_mapping,  by = c("sequence_name" = "samples")) %>% 
   rename(variant = del_id, position = del_start) %>% 
-  select(-c(del_end, del_subst, ref_start, length)) %>% 
-  mutate(across(position, as_factor)) 
+  select(-c(del_end, del_subst, ref_start, length, position))
 
 deletions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions_mapping.rds"))
 ```
@@ -407,8 +406,7 @@ insertions <-
   read_tsv(params$insertions_tsv) %>% 
   separate_rows(samples, sep = '\\|')
 
-message("Writing insertions.rds")
-insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
+
 
 ```
 ```{r}
@@ -417,10 +415,17 @@ insertions_mapping <-
   mutate(across(c(gene), as_factor)) %>% 
   inner_join(insertions)
 
+
 insertions_mapping <- 
   consortium_uk %>% 
   select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
-  inner_join(insertions_mapping,  by = c("sequence_name" = "samples"))
+  inner_join(insertions_mapping,  by = c("sequence_name" = "samples")) %>% 
+  rename(variant = insertion_id) %>% 
+  select(-c(insertion, ref_start))  
+
+message("Writing insertions.rds")
+insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
+insertions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions_mapping.rds"))
 
 insertions_mapping
 ```
