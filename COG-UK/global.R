@@ -32,7 +32,6 @@ consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 mutations_uk <- str_c(dataset_date, "/mutations_uk.rds") %>% read_rds # TODO drop unused columns
 mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds") %>% read_rds # precomputed mutation counts 
 database_tcell_predictions <- str_c(dataset_date, "/database_tcell_predictions.rds") %>% read_rds # spike T cell info and predictions
-deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates)
 vui_voc <- read_rds("vui_voc.rds") # VUI/VOC defining mutations in spike protein
 wt <- read_rds(str_c(dataset_date, "/wt.rds")) # spike protein wild type amino acid counts
 lineages_weeks_uk_all <- read_rds(str_c(dataset_date, "/lineages_weeks_uk_all.rds")) # lineage counts by epiweek
@@ -40,7 +39,10 @@ lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds"
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # deletions (genomic coordinates)
 spike_tab <- read_rds(str_c(dataset_date, "/spike_table.rds"))
+
+deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates)
 database_deletions <- read_rds(str_c(dataset_date, "/database_deletions.rds"))
+deletions_mapping <- read_rds(str_c(dataset_date, "/deletions_mapping.rds"))
 database_insertions <- read_rds(str_c(dataset_date, "/database_insertions.rds"))
 
 source("helpers.R")
@@ -83,6 +85,8 @@ mutations_s_uk <-
   filter(gene == "S") %>% 
   select(-gene) %>% 
   mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
+
+mutations_uk %<>% bind_rows(deletions_mapping)
 
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 

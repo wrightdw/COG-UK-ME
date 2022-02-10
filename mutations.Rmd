@@ -347,6 +347,8 @@ deletions <-
   read_tsv(params$deletions_tsv) %>% 
   separate_rows(samples, sep = '\\|')
 
+deletions %<>% semi_join(consortium_uk, by = c("samples" = "sequence_name")) # remove unfiltered sequence IDs from deletions
+
 message("Writing deletions.rds")
 deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
 ```
@@ -359,9 +361,12 @@ deletions_mapping <-
 deletions_mapping <- 
   consortium_uk %>% 
   select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
-  inner_join(deletions_mapping,  by = c("sequence_name" = "samples"))
+  inner_join(deletions_mapping,  by = c("sequence_name" = "samples")) %>% 
+  rename(variant = del_id, position = del_start) %>% 
+  select(-c(del_end, del_subst, ref_start, length)) %>% 
+  mutate(across(position, as_factor)) 
 
-deletions_mapping
+deletions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions_mapping.rds"))
 ```
 ```{r database_deletions}
 deletions_uk <-
