@@ -683,12 +683,15 @@ dashboardPage(
                     fluidRow(
                         box(title = "Spike profile expansion and contraction", width = 12,
                             collapsible = FALSE, icon = icon("chart-line"),
-                            p("Each point represents a spike profile sampled within 7 days of the latest UK sequence. Each spike profile is a set of amino acid substitutions listed relative to the original genotype (Wuhan-Hu-1). The number of sequences per profile in the latest 28-day period is shown on the x-axis. On the y-axis a statistic to show the recent expansion or contraction in numbers of a profile sequenced is shown. This statistic takes into account both the rate of change in frequency and the overall numbers of a profile detected."),
-                            p("Hover the cursor over a point to reveal the substitutions defining a spike profile, count in the latest 28-day period and the associated pango lineages."),
-                            p("For profiles associated with the Delta or Omicron variants of concern (VOCs), profiles are described as amino acid substitutions relative to the core profiles below with '+' indicating a substitution not in the VOC core profile and '-' marking the absence of a substitution that is present in the core profile."),
-                            p("Delta core profile: T19R, G142D, Δ156-157/R158G, L452R, T478K, D614G, P681R, D950N"),
-                            p("Omicron (BA.1) core profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F"),
-                            p("Omicron (BA.2) core profile: T19I, L24S/Δ25-27, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K"),
+                            p("Each spike profile is a set of amino acid substitutions listed relative to the original genotype (Wuhan-Hu-1).
+                              Spike profiles sampled within 7 days of the latest UK sequence are plotted below, with count of sequences in the
+                              latest 28-day period on the x-axis and a statistic estimating recent significant change in profile frequency on
+                              the y-axis."),
+                            p("Profiles of the Delta or Omicron variants of concern (VOCs) are described as amino acid substitutions relative
+                              to the core VOC profiles listed below."),
+                            p("Hovering the cursor over a point reveals the substitutions defining a spike profile, count in the latest 28-day
+                              period and associated pango lineages. The plot and table below can be re-drawn including data for each of the
+                              UK nations by selecting a dataset below."),
                             
                             prettyRadioButtons(
                                 inputId = "spike_geo",
@@ -703,12 +706,27 @@ dashboardPage(
                             
                             plotlyOutput("spikePlot_count28", height = 550),
                             br(),
-                            "For each profile, i, the absolute value for the 'Expansion/contraction' statistic is calculated using the observed frequency in each of the most recent 2-week periods, j, according to:", tags$div(
-                                HTML(paste("Sum{(O", tags$sub("i,j"), " - E", tags$sub("i"), ")", tags$sup("2"), "/ E", tags$sub("i"), "}", sep = ""))
-                            ), "where E_i is the frequency of profile i over the full 8-week period. This value is portrayed as negative or positive according to direction of change and represents both the rate of change in profile frequency and the magnitude of the change.",
-                            p("Substitutions in VOC core profiles that are often not identified as present in VOC sequences (due to amplicon dropout during sequencing) are not listed as abesnt. For Delta profiles, G142D, and for Omicron, K417N, N440K and G446S are assumed to be present."))
-                        
-                    )
+                            p(strong("VOC core spike profiles:"), "'+' indicates additional substitutions and '-' marks the absence of a
+                              substitution present in the core profiles below"),
+                            p("Delta: T19R, G142D, Δ156-157/R158G, L452R, T478K, D614G, P681R, D950N"),
+                            p("Omicron (BA.1): A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N,
+                              N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K,
+                              D796Y, N856K, Q954H, N969K, L981F"),
+                            p("Omicron (BA.2): T19I, L24S/Δ25-27, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K,
+                              S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K"),
+                            p(em("Substitutions in VOC core profiles that are sometimes not identified VOC sequences (due to amplicon dropout
+                              during sequencing) are not listed as absent. For Delta profiles, G142D, is not listed as absent. For Omicron,
+                              due to widespread undercalling of core substitutions, the absence of core substitutions is currently not
+                              shown")),
+                            
+                            p(strong("Expansion/contraction:"), "For each profile,", em("i"), ", the absolute value for this statistic is
+                              calculated using the observed frequency", em("O", tags$sub("i")), "of profile", em("i"), "in each of the most
+                              recent 2-week periods", em("j"), "according to:",
+                              tags$div(HTML(paste("Sum{(O", tags$sub("i,j"), " - E", tags$sub("i"), ")", tags$sup("2"), "/ E", tags$sub("i"), "}", sep = ""))),
+                              "where", em("E", tags$sub("i")), "is the frequency of profile",  em("i"), "over the full 8-week period. This value
+                              is shown as negative or positive according to direction of change and represents both the rate of change in
+                              frequency and the overall frequency of a profile.")
+                            ) # end of box
                     ,
                     
                     fluidRow(
