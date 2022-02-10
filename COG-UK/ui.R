@@ -160,6 +160,31 @@ dashboardPage(
         tabItems(
             tabItem(tabName = "strucure_voc",
                     fluidRow(
+                        box(title = "Spike protein visualisations", 
+                            closable = FALSE, 
+                            width = 12, 
+                            status = "orange", 
+                            collapsible = FALSE, 
+                            icon = icon("microscope"), 
+                            
+                            p("Spike protein structures showing locations of amino acid residues that are mutated in each
+                              variant of concern (VOC). The spike protein protrudes from the surface of the SARS-CoV-2
+                              virus, is responsible for initating binding to and entry into host cells, and is also the
+                              primary target for antibodies that recognise the virus."),
+                            p("Each spike consists of three identical protein chains (shown in teal, blue and gold). Here,
+                              spike is shown in its 'open' conformation in which the receptor-binding domain of the teal
+                              chain is 'up' exposing the binding site that recognises the human ACE2 receptor."),
+                            p("On each chain, the locations of amino acid substitutions, deletions (Δ), and insertions
+                              (ins) which distinguish each VOC from the original genotype (Wuhan-Hu-1), are highlighted as
+                              opaque-surface spheres coloured in red (where they are labelled), blue and gold. The
+                              substitution D614G which is shared by common descent by all lineage B.1 descendants is
+                              italicised."),
+                            p("Visualisations are made using the ectodomain of a complete spike model (Woo et al., 2020)
+                              which is in turn based upon a partial cryo-EM structure (RCSB Protein Data Bank (PDB) ID:
+                              6VSB (Wrapp et al., 2020)).")
+                    )), # End of box and fluid row
+                    
+                    fluidRow(
                           box(title = "Spike protein mutations (Omicron: BA.1)", 
                                    closable = FALSE, 
                                    width = 6, 
@@ -241,7 +266,10 @@ dashboardPage(
                                     class = "center-block img-responsive", 
                                     alt = "Beta B.1.351 spike structure with mutations")
                             ))
-                    )),
+                    ), 
+                    
+                    ), # end of Spike structure tab
+            
             tabItem(tabName = "about",
                     fluidRow(
                         box(title = "About COG-UK/Mutation Explorer", closable = FALSE, width = 12,
