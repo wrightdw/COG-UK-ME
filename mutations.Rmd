@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
+  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "2022-02-01" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -361,9 +361,10 @@ deletions_mapping <-
 deletions_mapping <- 
   consortium_uk %>% 
   select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
-  inner_join(deletions_mapping,  by = c("sequence_name" = "samples")) %>% 
-  rename(variant = del_id, position = del_start) %>% 
-  select(-c(del_end, del_subst, ref_start, length, position))
+  inner_join(deletions_mapping,  by = c("sequence_name" = "samples"))# %>% 
+  # rename(variant = del_id, 
+  #        position = del_start) #%>% 
+  # select(-c(del_end, del_subst, ref_start, length, position))
 
 deletions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions_mapping.rds"))
 ```
@@ -394,7 +395,8 @@ database_deletions <-
   deletions_uk %>% 
   inner_join(deletions_nations) %>% 
   left_join(deletions_uk_28) %>% 
-  left_join(deletions_nations_28)
+  left_join(deletions_nations_28) %>% 
+  mutate(across(where(is.numeric), ~replace_na(.x, 0L)))
 
 database_deletions %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/database_deletions.rds"))
@@ -406,7 +408,10 @@ insertions <-
   read_tsv(params$insertions_tsv) %>% 
   separate_rows(samples, sep = '\\|')
 
+insertions %<>% semi_join(consortium_uk, by = c("samples" = "sequence_name")) # remove unfiltered sequence IDs from deletions
 
+message("Writing insertions.rds")
+insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 
 ```
 ```{r}
@@ -415,19 +420,15 @@ insertions_mapping <-
   mutate(across(c(gene), as_factor)) %>% 
   inner_join(insertions)
 
-
 insertions_mapping <- 
   consortium_uk %>% 
   select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
-  inner_join(insertions_mapping,  by = c("sequence_name" = "samples")) %>% 
-  rename(variant = insertion_id) %>% 
-  select(-c(insertion, ref_start))  
+  inner_join(insertions_mapping,  by = c("sequence_name" = "samples")) #%>% 
+  # rename(variant = insertion_id) %>% 
+  # select(-c(insertion, ref_start))  
 
-message("Writing insertions.rds")
-insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 insertions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions_mapping.rds"))
 
-insertions_mapping
 ```
 ```{r database_insertions}
 insertions_uk <-
@@ -456,7 +457,8 @@ database_insertions <-
   insertions_uk %>% 
   inner_join(insertions_nations) %>% 
   left_join(insertions_uk_28) %>% 
-  left_join(insertions_nations_28)
+  left_join(insertions_nations_28) %>% 
+  mutate(across(where(is.numeric), ~replace_na(.x, 0L)))
 
 database_insertions %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/database_insertions.rds"))
