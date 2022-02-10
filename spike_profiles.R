@@ -225,6 +225,7 @@ get_pretty_profiles <- function(x = NA) {
       voc_absent <- setdiff(voc_absent, 'N440K')
       voc_absent <- setdiff(voc_absent, 'G446S')
       voc_absent <- setdiff(voc_absent, 'N764K')
+      voc_absent <- c()
       
       # use collected info to generate 'pretty_profile'
       pretty_profile <- 'Omicron (BA.1)'
@@ -242,6 +243,9 @@ get_pretty_profiles <- function(x = NA) {
       profile <- str_split(x$mutations[i], pattern = ';')[[1]]
       voc_extra <- setdiff(profile, profile_omicron_ba2)
       voc_absent <- setdiff(profile_omicron_ba2, profile)
+      
+      # Correction to account for most common amplicon dropout errors
+      voc_absent <- c()
       
       # use collected info to generate 'pretty_profile'
       pretty_profile <- 'Omicron (BA.2)'
