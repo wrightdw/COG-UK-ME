@@ -451,8 +451,6 @@ database_insertions <-
 database_insertions %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/database_insertions.rds"))
 ```
-```
-
 # Database
 ```{r database_genome}
 # mutations_s_uk <- 
