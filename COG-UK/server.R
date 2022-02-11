@@ -64,22 +64,7 @@ lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = 
 # Mutations
 table_1 <- function(){
   
-  # database_deletions %<>% 
-  #   rename(
-  #     mutation = del_id,
-  #     `numSeqs UK` = UK,
-  #     `numSeqs UK 28 days` = UK_28,
-  #     `numSeqs Eng 28 days` = England_28,
-  #     `numSeqs Scotland 28 days` = Scotland_28,
-  #     `numSeqs Wales 28 days` = Wales_28, 
-  #     `numSeqs NI 28 days` = Northern_Ireland_28) %>% 
-  #   select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest)
-  # 
-  # database_genome %>% print
-  
-  
-  
-  database_genome %>% 
+database_genome %>% 
     select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>%
     # bind_rows(database_deletions) %>% 
     arrange(desc(`numSeqs UK`)) %>% 
@@ -90,7 +75,7 @@ table_1 <- function(){
     mutate(`Sequences over the last 28 days in UK (%)` = `numSeqs UK 28 days` / total_sequences_28,
            .after = `numSeqs UK 28 days`) %>%
     rename(Gene = gene,
-           `Amino acid replacement/ deletion/ insertion` = mutation, 
+           `Amino acid replacement/ indel` = mutation, 
            `Cumulative sequences in UK` = `numSeqs UK`, 
            `Sequences over the last 28 days in UK` = `numSeqs UK 28 days`,
            `Sequences over the last 28 days in England` = `numSeqs Eng 28 days`,
@@ -243,7 +228,7 @@ shinyServer(function(input, output, session) {
     ## Mutations
     # Reactive value to generate downloadable table for selected table 1 mutation metadata
     datasetInput <- reactive({
-      mutations_uk %>% 
+      mutations_indels_uk %>% 
         filter(gene == input$dataset_gene) %>% 
         filter(variant == input$dataset) %>% 
         filter(sample_date >= sample_date_28) %>% 
@@ -595,7 +580,7 @@ shinyServer(function(input, output, session) {
     
     observeEvent(input$gene, {
       updateSelectInput(session, "position",
-                        choices = mutations_uk %>%
+                        choices = mutation_reference_counts %>%
                           filter(gene == input$gene) %>%
                           distinct(position) %>%
                           arrange(position))

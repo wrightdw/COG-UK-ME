@@ -76,9 +76,7 @@ database_insertions %<>%
     `numSeqs Wales 28 days` = Wales_28,
     `numSeqs NI 28 days` = Northern_Ireland_28)
 
-
 database_genome %<>%
-  # select(gene, mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`, earliest) %>%
   bind_rows(database_deletions) %>%
   bind_rows(database_insertions)
 
@@ -88,7 +86,8 @@ mutations_s_uk <-
   select(-gene) %>% 
   mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
 
-mutations_uk %<>% 
+mutations_indels_uk <-
+  mutations_uk %>% 
   bind_rows(deletions_mapping) %>% 
   bind_rows(insertions_mapping)
 

@@ -86,10 +86,13 @@ dashboardPage(
         conditionalPanel(
             condition =  "input.sidebar_menu == 'dashboard'",
             hr(),
-            selectInput("gene", "Gene:", mutations_uk %>% distinct(gene) %>% arrange(gene), 
+            selectInput("gene", "Gene:", mutation_reference_counts %>% distinct(gene) %>% arrange(gene), 
                         selected = "S"),
             selectInput("position", "Position:", 
-                        mutations_uk %>% distinct(position) %>% arrange(position), 
+                        mutation_reference_counts %>% 
+                            filter(gene == "S") %>% 
+                            distinct(position) %>% 
+                            arrange(position), 
                         selected = "614", selectize = TRUE),
             prettySwitch("percentage", "Percentage", FALSE, status = "info", fill = TRUE),
             prettySwitch("ref", "Wild type / other", TRUE,  status = "info", fill = TRUE),
@@ -463,10 +466,10 @@ dashboardPage(
                         sliderInput(
                           inputId = "mutation_range", 
                           label = "Date range:",
-                          min = mutations_uk %$% min(epi_date), 
-                          max = mutations_uk %$% max(epi_date), 
-                          value = c(mutations_uk %$% min(epi_date),
-                                    mutations_uk %$% max(epi_date)),
+                          min = mutation_reference_counts %$% min(epi_date), 
+                          max = mutation_reference_counts %$% max(epi_date), 
+                          value = c(mutation_reference_counts %$% min(epi_date),
+                                    mutation_reference_counts %$% max(epi_date)),
                           step = 7,
                           ticks = FALSE,
                           animate = TRUE,
@@ -645,7 +648,7 @@ dashboardPage(
                             
                             sliderInput("epitope_position", "Position:",
                                         min = 1, max = wt %$% max(position),
-                                        value = 614, step = 1),
+                                        value = 484, step = 1),
                             
                             switchInput(
                                 inputId = "epitope_ref", 

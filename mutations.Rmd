@@ -2,8 +2,8 @@
 title:  "COG-UK Mutations"
 output: html_notebook
 params: 
-  latest:           FALSE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
-  dataset_date:     "2022-02-01" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
+  latest:           TRUE # TRUE to copy latest files on CLIMB to working directory, overrides dataset_date with today()
+  dataset_date:     "" # Used if latest == FALSE. if empty, defaults to today's date, otherwise enter date string
   spike_csv:        "spike_escape_info.csv"
   spike_extra_csv:  "spike_escape_extra.csv"
   tcell_csv:        "tcell_long.csv"
@@ -168,6 +168,13 @@ for (i in 1:length(alias_key)) {
 
 consortium_uk
 ```
+## Sample
+```{r consortium_sample, eval=FALSE, include=TRUE}
+# Sample of full dataset for development purposes
+consortium_uk %<>% slice_sample(n = 100000)
+consortium_uk
+```
+
 ## Write
 ```{r consortium_write}
 mutations_uk <- 
@@ -197,149 +204,7 @@ mutations_uk %<>%
 
 mutations_uk
 ```
-## Mutation / REF counts
-```{r mutations_refs}
-#### UK ### 
-genes_positions <- 
-  mutations_uk %>% 
-  distinct(gene, position) # gene / position combinations actually found in mutations
 
-sequences_by_week <- 
-  consortium_uk %>% 
-  dplyr::count(epi_week, epi_date, name = "n_sequences")
-
-positions_by_week <- 
-  mutations_uk %>%
-  dplyr::count(epi_week, epi_date, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
-
-reference_counts <- 
-  positions_by_week %>%
-  inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
-  inner_join(sequences_by_week) %>% 
-  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
-  filter(n > 0) %>%  # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
-  mutate(adm1 = "UK")
-
-mutation_counts <- 
-  mutations_uk %>%
-  dplyr::count(epi_week, epi_date, gene, position, variant) %>% 
-  mutate(adm1 = "UK")
-
-#### Nations ####
-sequences_by_week_nations <-
-  consortium_uk %>%
-  dplyr::count(epi_week, epi_date, adm1, name = "n_sequences")
-
-positions_by_week_nations <-
-  mutations_uk %>%
-  dplyr::count(epi_week, epi_date, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
-
-reference_counts_nations <- 
-  positions_by_week_nations %>%
-  inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
-  inner_join(sequences_by_week_nations) %>% 
-  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
-  filter(n > 0) # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
-
-mutation_counts_nations <- 
-  mutations_uk %>%
-  dplyr::count(epi_week, epi_date, gene, position, variant, adm1)
-
-# TODO calculate UK counts by summing the nation counts
-mutation_reference_counts <- 
-  bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %>% 
-  mutate(across(variant, as_factor)) %T>% 
-  write_rds(str_c("COG-UK/", params$dataset_date, "/mutation_reference_counts.rds"))
-
-mutation_reference_counts
-```
-## Total sequences per epidemic week
-```{r consortium_counts, eval=FALSE, include=FALSE}
-n_uk <- 
-  consortium_uk %>% 
-  # filter(sample_date >= 2020-11-13) %>% 
-  # filter(epi_week < 50) %>%
-  group_by(epi_week) %>%
-  summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
-            N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del")) #%>%
-            # mutate_at(vars(D614G:DEL_69_70), cumsum) # cumulative counts
-            # mutate_at(vars(sequences:DEL_69_70), cumsum) # cumulative counts to normalise against cumulative sequences
-
-n_uk
-```
-
-```{r eval=FALSE, include=FALSE}
-n_uk %>% 
-  select(-epi_week) %>% 
-  summarise_all(funs(sum))
-```
-
-```{r eval=FALSE, include=FALSE}
-n_uk_28 <- 
-  consortium_uk %>% 
-  filter(sample_date >= sample_date_28) %>%
-  group_by(epi_week) %>%
-  summarise(sequences = n(), D614G = sum(d614g == "G"), A222V = sum(a222v == "V"), 
-            N439K = sum(n439k == "K"), N501Y = sum(n501y == "Y"), DEL_69_70 = sum(del_21765_6 == "del"))
-n_uk_28
-```
-```{r eval=FALSE, include=FALSE}
-n_uk_28 %>% 
-  select(-epi_week) %>% 
-  summarise_all(funs(sum))
-```
-
-```{r eval=FALSE, include=FALSE}
-theme_set(theme_classic() + theme(legend.position = "none"))
-
-pal <- wes_palette("Cavalcanti1", type = "discrete")
-update_geom_defaults("point", list(color = pal[1]))
-update_geom_defaults("line", list(color = pal[1]))
-
- ggplot(n_uk, aes(x = epi_week, y = sequences)) + 
-  geom_line() + geom_point() + labs(x = "Epidemic week", y = "Sequences", title = "Sequences per Week")
-
- ggsave("Sequences.png")
-```
-```{r eval=FALSE, include=FALSE}
-pal <- brewer.pal(n = 5, name = "Set1")
-update_geom_defaults("point", list(color = pal[2]))
-update_geom_defaults("line", list(color = pal[2]))
-
- ggplot(n_uk, aes(x = epi_week, y = D614G / sequences)) + 
-  geom_line() + geom_point() + labs(x = "Epidemic week", y = "D614G (normalised)", title = "D614G") + ylim(0,1)
- ggsave("D614G.png")
-
-```
-
-```{r eval=FALSE, include=FALSE}
-update_geom_defaults("point", list(color = pal[1]))
-update_geom_defaults("line", list(color = pal[1]))
-
- ggplot(n_uk, aes(x = epi_week, y = A222V / sequences)) + 
-  geom_line() + geom_point() + labs(x = "Epidemic week", y = "A222V (normalised)", title = "A222V") + ylim(0,1)
- ggsave("A222V.png")
-
-```
-```{r eval=FALSE, include=FALSE}
-update_geom_defaults("point", list(color = pal[4]))
-update_geom_defaults("line", list(color = pal[4]))
-
- ggplot(n_uk, aes(x = epi_week, y = N439K / sequences)) + 
-  geom_line() + geom_point() + labs(x = "Epidemic week", y = "N439K (normalised)", title = "N439K") + ylim(0,1)
- ggsave("N439K.png")
-
-```
-
-```{r eval=FALSE, include=FALSE}
-update_geom_defaults("point", list(color = pal[5]))
-update_geom_defaults("line", list(color = pal[5]))
-
- ggplot(n_uk, aes(x = epi_week, y = N501Y / sequences)) + 
-  geom_line() + geom_point() + labs(x = "Epidemic week", y = "N501Y (normalised)", title = "N501Y") + ylim(0,1)
- ggsave("N501Y.png")
-
-```
 
 # Deletions
 ```{r deletions}
@@ -354,20 +219,101 @@ deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds")
 ```
 ```{r}
 deletions_mapping <- 
-  read_csv(params$deletions_mapping_csv) %>%
-  mutate(across(c(gene), as_factor)) %>% 
-  inner_join(deletions)
+  read_csv(params$deletions_mapping_csv, 
+           col_types = cols(del_start = col_integer(),
+                            del_end = col_integer(),
+                            gene = readr::col_factor(NULL))) %>% # avoid name clash with scales package
+  inner_join(deletions) %>% 
+  select(-ref_start, -length)
 
 deletions_mapping <- 
   consortium_uk %>% 
   select(sequence_name, cog_id, sample_date, epi_week, epi_date, lineage, lineage_full, adm1, NUTS1) %>% 
-  inner_join(deletions_mapping,  by = c("sequence_name" = "samples"))# %>% 
-  # rename(variant = del_id, 
-  #        position = del_start) #%>% 
-  # select(-c(del_end, del_subst, ref_start, length, position))
+  inner_join(deletions_mapping,  by = c("sequence_name" = "samples")) %>% 
+  mutate(del_subst_position = parse_number(del_subst)) 
 
 deletions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions_mapping.rds"))
 ```
+## Complete
+```{r deletions_complete}
+deletions_complete <- 
+  deletions_mapping %>% 
+  rowwise() %>% 
+  mutate(del_start_end = 
+           seq(min(c(del_start, del_end, del_subst_position), na.rm = TRUE), 
+                             max(c(del_start, del_end, del_subst_position), na.rm = TRUE)) %>% 
+           paste(collapse = "|"), .keep = "unused"
+         ) %>% 
+  separate_rows(del_start_end, sep = '\\|') %>% 
+  rename(position = del_start_end, variant = del_id) %>%   
+  mutate(across(c(position, variant), as_factor)) %>% 
+  select(-del_subst)
+
+
+deletions_complete
+
+```
+
+## Mutation / REF counts
+```{r mutations_refs}
+mutations_deletions_uk <- bind_rows(mutations_uk, deletions_complete)
+
+#### UK ### 
+genes_positions <- 
+  mutations_deletions_uk %>% 
+  distinct(gene, position) # gene / position combinations actually found in mutations
+
+sequences_by_week <- 
+  consortium_uk %>% 
+  dplyr::count(epi_week, epi_date, name = "n_sequences")
+
+positions_by_week <- 
+  mutations_deletions_uk %>%
+  dplyr::count(epi_week, epi_date, gene, position, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position combinations 
+
+reference_counts <- 
+  positions_by_week %>%
+  inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
+  inner_join(sequences_by_week) %>% 
+  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
+  filter(n > 0) %>%  # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
+  mutate(adm1 = "UK")
+
+mutation_counts <- 
+  mutations_deletions_uk %>%
+  dplyr::count(epi_week, epi_date, gene, position, variant) %>% 
+  mutate(adm1 = "UK")
+
+#### Nations ####
+sequences_by_week_nations <-
+  consortium_uk %>%
+  dplyr::count(epi_week, epi_date, adm1, name = "n_sequences")
+
+positions_by_week_nations <-
+  mutations_deletions_uk %>%
+  dplyr::count(epi_week, epi_date, gene, position, adm1, .drop = FALSE, name = "n_variant_sequences") # count all possible epi_week/gene/position/nation combinations
+
+reference_counts_nations <- 
+  positions_by_week_nations %>%
+  inner_join(genes_positions) %>% # remove gene / position combinations not found in mutations
+  inner_join(sequences_by_week_nations) %>% 
+  mutate(n = n_sequences - n_variant_sequences, variant = "WT", .keep = "unused") %>% # calculate reference / other
+  filter(n > 0) # remove zero WT entries (where all sequences are variants for an epi_week / position combo)
+
+mutation_counts_nations <- 
+  mutations_deletions_uk %>%
+  dplyr::count(epi_week, epi_date, gene, position, variant, adm1)
+
+# TODO calculate UK counts by summing the nation counts
+mutation_reference_counts <- 
+  bind_rows(mutation_counts, reference_counts, mutation_counts_nations, reference_counts_nations) %>% 
+  mutate(across(variant, as_factor)) %T>% 
+  write_rds(str_c("COG-UK/", params$dataset_date, "/mutation_reference_counts.rds"))
+
+mutation_reference_counts
+```
+
+
 ```{r database_deletions}
 deletions_uk <-
   deletions_mapping %>% 
@@ -465,12 +411,6 @@ database_insertions %T>%
 ```
 # Database
 ```{r database_genome}
-# mutations_s_uk <- 
-#   mutations_uk %>% 
-#   filter(gene == "S") %>% 
-#   select(-gene) %>% 
-#   mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
-
 lineage_distinct <- 
   mutations_uk %>% 
   group_by(gene, position, variant) %>% 
@@ -714,37 +654,6 @@ database_functional_predictions
 bind_rows(database_tcell_predictions, database_functional_predictions) %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
 ```
 
-```{r eval=FALSE, include=FALSE}
-consortium_v <- 
-  consortium_uk %>% 
-  filter(n501y == "Y" & 
-         del_21765_6 == "del" &
-         sample_date >= "2020-11-24" &
-         lineage == "B.1.1.7"
-        )
-consortium_v
-```
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  summarise(n_distinct(variant))
-```
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  dplyr::count(variant) %>% 
-  filter(n == 1) 
-```
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  dplyr::count(variant) %>% 
-  filter(n >= 100) 
-```
-
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  dplyr::count(variant) %>% 
-  filter(n >= 5) %>% 
-  arrange(desc(n))
-```
 
 ### Table 1
 ```{r table_1}
@@ -752,12 +661,7 @@ database_genome %>%
   slice_max(`numSeqs UK`, n = 15) %>% 
   select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
 ```
-```{r appendix, eval=FALSE, include=FALSE}
-database_genome %>% 
-  filter(`numSeqs UK` >= 5) %>% 
-  arrange(desc(`numSeqs UK`)) %>% 
-  select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`) %T>% write_csv("appendix.csv")
-```
+
 
 
 ```{r setdiff, eval=FALSE, include=FALSE}
@@ -1819,6 +1723,11 @@ viruses <- virus_profiles(mutation_df = mutations_uk)
 spike_tab <- spike_profiles_nations(viruses)
 write_rds(viruses, str_c("COG-UK/", params$dataset_date, "/spike_viruses.rds"))
 write_rds(spike_tab, str_c("COG-UK/", params$dataset_date, "/spike_table.rds"))
+```
+# RDS check
+```{r}
+# TODO Check that RDS files can be read
+# filedata <- map(filenames, function(x){print(x); read_rds(x)} )
 ```
 
 ## Done
