@@ -758,7 +758,7 @@ dashboardPage(
                               is shown as negative or positive according to direction of change and represents both the rate of change in
                               frequency and the overall frequency of a profile.")
                             ) # end of box
-                    ,
+                    ), # end of fluid row
                     
                     fluidRow(
                         box(title = "Spike profiles detected in the UK during the last week", closable = FALSE, width = 12,
@@ -767,8 +767,8 @@ dashboardPage(
                             p(strong("Profile"), "lists the amino acid substitutions (currently deletions and insertions are not included) in the spike protein relative to the original genotype (Wuhan-Hu-1). Note: Incomplete spike profiles may be called where the underlying sequence data is incomplete. An example of this is the substitution G142D which is present in Delta sequences but often not called due to an amplicon dropout."),
                             p(strong("Amino acid substitutions"), "is the count of spike amino acid substitutions relative to the orginal genotype (Wuhan-Hu-1)."),
                             p(strong("Frequency change vs. prev 28 days (%)"), "28 day periods are calculated relative to the date of the most recent UK sequence. A blank cell indicates that a spike profile was not sequenced in the 28-day period preceding the most recent 28-day period. It shows the percentage change in the frequency of a profile among all sequenced genomes in the most recent 28-day period.")
+                            )
                         )
-                    )
             ), # end tabitem spike_profiles
             
             
@@ -874,4 +874,4 @@ tabItem(tabName = "omicron",
         )
     )
  
-))
+)
