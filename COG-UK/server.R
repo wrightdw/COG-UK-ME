@@ -162,12 +162,12 @@ shinyServer(function(input, output, session) {
     ######## Data download inputs ########
     
     ## Mutations
-    # Reactive value to generate downloadable table for selected table 1 mutation metadata
+    # Reactive value to generate downloadable table for selected mutation or indel metadata
+    # TODO database query
     datasetInput <- reactive({
-      mutations_indels_uk %>% 
+      mutations_indels_uk_28 %>% 
         filter(gene == input$dataset_gene) %>% 
         filter(variant == input$dataset) %>% 
-        filter(sample_date >= sample_date_28) %>% 
         select(sequence_name, sample_date, epi_week, epi_date, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
@@ -214,9 +214,10 @@ shinyServer(function(input, output, session) {
     
     ## Antigenic mutations
     # Reactive value to generate downloadable table for selected mutation
+    # TODO query from database
     escapeInput <- reactive({
-      mutations_uk %>% 
-        filter(gene == "S" & variant == input$selectEscape) %>% 
+      mutations_s_uk %>% 
+        filter(variant == input$selectEscape) %>% 
         select(sequence_name, sample_date, epi_week, epi_date, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
@@ -508,6 +509,7 @@ shinyServer(function(input, output, session) {
       }
     })
     
+    # position input for mutations/indels chart
     observeEvent(input$gene, {
       updateSelectInput(session, "position",
                         choices = mutation_reference_counts %>%
@@ -516,11 +518,13 @@ shinyServer(function(input, output, session) {
                           arrange(position))
     })
     
+    # variant select for mutations/indels download
     observeEvent(input$dataset_gene, {
       updateSelectizeInput(session, 
                            "dataset",
                            choices = database_genome %>% 
                              filter(gene == input$dataset_gene) %>% 
+                             filter(`numSeqs UK 28 days` > 0) %>% 
                              distinct(mutation))
     })
     

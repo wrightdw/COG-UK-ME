@@ -29,8 +29,10 @@ dataset_date <- get_dataset_date(0)
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
-mutations_uk <- str_c(dataset_date, "/mutations_uk.rds") %>% read_rds # TODO drop unused columns
+
+mutations_s_uk <- str_c(dataset_date, "/mutations_s_uk.rds") %>% read_rds # TODO drop unused columns
 mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds") %>% read_rds # precomputed mutation counts 
+
 database_tcell_predictions <- str_c(dataset_date, "/database_tcell_predictions.rds") %>% read_rds # spike T cell info and predictions
 vui_voc <- read_rds("vui_voc.rds") # VUI/VOC defining mutations in spike protein
 wt <- read_rds(str_c(dataset_date, "/wt.rds")) # spike protein wild type amino acid counts
@@ -39,13 +41,16 @@ lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds"
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 spike_tab <- read_rds(str_c(dataset_date, "/spike_table.rds"))
 
-deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates)
+deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates) # TODO remove dependency
 database_deletions <- read_rds(str_c(dataset_date, "/database_deletions.rds"))
-deletions_mapping <- read_rds(str_c(dataset_date, "/deletions_mapping.rds"))
-
-# insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # insertions (genomic coordinates)
 database_insertions <- read_rds(str_c(dataset_date, "/database_insertions.rds"))
-insertions_mapping <- read_rds(str_c(dataset_date, "/insertions_mapping.rds"))
+mutations_indels_uk_28 <- read_rds(str_c(dataset_date, "/mutations_indels_uk_28.rds"))
+
+# not required for dashboard app
+# insertions_mapping <- read_rds(str_c(dataset_date, "/insertions_mapping.rds"))
+# deletions_mapping <- read_rds(str_c(dataset_date, "/deletions_mapping.rds"))
+# mutations_uk <- str_c(dataset_date, "/mutations_uk.rds") %>% read_rds
+# insertions <- str_c(dataset_date, "/insertions.rds") %>% read_rds # insertions (genomic coordinates)
 
 source("helpers.R")
 
@@ -78,11 +83,6 @@ database_insertions %<>%
 database_genome %<>%
   bind_rows(database_deletions) %>%
   bind_rows(database_insertions)
-
-mutations_indels_uk <-
-  mutations_uk %>% 
-  bind_rows(deletions_mapping) %>% 
-  bind_rows(insertions_mapping)
 
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 

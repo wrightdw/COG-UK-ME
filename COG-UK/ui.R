@@ -506,7 +506,7 @@ dashboardPage(
                                             label = "Gene:",
                                             choices = database_genome$gene %>% levels, 
                                             selected = "S",
-                                            options = list(dropdownParent = 'body')# prevent dropdown opening behind footer
+                                            options = list(dropdownParent = 'body') # prevent dropdown opening behind footer
                                         ),
                                         
                                         selectizeInput(

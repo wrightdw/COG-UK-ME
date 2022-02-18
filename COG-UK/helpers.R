@@ -13,12 +13,6 @@ epi_lookup <-
     epi_week = consortium_uk %$% levels(epi_week) %>% as.integer %>% sort
   )
 
-mutations_s_uk <- 
-  mutations_uk %>% 
-  filter(gene == "S") %>% 
-  select(-gene) %>% 
-  mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
-
 # https://slowkow.com/notes/pheatmap-tutorial/#quantile-breaks
 quantile_breaks <- function(xs, n = 10) {
   breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
@@ -58,11 +52,11 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_ra
     unlist(use.names = FALSE) %>%
     max()
   
-  min.val <- 0
   if (max.val > percentage_range[2]){
     max.val == percentage_range[2]
   }
   
+  min.val <- 0
   if (min.val < percentage_range[1]){
     min.val == percentage_range[1]
   }
@@ -201,6 +195,7 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
       filter(adm1 == nation) 
   }
   
+  # TODO remove dependency on deletions
   del_22289_6_samples <- 
     deletions %>% 
     filter(
