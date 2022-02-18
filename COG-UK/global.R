@@ -64,7 +64,6 @@ database_deletions %<>%
     `numSeqs Scotland 28 days` = Scotland_28,
     `numSeqs Wales 28 days` = Wales_28,
     `numSeqs NI 28 days` = Northern_Ireland_28)
-# database_genome %>% print
 
 database_insertions %<>%
   rename(
@@ -79,12 +78,6 @@ database_insertions %<>%
 database_genome %<>%
   bind_rows(database_deletions) %>%
   bind_rows(database_insertions)
-
-mutations_s_uk <- 
-  mutations_uk %>% 
-  filter(gene == "S") %>% 
-  select(-gene) %>% 
-  mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
 
 mutations_indels_uk <-
   mutations_uk %>% 
@@ -104,25 +97,16 @@ lineages_t3 <-
     "B.1.1.7" = "UK. L18F, Δ69-70, Δ144, N501Y, A570D, P681H, T716I, S982A and D1118H. WHO label: <strong>Alpha</strong>.", 
     "B.1.351" = 
       "South Africa. D80A, D215G, Δ242-244, K417N, E484K, N501Y and A701V. WHO label: <strong>Beta</strong>.", 
-    "A.23.1" = "UK. R102I, F157L, V367F, E484K, Q613H and P681R.",
     "B.1.525" = "UK ex West Africa. Q52R, A67V, Δ69-70, Δ144, E484K, Q677H and F888L. WHO label: <strong>Eta</strong>.",
-    "B.1.1.318" = "UK ex West Africa. T95I, Δ144, E484K, P681H and D796H.", 
     "B.1.526" = "New York, USA. L5F, T95I, D253G, E484K or S477N and A701V. WHO label: <strong>Iota</strong>.",
-    "A.27" = "Mayotte. L18F, L452R, N501Y, A653V, H655Y, Q677H, D796Y and G1219V.",
-    "B.1.1.28" = "The Philippines. Δ141-143, Δ243-244, E484K, N501Y, P681H, E1092K, H1101Y and V1176F.",
     "B.1.429" = "California, USA. D614G, G1251V, L452R, P26S, S13I, S1252C and W152C. WHO label: <strong>Epsilon</strong>.",
     "B.1.324.1" = "UK associated variant. E484K, S494P, N501Y, D614G, P681H and E1111K in the Spike. ",
     "P.2" = "Brazil. E484K and V1176F. WHO label: <strong>Zeta</strong>.",
     "P.3" = "The Philippines. Δ141-143, E484K, N501Y, P681H, E1092K, H1101Y, V1176F and in some cases Δ243-244. WHO label: <strong>Theta</strong>.",
     
-    "AV.1" = "UK, Greece and Chad. D80G, T95I, G142D, Δ144, N439K, E484K, D614G, P681H, I1130V and D1139H.",
-    "C.36.3" = "Egypt. S12F, Δ69-70, W152R, R346S, L452R, Q677H and A899S.",
-    
     "C.37" = "South America. Δ246-252, G75V, T76I, L452Q, F490S, D614G, and T859N. WHO label: <strong>Lambda</strong>.",
     "B.1.621" = "Colombia. T95I, R346K, E484K, N501Y and P681H. WHO label: <strong>Mu</strong>.",
-    
     "B.1.617.1" = "India. E154K, L452R, E484Q and P681R. WHO label: <strong>Kappa</strong>.",
-    "B.1.617.3" = "India. T19R, Δ156-158, L452R, E484Q, D614G, P681R and D950N.",
     
     # Delta
     "B.1.617.2" = "India. T19R, G142D, Δ156-157, R158G, L452R, T478K, D614G, P681R and D950N. WHO label: <strong>Delta</strong>.",

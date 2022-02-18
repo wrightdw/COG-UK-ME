@@ -393,12 +393,7 @@ dashboardPage(
                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
                                    p("Download a CSV file, for each variant, containing COG-UK sequence name, sample date, epidemiological week, epidemiological week start date and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
                                    selectizeInput("concern", "Choose lineage:",
-                                                  choices = c(lineages_t3$lineage, 
-                                                              "B.1.1.7 + E484K", 
-                                                              "A.23.1 + E484K",
-                                                              "B.1.1.7 + S494P"
-                                                              # , "B.1.324.1 + E484K"
-                                                  ) %>% sort),
+                                                  choices = lineages_t3$lineage %>% sort),
                                    downloadButton("downloadConcern", "Download", class = "btn-info")),
                                
                                box(title = "Download table", closable = FALSE, width = NULL, 
@@ -439,12 +434,7 @@ dashboardPage(
                                         })(),
                                         selected = "BA.1"
                                     ),
-                                    # pickerInput(
-                                    #     inputId = "scale_heatmap",
-                                    #     label = "Scale:",
-                                    #     choices = c("Linear","Quantile"),
-                                    #     selected = "Linear"
-                                    # ),
+                                    
                                     sliderInput(
                                         inputId = "percentage_range",
                                         label = "Percentage range:",

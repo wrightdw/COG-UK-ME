@@ -13,17 +13,20 @@ epi_lookup <-
     epi_week = consortium_uk %$% levels(epi_week) %>% as.integer %>% sort
   )
 
+mutations_s_uk <- 
+  mutations_uk %>% 
+  filter(gene == "S") %>% 
+  select(-gene) %>% 
+  mutate(across(c(variant, position), fct_drop)) # drop non-spike mutations from factor levels
+
 # https://slowkow.com/notes/pheatmap-tutorial/#quantile-breaks
 quantile_breaks <- function(xs, n = 10) {
   breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
   breaks[!duplicated(breaks)]
 }
 
-
 antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_range){
   scale_heatmap = "Linear"
-  # mutations_lineages_epi_weeks <-mutations_lineages_epi_weeks %>% 
-  #   filter(across(everything(-1), ~ . <= percentage_range[2]))
   
   RBD1_class <- c(403, 405, 406, 408, 409, 414, 415, 416, 417, 420, 421, 449, 453, 455, 456, 457, 458, 459, 460, 473, 474, 475, 476, 477, 484, 486, 487, 489, 490, 492, 493, 494, 495, 496, 498, 500, 501, 502, 503, 504, 505)
   RBD2_class <- c(338, 339, 342, 343, 346, 351, 368, 371, 372, 373, 374, 403, 405, 406, 417, 436, 444, 445, 446, 447, 448, 449, 450, 452, 453, 455, 456, 470, 472, 473, 475, 478, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505)
@@ -49,17 +52,20 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_ra
     unlist(use.names = FALSE) %>% 
     quantile_breaks(101) 
 
-  max.val<-horz_heat %>% 
+  max.val <-
+    horz_heat %>% 
     select(-(position:domain)) %>% 
     unlist(use.names = FALSE) %>%
     max()
-  min.val<-0
-  if (max.val>percentage_range[2]){
-    max.val==percentage_range[2]
-  }else{}
-  if (min.val<percentage_range[1]){
-    min.val==percentage_range[1]
-  }else{} 
+  
+  min.val <- 0
+  if (max.val > percentage_range[2]){
+    max.val == percentage_range[2]
+  }
+  
+  if (min.val < percentage_range[1]){
+    min.val == percentage_range[1]
+  }
  
   horz_heat$RBD1 <- ifelse(horz_heat$position %in% RBD1_class, TRUE, NA)
   horz_heat$RBD2 <- ifelse(horz_heat$position %in% RBD2_class, TRUE, NA)
@@ -166,9 +172,6 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_ra
     left_annotation = row_ha2
   )
   heatmap
-  # draw(heatmap, heatmap_legend_side = "right")
-  # lgd = Legend(col_fun = col_fun2, title = "Prop", break_dist = 1, at = c(0, 0.001, 0.01, 0.05, 40), legend_height = unit(4, "cm"))
-  # draw(lgd)
 }
 
 antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland", "Wales", "Northern_Ireland"), lineage = "B.1.1.7", defining = "N501Y", percentage_range)
@@ -314,4 +317,54 @@ sum_key_mutations_uk <- function(..., date_from = NULL){
               `N501Y + E484K` = sum(n501y == "Y" & e484k == "K"),
               .groups = "keep"
     )
+}
+
+# Count sequences for lineage plus a non-key S-gene mutation
+lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = FALSE){
+  mutations_s_uk_lv <- 
+    mutations_s_uk %>%
+    when(
+      use_regex ~filter(., lineage == !!lineage | str_detect(lineage, sublineage_regex(!!lineage))),
+      ~filter(., lineage == !!lineage)
+    ) 
+  
+  if(is.null(variant2)){
+    mutations_s_uk_lv %<>%  
+      filter(variant == !!variant) 
+  } else {
+    mutations_s_uk_lv1 <-  
+      mutations_s_uk_lv %>% 
+      filter(variant == !!variant) %>% select(-variant, -position)
+    
+    mutations_s_uk_lv2 <-  
+      mutations_s_uk_lv %>% 
+      filter(variant == !!variant2) %>% select(-variant, -position)
+    
+    mutations_s_uk_lv <- 
+      intersect(mutations_s_uk_lv1, mutations_s_uk_lv2)
+  }
+  
+  mutations_s_uk_lv_28 <- 
+    mutations_s_uk_lv %>%
+    filter(sample_date >= sample_date_28)
+  
+  left_join(
+    mutations_s_uk_lv %>%
+      group_by(adm1) %>% 
+      summarise(n_sequences = n_distinct(sequence_name)) %>% 
+      bind_rows(summarise(., n_sequences = sum(n_sequences)) %>% 
+                  mutate(adm1 = "UK")),
+    
+    mutations_s_uk_lv_28 %>%
+      group_by(adm1) %>% 
+      summarise(n_sequences_28 = n_distinct(sequence_name)) %>% 
+      bind_rows(summarise(., n_sequences_28 = sum(n_sequences_28)) %>% 
+                  mutate(adm1 = "UK"))
+  ) %>%
+    pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>%
+    mutate(lineage = !!lineage, variant = !!variant, .before = 1) %>% 
+    when(
+      is.null(variant2) ~mutate(., variant = !!variant),
+      ~mutate(., variant = str_c(!!variant, " + ", !!variant2))
+    ) 
 }

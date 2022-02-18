@@ -8,56 +8,6 @@ library(ggseqlogo)
 library(RColorBrewer)
 library(viridis)
 
-lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = FALSE){
-  
-  mutations_s_uk_lv <- 
-    mutations_s_uk %>%
-    when(
-      use_regex ~filter(., lineage == !!lineage | str_detect(lineage, sublineage_regex(!!lineage))),
-      ~filter(., lineage == !!lineage)
-    ) 
-    
-  if(is.null(variant2)){
-    mutations_s_uk_lv %<>%  
-      filter(variant == !!variant) 
-  } else {
-    mutations_s_uk_lv1 <-  
-      mutations_s_uk_lv %>% 
-      filter(variant == !!variant) %>% select(-variant, -position)
-    
-    mutations_s_uk_lv2 <-  
-      mutations_s_uk_lv %>% 
-      filter(variant == !!variant2) %>% select(-variant, -position)
-    
-    mutations_s_uk_lv <- 
-      intersect(mutations_s_uk_lv1, mutations_s_uk_lv2)
-  }
-  
-  mutations_s_uk_lv_28 <- 
-    mutations_s_uk_lv %>%
-    filter(sample_date >= sample_date_28)
-  
-  left_join(
-    mutations_s_uk_lv %>%
-      group_by(adm1) %>% 
-      summarise(n_sequences = n_distinct(sequence_name)) %>% 
-      bind_rows(summarise(., n_sequences = sum(n_sequences)) %>% 
-                  mutate(adm1 = "UK")),
-    
-    mutations_s_uk_lv_28 %>%
-      group_by(adm1) %>% 
-      summarise(n_sequences_28 = n_distinct(sequence_name)) %>% 
-      bind_rows(summarise(., n_sequences_28 = sum(n_sequences_28)) %>% 
-                  mutate(adm1 = "UK"))
-  ) %>%
-    pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>%
-    mutate(lineage = !!lineage, variant = !!variant, .before = 1) %>% 
-    when(
-      is.null(variant2) ~mutate(., variant = !!variant),
-      ~mutate(., variant = str_c(!!variant, " + ", !!variant2))
-    ) 
-}
-
 ## Table functions
 # TODO table caching
 # 
@@ -93,20 +43,6 @@ table_3 <- function(){
       inner_join(lineages_t3) %>% 
       select(-variant) %>% 
       relocate(reason, .after = lineage),
-    
-    n_uk_lineages_all %>%
-      filter(variant == "E484K" & lineage == "A.23.1") %>%
-      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
-      mutate(reason = "As A.23.1, with the addition of E484K."),
-    
-    n_uk_lineages_all %>%
-      filter(variant == "E484K" & lineage == "B.1.1.7") %>%
-      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
-      mutate(reason = "As B.1.1.7, with the addition of E484K."),
-    
-    lineage_plus_variant(lineage = "B.1.1.7", variant = "S494P") %>% # for non-key mutations
-      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused") %>%
-      mutate(reason = "As B.1.1.7, with the addition of S494P."),
     
     n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.324.1") %>%
@@ -258,12 +194,6 @@ shinyServer(function(input, output, session) {
           filter(e484k == "K") %>% 
           filter(lineage == "A.23.1") 
           # filter(lineage == "A.23.1" | str_detect(lineage, sublineage_regex("B.1.1.7"))) 
-      } else if(input$concern == "B.1.1.7 + S494P") {
-        concern_download <- 
-          mutations_s_uk %>% 
-          filter(variant == "S494P") %>% 
-          filter(lineage == "B.1.1.7")
-          # filter(lineage == "B.1.1.7" | str_detect(lineage, sublineage_regex("B.1.1.7")))
       } else {
         concern_download <- 
           consortium_uk %>% 
@@ -285,8 +215,8 @@ shinyServer(function(input, output, session) {
     ## Antigenic mutations
     # Reactive value to generate downloadable table for selected mutation
     escapeInput <- reactive({
-      mutations_s_uk %>% 
-        filter(variant == input$selectEscape) %>% 
+      mutations_uk %>% 
+        filter(gene == "S" & variant == input$selectEscape) %>% 
         select(sequence_name, sample_date, epi_week, epi_date, lineage) %>% 
         arrange(desc(sample_date), lineage)
     })
@@ -1011,14 +941,6 @@ shinyServer(function(input, output, session) {
     
     ########### Map and geographical distribution of variants
     
-    # observeEvent(input$variant_map, {
-    #   updateSelectizeInput(session, 
-    #                        "antigenic_mutation",
-    #                        choices = antigenic_mutations_lineages_all %>% 
-    #                          filter(lineage == input$variant_map) %>% 
-    #                          distinct(variant))
-    # })
-    
     map_weekInput <- reactive({
       # if((input$antigenic_mutation) == ""){ # if input is empty show only lineages
       
@@ -1051,42 +973,7 @@ shinyServer(function(input, output, session) {
           df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
           max_val <- max_count
         }
-      # } else { # if a mutation is selected
-        
-        # antigenic_mutations_lineages_all_1<- antigenic_mutations_lineages_all %>% 
-        #   filter(variant == input$antigenic_mutation)
-        # geo_all_1<- antigenic_mutations_lineages_all_1 %>% filter(lineage == input$variant_map)
-        # 
-        # max_count<- max(geo_all_1$Count)
-        # max_proportion<- max(geo_all_1$Proportion)
-        # geo_all_1<-geo_all_1 %>% filter(epi_date == input$variant_date)
-        # 
-        # if(input$percentage_map == TRUE){
-        #   geo_all_1<-dplyr::rename(geo_all_1, "value" = "Proportion")
-        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Count")]
-        #   # geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
-        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
-        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
-        #   
-        #   #Join mydata with mapdata
-        #   df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
-        #   c<-"Percentage"
-        #   max_val<-max_proportion
-        # }
-        # else
-        # {
-        #   geo_all_1<-dplyr::rename(geo_all_1, "value" = "Count")
-        #   c<-"Number of sequences"
-        #   # geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "objectid")]
-        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "epi_week")]
-        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "lineage")]
-        #   geo_all_1<- geo_all_1[, -which(names(geo_all_1) == "Proportion")]
-        #   #Join mydata with mapdata
-        #   df <- plyr::join(mapdata, geo_all_1, by= c("NUTS1"))
-        #   max_val <- max_count
-        # }
-      # } # end else
-      
+
       # generate plot
       gg <- ggplot() + geom_polygon(data = df, aes(x = long, y = lat, group = group, fill = value), color = "#FFFFFF", size = 0.25)
       gg <- gg + scale_fill_gradient2(low = "blue", mid = "red", high = "yellow", na.value = "white")
