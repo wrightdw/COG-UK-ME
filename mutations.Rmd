@@ -202,7 +202,15 @@ mutations_uk %<>%
   mutate(gene = fct_recode(gene, ORF1ab = "orf1ab")) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
 
+mutations_s_uk <- 
+  mutations_uk %>% 
+  filter(gene == "S") %>% 
+  select(-gene) %>% 
+  mutate(across(c(variant, position), fct_drop)) %>% # drop non-spike mutations from factor levels
+  write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_s_uk.rds"))
+
 mutations_uk
+mutations_s_uk
 ```
 
 
@@ -217,7 +225,7 @@ deletions %<>% semi_join(consortium_uk, by = c("samples" = "sequence_name")) # r
 message("Writing deletions.rds")
 deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
 ```
-```{r}
+```{r deletions_mapping}
 deletions_mapping <- 
   read_csv(params$deletions_mapping_csv, 
            col_types = cols(del_start = col_integer(),
@@ -249,9 +257,7 @@ deletions_complete <-
   mutate(across(c(position, variant), as_factor)) %>% 
   select(-del_subst)
 
-
 deletions_complete
-
 ```
 
 ## Mutation / REF counts
@@ -360,7 +366,8 @@ message("Writing insertions.rds")
 insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 
 ```
-```{r}
+### Mapping
+```{r insertions_mapping}
 insertions_mapping <- 
   read_csv(params$insertions_mapping_csv) %>%
   mutate(across(c(gene), as_factor)) %>% 
@@ -376,6 +383,17 @@ insertions_mapping <-
 insertions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions_mapping.rds"))
 
 ```
+# Mutations + indels
+```{r mutations_indels}
+# for mutations/indels downloads
+mutations_indels_uk_28 <-
+  mutations_uk %>% 
+  bind_rows(deletions_mapping %>% rename(variant = del_id)) %>% 
+  bind_rows(insertions_mapping %>% rename(variant = insertion_id)) %>% 
+  filter(sample_date >= sample_date_28) %T>% 
+  write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_indels_uk_28.rds"))
+```
+
 ```{r database_insertions}
 insertions_uk <-
   insertions_mapping %>% 
@@ -655,21 +673,7 @@ bind_rows(database_tcell_predictions, database_functional_predictions) %T>% writ
 ```
 
 
-### Table 1
-```{r table_1}
-database_genome %>% 
-  slice_max(`numSeqs UK`, n = 15) %>% 
-  select(mutation, `numSeqs UK`, `numSeqs UK 28 days`, `numSeqs Eng 28 days`, `numSeqs Scotland 28 days`, `numSeqs Wales 28 days`, `numSeqs NI 28 days`)
-```
 
-
-
-```{r setdiff, eval=FALSE, include=FALSE}
-setdiff(
-consortium_uk %>% filter(d614g == "G") %>% select(sequence_name),
-mutations_s_uk %>% filter(variant == "D614G") %>% select(sequence_name)
-)
-```
 ### Lineages
 ```{r lineage_counts}
 n_uk_lineages <- 
@@ -691,179 +695,7 @@ n_uk_lineages <-
 n_uk_lineages
 ```
 
-#### B.1.1.7
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-```
 
-
-#### B.1.1.70
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% filter(lineage == "B.1.1.70" | str_detect(lineage, "B\\.1\\.1\\.70\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-
-```
-
-#### B.1.351
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.351\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-```
-
-#### B.1.1.298
-```{r eval=FALSE, include=FALSE}
-n_uk_lineages %>% filter(lineage == "B.1.1.298" | str_detect(lineage, "B\\.1\\.1\\.298\\.")) %>% select(-lineage) %>% summarise_all(funs(sum))
-```
-#### E484K
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  dplyr::count(lineage)
-```
-#### E484K 28 Days
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  dplyr::count(lineage)
-```
-#### E484K / B.1.351 Summary
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
-  summarise("n_E484K_B.1.351" = n_distinct(sequence_name))
-```
-#### E484K / B.1.351 Summary 28 Days
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  summarise("n_28_E484K_B.1.351 " = n_distinct(sequence_name))
-```
-#### E484K / B.1.1.248
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>% summarise("n_E484K_B.1.1.248" = n_distinct(sequence_name))
-
-```
-#### E484K / B.1.1.248 28 Days
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.1.248" | str_detect(lineage, "B\\.1\\.1\\.248\\.")) %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  summarise("n_E484K_B.1.1.248" = n_distinct(sequence_name))
-```
-
-#### E484K / B.1.1.7
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% summarise("n_E484K_B.1.1.7" = n_distinct(sequence_name))
-```
-#### E484K / B.1.1.7 28 Days
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.1.7" | str_detect(lineage, "B\\.1\\.1\\.7\\.")) %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  summarise("n_E484K_B.1.1.7" = n_distinct(sequence_name))
-```
-
-#### E484K / B.1.1
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K_B.1.1" = n_distinct(sequence_name))
-```
-#### E484K / B.1.1 28 Days
-```{r eval=FALSE, include=FALSE}
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  filter(lineage == "B.1.1" | str_detect(lineage, "B\\.1\\.1\\.")) %>% summarise("n_E484K__28_B.1.1" = n_distinct(sequence_name))
-```
-#### N501Y + E484K / B.1.351 Summary
-```{r eval=FALSE, include=FALSE}
-intersect(
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
-  distinct(sequence_name),
-  
-consortium_uk %>% 
-  filter(n501y == "Y") %>% 
-  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
-  distinct(sequence_name)
-)
-```
-
-#### E484K + N501Y / B.1.351
-```{r eval=FALSE, include=FALSE}
-intersect(
-mutations_s_uk %>% 
-  filter(variant == "E484K") %>% 
-  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  distinct(sequence_name),
-  
-consortium_uk %>% 
-  filter(n501y == "Y") %>% 
-  filter(lineage == "B.1.351" | str_detect(lineage, "B\\.1\\.1\\.351\\.")) %>% 
-  filter(sample_date >= sample_date_28) %>% 
-  distinct(sequence_name)
-)
-```
-### Escape Mutations
-```{r escape, eval=FALSE, include=FALSE}
-escape <- 
-  read_csv("list_escape_2.csv", col_names = "mutation")
-
-database_genome %>% 
-  right_join(escape) %>% 
-  select(mutation, `numSeqs UK`:`numSeqs Wales 28 days`) %T>% 
-  write_csv("escape_counts.csv")
-```
-
-### Escape mutations sample names
-```{r escape_ids, eval=FALSE, include=FALSE}
-escape_t4 <- 
-c(
-"G446V",
-"L452R",
-"E484Q",
-"K444R",
-"E484K",
-"Y508H",
-"N440K",
-"L455F",
-"A831V",
-"A475V",
-"F490S",
-"V483A",
-"R346K",
-"K378N",
-"K444N",
-'G446S',
-"N450D",
-"K150R",
-"R346S",
-"K150T",
-"V445A",
-"G446A",
-"Y449H",
-"E484A",
-"Y453F", "N439K"
-)  
-
-lapply(escape_t4,  function(x){
-    mutations_s_uk %>% 
-        filter(variant == x) %>% 
-        distinct(sequence_name) %T>% {{.} %$% 
-        write_lines(sequence_name, paste0(x, ".txt"))}
-})
-```
 ## Antigenic
 ### Antigenic mutations by lineage
 Would you be able to prepare a file with all the antigenic mutations (filtered from Will’s antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
@@ -1725,7 +1557,7 @@ write_rds(viruses, str_c("COG-UK/", params$dataset_date, "/spike_viruses.rds"))
 write_rds(spike_tab, str_c("COG-UK/", params$dataset_date, "/spike_table.rds"))
 ```
 # RDS check
-```{r}
+```{r rds_check}
 # TODO Check that RDS files can be read
 # filedata <- map(filenames, function(x){print(x); read_rds(x)} )
 ```
