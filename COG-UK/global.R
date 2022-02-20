@@ -25,12 +25,12 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2022-02-01")
+# dataset_date <- as.Date("2022-02-20")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 
-mutations_s_uk <- str_c(dataset_date, "/mutations_s_uk.rds") %>% read_rds # TODO drop unused columns
+mutations_s_uk <- str_c(dataset_date, "/mutations_s_escape_uk.rds") %>% read_rds # S gene escape mutations
 mutation_reference_counts <- str_c(dataset_date, "/mutation_reference_counts.rds") %>% read_rds # precomputed mutation counts 
 
 database_tcell_predictions <- str_c(dataset_date, "/database_tcell_predictions.rds") %>% read_rds # spike T cell info and predictions

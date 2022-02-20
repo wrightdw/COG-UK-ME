@@ -23,8 +23,6 @@ params:
 ```{r setup}
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(magrittr))
-library(wesanderson)
-library(RColorBrewer)
 suppressPackageStartupMessages(library(lubridate))
 library(fuzzyjoin)
 library(htmltools)
@@ -202,15 +200,7 @@ mutations_uk %<>%
   mutate(gene = fct_recode(gene, ORF1ab = "orf1ab")) %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds"))
 
-mutations_s_uk <- 
-  mutations_uk %>% 
-  filter(gene == "S") %>% 
-  select(-gene) %>% 
-  mutate(across(c(variant, position), fct_drop)) %>% # drop non-spike mutations from factor levels
-  write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_s_uk.rds"))
-
 mutations_uk
-mutations_s_uk
 ```
 
 
@@ -518,6 +508,25 @@ database_genome %<>%
 database_genome %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_genome.rds"))
 ```
 
+# Escape mutations
+```{r}
+# mutations_uk <- read_rds("COG-UK/2022-02-20/mutations_uk.rds")
+# database_genome <- read_rds("COG-UK/2022-02-20/database_genome.rds")
+
+escape_mutations <-
+  database_genome %>% 
+    filter(gene == "S") %>% 
+    filter(!is.na(escape)) %$% 
+    mutation 
+
+mutations_s_escape_uk <- 
+  mutations_uk %>% 
+  filter(gene == "S") %>% 
+  select(-gene, -cog_id, -NUTS1, -position) %>% 
+  filter(variant %in% escape_mutations) %>%
+  mutate(across(c(variant), fct_drop)) %T>% # drop non-spike and non-escape mutations from factor levels
+  write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_s_escape_uk.rds"))
+```
 # Therapeutics
 ```{r therapeutics}
 # ORF1ab positions https://www.ncbi.nlm.nih.gov/protein/1796318597

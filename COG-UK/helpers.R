@@ -172,7 +172,7 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   {
   nation = match.arg(nation)
   
-  if(lineage %in% c("AY.4", "AY.4.2", "BA.1")) { # alias lineage name - include sublineages of alias name
+  if(lineage %in% c("AY.4", "AY.4.2", "BA.1", "BA.2")) { # alias lineage name - include sublineages of alias name
     mutations_s_uk %<>% 
       filter( (lineage == !!lineage | str_starts(lineage, fixed(str_c(!!lineage, "."))) ) & !(variant %in% !!defining))
     
@@ -314,7 +314,8 @@ sum_key_mutations_uk <- function(..., date_from = NULL){
     )
 }
 
-# Count sequences for lineage plus a non-key S-gene mutation
+### Functions not currently in use ###
+# Count sequences for lineage plus a non-key S-gene mutation 
 lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = FALSE){
   mutations_s_uk_lv <- 
     mutations_s_uk %>%
