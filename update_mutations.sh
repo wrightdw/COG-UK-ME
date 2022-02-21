@@ -10,6 +10,9 @@ then
 	tar -xvzf "${TODAY}.tar.gz"
 	echo "Removing archive"
 	rm "${TODAY}.tar.gz"
+	echo "Removing unused RDS files"
+	cd "/home/dw73x/COG-UK/${TODAY}"
+	rm mutations_uk.rds insertions_mapping.rds deletions_mapping.rds insertions.rds
 else
  	echo "No remote file (or ssh failure)"
 	exit 1
