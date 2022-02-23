@@ -138,6 +138,12 @@ consortium_uk %<>%
 
 consortium_uk
 ```
+## Sample
+```{r consortium_sample, eval=FALSE, include=TRUE}
+# Sample of full dataset for development purposes
+consortium_uk %<>% slice_sample(n = 100000)
+consortium_uk
+```
 ## 28 days
 ```{r consortium_constants, include=FALSE}
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
@@ -166,13 +172,6 @@ for (i in 1:length(alias_key)) {
 
 consortium_uk
 ```
-## Sample
-```{r consortium_sample, eval=FALSE, include=TRUE}
-# Sample of full dataset for development purposes
-consortium_uk %<>% slice_sample(n = 100000)
-consortium_uk
-```
-
 ## Write
 ```{r consortium_write}
 mutations_uk <- 
