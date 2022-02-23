@@ -146,8 +146,10 @@ dashboardPage(
     body = dashboardBody(
         useShinyjs(), # set up the dashboard to use shinyjs 
         
+        # loading screens
         useWaiter(),
-        waiterShowOnLoad(html = loading_screen, color = "white"),
+        waiterShowOnLoad(html = loading_screen, color = "white"), # app initialisation screen
+        autoWaiter(html = spin_3k(), color = "white"), # plot and table rendering
         
         tags$head(
             tags$link(rel = "shortcut icon", href = "favicon.png"),
