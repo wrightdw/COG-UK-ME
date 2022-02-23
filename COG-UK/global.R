@@ -1,6 +1,7 @@
 library(tidyverse)
 library(lubridate)
 library(magrittr)
+library(waiter)
 
 # Work out choice of dataset based on hour of day or most recent dataset
 get_dataset_date <- function(rollover = 7){
@@ -25,7 +26,7 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2022-02-20")
+# dataset_date <- as.Date("2022-02-21")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -157,3 +158,10 @@ vui_voc_lineages <-
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
+
+# Waiter loading data screen
+loading_screen <- tagList(
+  h3("COG-UK Mutation Explorer", style = "color:#333"),
+  spin_plus(),
+  h4("Loading data...", style = "color:#333")
+) 

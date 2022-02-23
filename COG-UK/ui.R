@@ -146,6 +146,9 @@ dashboardPage(
     body = dashboardBody(
         useShinyjs(), # set up the dashboard to use shinyjs 
         
+        useWaiter(),
+        waiterShowOnLoad(html = loading_screen, color = "white"),
+        
         tags$head(
             tags$link(rel = "shortcut icon", href = "favicon.png"),
             tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),

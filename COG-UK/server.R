@@ -147,11 +147,11 @@ names(spike_table)[4] <- 'Sequences total'
 names(spike_table)[5] <- 'Sequences 28 days'
 names(spike_table)[6] <- 'Frequency change vs. prev 28 days (%)'
 names(spike_table)[7] <- 'Expansion/ contraction'
-
 ### spike profiles end
 
 shinyServer(function(input, output, session) {
-
+    waiter_hide() # hide loading screen
+  
     output$table_1 <- renderDataTable({
       table_1() %>% 
         datatable(filter = "top", rownames = FALSE, 
