@@ -163,5 +163,5 @@ mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
 loading_screen <- tagList(
   h3("COG-UK Mutation Explorer", style = "color:#333"),
   spin_plus(),
-  h4("Loading data...", style = "color:#333")
+  h4("Loading data . . .", style = "color:#333")
 ) 
