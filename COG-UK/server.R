@@ -123,31 +123,36 @@ table_therapeutics <- function(){
   ) 
 }
 
-### spike profiles start
+### spike profiles - non reactive - start
+names(spike_tab) <- c('Profile', 'N_change', 'Lineage', 'Count', 'Count_28',
+                      'Growth', 'Expansion', 'VOC', 'Geography')
 spike_tab$Profile <- gsub(';', ', ', spike_tab$Profile)
-# create 'spike_table' slightly re-formatted version of spike_tab for datatable()
-spike_table <- spike_tab
-# hack to allow display of all omicron profile subs 
 spike_tab$Profile <- gsub('Y505H, T547K', 'Y505H,\nT547K', spike_tab$Profile)
+spike_tab$Lineage <- gsub('AY.46.5, ', 'AY.46.5,\n', spike_tab$Lineage)
+spike_tab$VOC <- gsub('Omicron ', 'Omicron\n', spike_tab$VOC)
 
-# identify where 0 is in range of expansion
-# col_min <- min(c(-0.02, plyr::round_any(min(spike_tab$Expansion), 0.005, floor)))
-# col_max <- max(c(0.02, plyr::round_any(max(spike_tab$Expansion), 0.005, ceiling)))
+##### colour scale stuff
+# identify where 0 is in range
 col_max <- max(c(0.02, plyr::round_any(max(abs(spike_tab$Expansion)), 0.005, ceiling)))
 col_min <- -col_max
 zero_percentile <- (0 - col_min) / (col_max - col_min)
 
-# rounding for table
-spike_table$`Change in Frequency vs. previous 28 days (%)` <- round(spike_table$`Change in Frequency vs. previous 28 days (%)`, 2)
+col_max_growth <- plyr::round_any(max(spike_tab$Growth), 10, ceiling)
+col_min_growth <- plyr::round_any(min(spike_tab$Growth), 10, floor)
+zero_percentile_growth <- (0 - col_min_growth) / (col_max_growth - col_min_growth)
+
+#### Re-formatting of spike table for data table
+spike_table <- spike_tab
+spike_table$Growth <- round(spike_table$Growth, 2)
 spike_table$Expansion <- signif(spike_table$Expansion, 4)
-# column re-naming for display
+
 names(spike_table)[2] <- 'Amino acid substitutions'
 names(spike_table)[3] <- 'Lineage(s)'
-names(spike_table)[4] <- 'Sequences total'
+names(spike_table)[4] <- 'Sequences 56 days'
 names(spike_table)[5] <- 'Sequences 28 days'
-names(spike_table)[6] <- 'Frequency change vs. prev 28 days (%)'
+names(spike_table)[6] <- 'Average growth rate (%)'
 names(spike_table)[7] <- 'Expansion/ contraction'
-### spike profiles end
+### spike profiles - non reactive - end
 
 shinyServer(function(input, output, session) {
     waiter_hide() # hide loading screen
@@ -1003,50 +1008,82 @@ shinyServer(function(input, output, session) {
                   height=1200)
     })
   
-  ### 'Spike profiles' tab - outputs
+  ### 'Spike profiles' tab - outputs - start
   # Subset spike profiles for plot based on user selected geography (input$spike_geo)
   spike_tab_subset <- reactive({
     spike_tab_sub <- spike_tab %>%
       filter(Geography == input$spike_geo)
-    spike_tab_sub <- spike_tab_sub[order(abs(spike_tab_sub$Expansion),
-                                         decreasing = F),]
+    spike_tab_sub <- spike_tab_sub[order(abs(spike_tab_sub$Expansion), decreasing = F),]
     as.data.frame(spike_tab_sub)
+    
   })
   
+  
   output$spikePlot_count28 <- renderPlotly({
-    ggplotly(ggplot(data = spike_tab_subset(),
-                    aes(x = `Count in latest 28 days`, y = Expansion, col = Expansion,
-                        text = paste('</br>Profile: ', Profile,
-                                     '</br>Count 28 days = ', `Count in latest 28 days`,
-                                     '</br>Lineage(s) = ', `lineage(s)`))) +
-               geom_point() +
-               scale_x_continuous(trans = 'log',
-                                  breaks = c(1, 10, 100, 1000, 10000, 100000),
-                                  labels = c("1", "10", "100", "1,000", "10k", "100k")) +
-               scale_y_continuous(breaks = seq(-20, 20, ifelse(col_max - col_min > 2, 0.2, 0.1))) +
-               scale_color_gradientn(limits = c(col_min, col_max),
-                                     values = c(0, zero_percentile - 0.02, zero_percentile, zero_percentile + 0.02, 1),
-                                     colours = c('dodgerblue4', 'lightblue1', 'grey90', 'coral', 'firebrick4')) +
-               labs(x = 'Count of sequences over latest 28-day period',
-                    y = 'Expansion/contraction',
-                    col = 'Expansion/\nContraction') +
-               theme_minimal() +
-               theme(text = element_text(size = 13)),
+    
+    p <- ggplot(data = spike_tab_subset(),
+                aes(text = paste('</br>Profile: ', Profile,
+                                 '</br>Count 28 days = ', Count_28,
+                                 '</br>Lineage(s) = ', Lineage))) +
+      geom_point(aes_string(x = "Count_28", y = input$spike_y, col = input$spike_col)) +
+      # scale_y_continuous(breaks = seq(-20, 20, ifelse(col_max - col_min > 2, 0.2, 0.1))) +
+      scale_x_continuous(trans = 'log', breaks = c(1, 10, 100, 1000, 10000, 100000),
+                         labels = c("1", "10", "100", "1,000", "10k", "100k")) +
+      xlab('Count of sequences in latest 28-day period') +
+      theme_minimal() +
+      theme(text = element_text(size = 13))
+    
+    ## Depending on input$spike_y, need different scale and label
+    if (input$spike_y == "Expansion") {
+      p <- p +
+        scale_y_continuous(breaks = seq(-20, 20, ifelse(col_max - col_min > 2, 0.2, 0.1)),
+                           name = "Expansion/contraction")
+    } else if (input$spike_y == "Growth") {
+      p <- p +
+        scale_y_continuous(name = "Average growth rate (%)")
+    } else if (input$spike_y == "N_change") {
+      p <- p +
+        scale_y_continuous(breaks = seq(0, 100, 2),
+                           name = "Amino acid substitutions")
+    }
+    
+    ## Depending on input$spike_x, need different colour scale
+    if (input$spike_col == "Expansion") {
+      p <- p +
+        scale_color_gradientn(limits = c(col_min, col_max),
+                              values = c(0, zero_percentile - 0.02, zero_percentile, zero_percentile + 0.02, 1),
+                              colours = c('dodgerblue4', 'lightblue1', 'grey90', 'coral', 'firebrick4'),
+                              name = 'Expansion/\nContraction')
+      
+    } else if (input$spike_col == "Growth") {
+      p <- p + 
+        scale_color_gradientn(limits = c(col_min_growth, col_max_growth),
+                              values = c(0, zero_percentile_growth - 2, zero_percentile_growth, zero_percentile_growth + 0.02, 1),
+                              colours = c('dodgerblue4', 'lightblue1', 'grey90', 'coral', 'firebrick4'),
+                              name = 'Growth\nrate')
+    } else if (input$spike_col == "VOC") {
+      p <- p +
+        scale_color_brewer(palette = 'Set2', name = 'Variant')
+    }
+    
+    ggplotly(p,
              tooltip = c("text"), textposition = 'topright')
   })
+  
   
   # Subset spike profiles for table based on user selected geography (input$spike_geo)
   spike_table_subset <- reactive({
     spike_table_sub <- spike_table %>%
       filter(Geography == input$spike_geo)
-    spike_table_sub <- spike_table_sub %>% select(-c("Geography"))
+    spike_table_sub <- spike_table_sub %>% select(-c("Geography", "VOC"))
     spike_table_sub <- spike_table_sub[order(spike_table_sub$`Expansion/ contraction`, decreasing = T),]
     as.data.frame(spike_table_sub)
+    
   })
   
   output$spikeTable <- renderDataTable({
     datatable(spike_table_subset(),
               options = list(lengthMenu = c(20, 50, 100, 200)), rownames = FALSE) 
   })
-  ### 'Spike profiles' tab - end
+  ### 'Spike profiles' tab - outputs - end
 })
