@@ -710,48 +710,53 @@ dashboardPage(
                         box(title = "Spike profile expansion and contraction", width = 12,
                             collapsible = FALSE, icon = icon("chart-line"),
                             p("Each spike profile is a set of amino acid substitutions listed relative to the original genotype (Wuhan-Hu-1).
-                              Spike profiles sampled within 7 days of the latest UK sequence are plotted below, with count of sequences in the
-                              latest 28-day period on the x-axis and a statistic estimating recent significant change in profile frequency on
-                              the y-axis."),
+    Spike profiles sampled within 7 days of the latest UK sequence are plotted below, with count of sequences in the
+    latest 28-day period on the x-axis and a statistic estimating recent significant change in profile frequency on
+    the y-axis."),
                             p("Profiles of the Delta or Omicron variants of concern (VOCs) are described as amino acid substitutions relative
-                              to the core VOC profiles listed below."),
+    to the core VOC profiles listed below."),
                             p("Hovering the cursor over a point reveals the substitutions defining a spike profile, count in the latest 28-day
-                              period and associated pango lineages. The plot and table below can be re-drawn including data for each of the
-                              UK nations by selecting a dataset below."),
+    period and associated pango lineages. The plot and table below can be re-drawn including data for each of the
+    UK nations selecting a dataset below."),
                             
-                            prettyRadioButtons(
-                                inputId = "spike_geo",
-                                label = h5("Dataset:"),
-                                choices = list("United Kingdom" = "United Kingdom" ,
-                                               "England" = "England",
-                                               "Northern Ireland" = "Northern Ireland",
-                                               "Scotland" = "Scotland",
-                                               "Wales" = "Wales"),
-                                selected = "United Kingdom"
-                            ),
+                            ## Input panel with options for plot (spike_geo also feeds into table)
+                            inputPanel(
+                                selectInput('spike_geo', 'Dataset',
+                                            choices = c("United Kingdom", "England", "Northern Ireland", "Scotland", "Wales"),
+                                            selected = "United Kingdom"),
+                                selectInput('spike_y', 'Y-axis',
+                                            choices = list("Expansion/Contraction" = "Expansion",
+                                                           "Growth rate" = "Growth",
+                                                           "Amino acid changes" = "N_change"),
+                                            selected = "class"),
+                                selectInput('spike_col', 'Colour scheme',
+                                            choices = list("Expansion/Contraction" = "Expansion",
+                                                           "Growth rate" = "Growth",
+                                                           "Variant" = "VOC"), 
+                                            selected = "Expansion/Contraction")), # end of inputPanel
                             
                             plotlyOutput("spikePlot_count28", height = 550),
                             br(),
                             p(strong("VOC core spike profiles:"), "'+' indicates additional substitutions and '-' marks the absence of a
-                              substitution present in the core profiles below"),
+           substitution present in the core profiles below"),
                             p("Delta: T19R, G142D, Δ156-157/R158G, L452R, T478K, D614G, P681R, D950N"),
                             p("Omicron (BA.1): A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N,
-                              N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K,
-                              D796Y, N856K, Q954H, N969K, L981F"),
+    N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K,
+    D796Y, N856K, Q954H, N969K, L981F"),
                             p("Omicron (BA.2): T19I, L24S/Δ25-27, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K,
-                              S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K"),
+    S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K"),
                             p(em("Substitutions in VOC core profiles that are sometimes not identified VOC sequences (due to amplicon dropout
-                              during sequencing) are not listed as absent. For Delta profiles, G142D, is not listed as absent. For Omicron,
-                              due to widespread undercalling of core substitutions, the absence of core substitutions is currently not
-                              shown")),
+       during sequencing) are not listed as absent. For Delta profiles, G142D, is not listed as absent. For Omicron,
+       due to widespread undercalling of core substitutions, the absence of core substitutions is currently not
+       shown")),
                             
                             p(strong("Expansion/contraction:"), "For each profile,", em("i"), ", the absolute value for this statistic is
-                              calculated using the observed frequency", em("O", tags$sub("i")), "of profile", em("i"), "in each of the most
-                              recent 2-week periods", em("j"), "according to:",
+    calculated using the observed frequency", em("O", tags$sub("i")), "of profile", em("i"), "in each of the most
+    recent 2-week periods", em("j"), "according to:",
                               tags$div(HTML(paste("Sum{(O", tags$sub("i,j"), " - E", tags$sub("i"), ")", tags$sup("2"), "/ E", tags$sub("i"), "}", sep = ""))),
                               "where", em("E", tags$sub("i")), "is the frequency of profile",  em("i"), "over the full 8-week period. This value
-                              is shown as negative or positive according to direction of change and represents both the rate of change in
-                              frequency and the overall frequency of a profile.")
+    is shown as negative or positive according to direction of change and represents both the rate of change in
+    frequency and the overall frequency of a profile.")
                             ) # end of box
                     ), # end of fluid row
                     
@@ -759,11 +764,11 @@ dashboardPage(
                         box(title = "Spike profiles detected in the UK during the last week", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),
                             dataTableOutput("spikeTable"),
-                            p(strong("Profile"), "lists the amino acid substitutions (currently deletions and insertions are not included) in the spike protein relative to the original genotype (Wuhan-Hu-1). Note: Incomplete spike profiles may be called where the underlying sequence data is incomplete. An example of this is the substitution G142D which is present in Delta sequences but often not called due to an amplicon dropout."),
+                            p(strong("Profile"), "lists the amino acid substitutions (deletions and insertions are not currently included) in the spike protein relative to the original genotype (Wuhan-Hu-1). Note: Incomplete spike profiles may be called where the underlying sequence data is incomplete."),
                             p(strong("Amino acid substitutions"), "is the count of spike amino acid substitutions relative to the orginal genotype (Wuhan-Hu-1)."),
-                            p(strong("Frequency change vs. prev 28 days (%)"), "28 day periods are calculated relative to the date of the most recent UK sequence. A blank cell indicates that a spike profile was not sequenced in the 28-day period preceding the most recent 28-day period. It shows the percentage change in the frequency of a profile among all sequenced genomes in the most recent 28-day period.")
-                            )
-                        )
+                            p(strong("Average growth rate (%)"), "Calculated over the latest 56 day period to the date of the most recent UK sequence. The percentage change in frequency between each 2-week period within this period averaged and shown as a percentage.")
+                            ) # end of box
+                        ) # end of fluid row
             ), # end tabitem spike_profiles
             
             

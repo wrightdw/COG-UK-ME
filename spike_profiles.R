@@ -122,7 +122,16 @@ spike_profiles <- function(viruses = NA, spike_period = 7,
   spike_tab$Freq_f4 <- spike_tab$N_f4 / N_f4
   spike_tab$Freq_56 <- spike_tab$N_56 / N_56
   
-  spike_tab$Growth <- (spike_tab$Freq_28 / spike_tab$Freq_28p * 100) - 100
+  ## Average growth rate between last 4 2-weeks
+  spike_tab$G1 <- (spike_tab$Freq_f1 / spike_tab$Freq_f2) * 100 - 100
+  spike_tab$G2 <- (spike_tab$Freq_f2 / spike_tab$Freq_f3) * 100 - 100
+  spike_tab$G3 <- (spike_tab$Freq_f3 / spike_tab$Freq_f4) * 100 - 100
+  spike_tab$G1[!is.finite(spike_tab$G1)] <- 0
+  spike_tab$G2[!is.finite(spike_tab$G2)] <- 0
+  spike_tab$G3[!is.finite(spike_tab$G3)] <- 0
+  spike_tab$Growth <- (spike_tab$G1 + spike_tab$G2 + spike_tab$G3) / 3
+  
+  ## Expansion/contraction based on chi^2
   spike_tab$chi_2 <- ((spike_tab$Freq_f1 - spike_tab$Freq_56)^2 / spike_tab$Freq_56) + 
     ((spike_tab$Freq_f2 - spike_tab$Freq_56)^2 / spike_tab$Freq_56) +
     ((spike_tab$Freq_f3 - spike_tab$Freq_56)^2 / spike_tab$Freq_56) +
@@ -134,17 +143,30 @@ spike_profiles <- function(viruses = NA, spike_period = 7,
   spike_tab$Increase <- ifelse(spike_tab$Freq_28p > spike_tab$Freq_28, 0, spike_tab$Increase)
   
   # use column to put take absolute value of change and put sign on it
-  spike_tab$expansion <- ifelse(spike_tab$Increase == 0, spike_tab$chi_2 - spike_tab$chi_2*2, spike_tab$chi_2)
+  spike_tab$expansion <- ifelse(spike_tab$Increase == 0,
+                                spike_tab$chi_2 - spike_tab$chi_2*2,
+                                spike_tab$chi_2)
+  
+  # create a VOC variable
+  spike_tab$VOC <- 'Other'
+  spike_tab$VOC <- ifelse(grepl('B.1.617.2', spike_tab$lineage), 'Delta', spike_tab$VOC)
+  spike_tab$VOC <- ifelse(grepl('AY.', spike_tab$lineage), 'Delta', spike_tab$VOC)
+  spike_tab$VOC <- ifelse(grepl('BA.1', spike_tab$lineage), 'Omicron (BA.1/BA.1.x)', spike_tab$VOC)
+  spike_tab$VOC <- ifelse(grepl('BA.2', spike_tab$lineage), 'Omicron (BA.2)', spike_tab$VOC)
+  spike_tab$VOC <- factor(spike_tab$VOC,
+                          levels = c('Delta', 'Omicron (BA.1/BA.1.x)', 'Omicron (BA.2)', 'Other'))
   
   spike_tab <- spike_tab[,c('profile', 'N_change', 'lineage', 
-                            'N', 'N_28', 'Growth', 'expansion')]
+                            'N', 'N_28', 'Growth', 'expansion',
+                            'VOC')]
   names(spike_tab) <- c('Profile',
-                        'Number of amino acid changes',
-                        'lineage(s)',
+                        'N_change',
+                        'Lineage',
                         'Count',
-                        'Count in latest 28 days',
-                        'Change in Frequency vs. previous 28 days (%)',
-                        'Expansion')
+                        'Count_28',
+                        'Growth',
+                        'Expansion',
+                        'VOC')
   spike_tab
 }
 
@@ -168,7 +190,6 @@ spike_profiles_nations <- function(viruses = NA) {
   spike_profiles_nations
   
 }
-
 
 get_pretty_profiles <- function(x = NA) {
   
@@ -195,7 +216,7 @@ get_pretty_profiles <- function(x = NA) {
     if (grepl('AY.', x$lineage[i]) |
         grepl('B.1.617.2', x$lineage[i])) {
       
-      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      profile <- stringr::str_split(x$mutations[i], pattern = ';')[[1]]
       
       voc_extra <- setdiff(profile, profile_delta)
       voc_absent <- setdiff(profile_delta, profile)
@@ -216,7 +237,7 @@ get_pretty_profiles <- function(x = NA) {
     } else if (grepl('BA.1', x$lineage[i]) |
                grepl('B.1.1.529', x$lineage[i])){
       
-      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      profile <- stringr::str_split(x$mutations[i], pattern = ';')[[1]]
       voc_extra <- setdiff(profile, profile_omicron)
       voc_absent <- setdiff(profile_omicron, profile)
       # Correction to account for most common amplicon dropout errors
@@ -224,7 +245,6 @@ get_pretty_profiles <- function(x = NA) {
       voc_absent <- setdiff(voc_absent, 'K417N')
       voc_absent <- setdiff(voc_absent, 'N440K')
       voc_absent <- setdiff(voc_absent, 'G446S')
-      voc_absent <- setdiff(voc_absent, 'N764K')
       voc_absent <- c()
       
       # use collected info to generate 'pretty_profile'
@@ -240,7 +260,7 @@ get_pretty_profiles <- function(x = NA) {
       
     } else if (grepl('BA.2', x$lineage[i])){
       
-      profile <- str_split(x$mutations[i], pattern = ';')[[1]]
+      profile <- stringr::str_split(x$mutations[i], pattern = ';')[[1]]
       voc_extra <- setdiff(profile, profile_omicron_ba2)
       voc_absent <- setdiff(profile_omicron_ba2, profile)
       
@@ -266,4 +286,3 @@ get_pretty_profiles <- function(x = NA) {
   }
   x
 }
-
