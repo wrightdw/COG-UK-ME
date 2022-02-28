@@ -488,7 +488,9 @@ dashboardPage(
                             
                             p("Individual amino acid replacements detected in UK genomes are shown (sequences ≥ 5). Neither insertions nor deletions, nor synonymous mutations are included."),
                             p(em("NB Number of genomes is not equal to number of COVID-19 cases as data have not been deduplicated.")),
-                            dataTableOutput("table_1")
+                            dataTableOutput("table_1"),
+                            p("Deletions of nucleotides of lengths that are multiples of 3 in coding regions, in which substitutions are also tracked, are shown. Out-of-frame deletions that also result in a change in amino acid flanking the deletion are also annotated (e.g. ‘del156-157/R158G). Notation is relative to Wuhan-Hu-1."),
+                            p("Insertions of nucleotides of lengths that are multiples of 3 in coding regions, in which substitutions are also tracked, are shown. Insertions that fall between codons are labelled with the notation (e.g. 'Ins: 140-ITAL-141'). Insertions within codons are labelled (e.g. 'Ins: V120VL') which is a 3 nucleotide insertion within codon 120 which results in two residues ‘VL’ in the translated sequence. Notation is relative to Wuhan-Hu-1. Insertions containing ambiguous bases are not included.")
                         ) # end box
                     ),
                     
