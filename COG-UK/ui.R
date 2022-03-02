@@ -149,7 +149,7 @@ dashboardPage(
         # loading screens
         useWaiter(),
         waiterShowOnLoad(html = loading_screen, color = "white"), # app initialisation screen
-        autoWaiter(html = spin_3k(), color = "white"), # plot and table rendering
+        autoWaiter(id = c("variant_time", "antibody_heatmap", "mutation_time", "epitope_sequence", "spikePlot_count28"), html = spin_3k(), color = "white"), # plot and table rendering
         
         tags$head(
             tags$link(rel = "shortcut icon", href = "favicon.png"),
