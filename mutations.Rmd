@@ -139,9 +139,9 @@ consortium_uk %<>%
 
 consortium_uk
 ```
-## Sample
+## Sample - dev only
 ```{r consortium_sample, eval=FALSE, include=TRUE}
-# Sample of full dataset for development purposes
+# Sample of 100K sequences from full dataset for development purposes
 consortium_uk %<>% slice_sample(n = 100000)
 consortium_uk
 ```
@@ -203,6 +203,12 @@ mutations_uk %<>%
 mutations_uk
 ```
 
+## Read - dev only
+```{r mutations_read, eval=FALSE, include=TRUE}
+# read mutations from RDS to shortcut CSV parsing
+mutations_uk <- str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds") %>% read_rds
+mutations_uk
+```
 
 # Deletions
 ```{r deletions}
@@ -527,20 +533,20 @@ mutations_s_escape_uk <-
   mutate(across(c(variant), fct_drop)) %T>% # drop non-spike and non-escape mutations from factor levels
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_s_escape_uk.rds"))
 ```
-# Therapeutics
+# Drug resistance
 ```{r therapeutics}
 # ORF1ab positions https://www.ncbi.nlm.nih.gov/protein/1796318597
 # see mat_peptide annotation
 # nsp12 4393..5324
 # Mpro 3264..3569
 
-therapeutics_data <- function(data_dir, orf1ab_pos){
+therapeutics_data <- function(data_dir, position_polyprotein){
   fs::dir_ls(data_dir, glob = "*.csv") %>% # get file names
-    map_dfr(read_csv, col_types = cols(`quantification (fold)` = col_character())) %>% 
+    map_dfr(read_csv, col_types = cols(quantification = col_character())) %>% 
     rename(gene = ORF) %>%
     rename_with(~str_c(.x, "_protein"), c(position, residue, mutation)) %>% 
-    mutate(gene = recode(gene, "orf1b" = "orf1ab", "ORF1a" = "orf1ab"),
-           position = position_protein + orf1ab_pos - 1, .after = gene) %>% 
+    mutate(gene = recode(gene, "orf1b" = "ORF1ab", "ORF1a" = "ORF1ab"),
+           position = position_protein + position_polyprotein - 1, .after = gene) %>% 
     mutate(variant = str_c(str_sub(mutation_protein, 1, 1), 
                            position, 
                            str_sub(mutation_protein, -1, -1) ), 
@@ -548,11 +554,12 @@ therapeutics_data <- function(data_dir, orf1ab_pos){
 }
 
 thera_data <- bind_rows(therapeutics_data(params$remdesivir_dir, 4393), # nsp12 
-                        therapeutics_data(params$nirmatrelvir_dir, 3264)) # Mpro
+                        therapeutics_data(params$nirmatrelvir_dir, 3264), # Mpro
+                        therapeutics_data(params$ensovibep_dir, 1)) # S
 
 mutations_rem_uk <- 
   mutations_uk %>% 
-  filter(gene == "orf1ab") %>% 
+  # filter(gene == "ORF1ab") %>% 
   mutate(across(position, as.character)) %>%
   mutate(across(position, as.numeric)) %>%
   mutate(across(c(variant), fct_drop)) %>% 

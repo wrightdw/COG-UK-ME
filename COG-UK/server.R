@@ -114,9 +114,10 @@ table_5 = function(assay_filter = NULL){
 table_therapeutics <- function(){
   therapeutics %>% 
     arrange(desc(`numSeqs UK`), desc(`numSeqs UK 28 days`)) %>% 
-    select(gene, variant, Protein, resistance, drug, assay, detail, `quantification (fold)`, note, `numSeqs UK`, `numSeqs UK 28 days`, anchor) %>%
-    rename_with(str_to_title, c(gene, resistance, drug, assay, detail, `quantification (fold)`, note)) %>% 
-    rename(`Amino acid replacement` = variant, 
+    select(gene, variant, Protein, mutation_protein, resistance, drug, assay, detail, quantification, note, `numSeqs UK`, `numSeqs UK 28 days`, anchor) %>%
+    rename_with(str_to_title, c(gene, resistance, drug, assay, detail, quantification, note)) %>% 
+    rename(`Amino acid replacement (polyprotein)` = variant, 
+           `Amino acid replacement (protein)` = mutation_protein, 
            `Cumulative sequences in UK` = `numSeqs UK`,
            `Sequences over 28 days` = `numSeqs UK 28 days`,
            `Reference` = anchor
