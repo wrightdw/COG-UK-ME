@@ -375,10 +375,31 @@ shinyServer(function(input, output, session) {
       }
     })
 
-    # Filter mutation data and create plot
+    # Filter mutation and deletion data and create plot
     mutation_plot <- reactive({
-      mutation_reference_counts %<>% 
-        filter(gene == input$gene & position == input$position) %>%
+      # deletions or mutations only - lump the other category together
+      
+      mutation_reference_counts %<>%  
+        filter(gene == input$gene & position == input$position) 
+      
+      print(input$replacement)
+      if(input$replacement == "mutation"){
+        
+        # sub combined deletions by date
+        mutation_reference_counts %<>%  
+          mutate(variant = fct_collapse(variant, 
+                                        "Deletions" = unique(grep("^del", variant, value = T)))) %>% 
+          group_by(across(-n)) %>% 
+          summarise(n = sum(n), .groups = "drop")         
+      } else { # deletion
+        mutation_reference_counts %<>%  
+          mutate(variant = fct_collapse(variant, 
+                                        "Replacements" = unique(grep("^del", variant, value = T, invert = TRUE)))) %>% 
+          group_by(across(-n)) %>% 
+          summarise(n = sum(n), .groups = "drop")        
+        }
+        
+      mutation_reference_counts %<>%   
         arrange(desc(n)) %>%
         mutate(variant = 
                  variant %>% 
@@ -386,7 +407,7 @@ shinyServer(function(input, output, session) {
                  fct_inorder %>% 
                  fct_relevel("WT", after = 0)
                ) %>%   # fix variant colour WT first then by frequency
-        filter(adm1 == input$nation) 
+        filter(adm1 == input$nation) # keep colours the same when switching between nations
         
       variants <- mutation_reference_counts %$% levels(variant)
       

@@ -83,9 +83,16 @@ dashboardPage(
             
         ),
         
+        # mutation chart controls
         conditionalPanel(
             condition =  "input.sidebar_menu == 'dashboard'",
             hr(),
+            prettyRadioButtons(
+              inputId = "replacement",
+              label = "Replacement", 
+              choices = c("Mutation" = "mutation", "Deletion" = "deletion"),
+              selected = "mutation"
+            ),
             selectInput("gene", "Gene:", mutation_reference_counts %>% distinct(gene) %>% arrange(gene), 
                         selected = "S"),
             selectInput("position", "Position:", 
@@ -95,7 +102,7 @@ dashboardPage(
                             arrange(position), 
                         selected = "614", selectize = TRUE),
             prettySwitch("percentage", "Percentage", FALSE, status = "info", fill = TRUE),
-            prettySwitch("ref", "Wild type / other", TRUE,  status = "info", fill = TRUE),
+            prettySwitch("ref", "Wild type/other", TRUE,  status = "info", fill = TRUE),
             
             prettyRadioButtons(
                 inputId = "nation",
