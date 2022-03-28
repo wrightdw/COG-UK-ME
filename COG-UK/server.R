@@ -382,24 +382,26 @@ shinyServer(function(input, output, session) {
       mutation_reference_counts %<>%  
         filter(gene == input$gene & position == input$position) 
       
-      print(input$replacement)
-      if(input$replacement == "mutation"){
+      if(input$mutation_type == "replacement"){
         
-        # sub combined deletions by date
+        # substitute combined deletions by date
         mutation_reference_counts %<>%  
           mutate(variant = fct_collapse(variant, 
-                                        "Deletions" = unique(grep("^del", variant, value = T)))) %>% 
+                                        "Deletions" = unique(grep("^del", # collapse deletions only
+                                                                  variant, value = TRUE)))) %>% 
           group_by(across(-n)) %>% 
           summarise(n = sum(n), .groups = "drop")         
       } else { # deletion
         mutation_reference_counts %<>%  
           mutate(variant = fct_collapse(variant, 
-                                        "Replacements" = unique(grep("^del", variant, value = T, invert = TRUE)))) %>% 
+                                        "Replacements" = unique(grep("(^del)|(^WT$)", # collapse non-deletions and non-WT
+                                                                     variant, value = TRUE, invert = TRUE)))) %>% 
           group_by(across(-n)) %>% 
           summarise(n = sum(n), .groups = "drop")        
         }
         
       mutation_reference_counts %<>%   
+        # filter(n >= 5) %>% 
         arrange(desc(n)) %>%
         mutate(variant = 
                  variant %>% 

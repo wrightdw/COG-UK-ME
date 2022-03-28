@@ -26,7 +26,7 @@ get_dataset_date <- function(rollover = 7){
 # dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-dataset_date <- as.Date("2022-02-27")
+dataset_date <- as.Date("2022-03-27")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds

@@ -88,10 +88,10 @@ dashboardPage(
             condition =  "input.sidebar_menu == 'dashboard'",
             hr(),
             prettyRadioButtons(
-              inputId = "replacement",
-              label = "Replacement", 
-              choices = c("Mutation" = "mutation", "Deletion" = "deletion"),
-              selected = "mutation"
+              inputId = "mutation_type",
+              label = "Mutation:", 
+              choices = c("Replacement" = "replacement", "Deletion" = "deletion"),
+              selected = "replacement"
             ),
             selectInput("gene", "Gene:", mutation_reference_counts %>% distinct(gene) %>% arrange(gene), 
                         selected = "S"),
