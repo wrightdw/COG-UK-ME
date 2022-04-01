@@ -36,11 +36,12 @@ database_genome %>%
 }
 
 # Variants
+# TODO precompute
 table_3 <- function(){
   bind_rows(
     n_uk_lineages_all %>% 
       filter(lineage %in% lineages_t3$lineage & variant == "sequences") %>% 
-      inner_join(lineages_t3) %>% 
+      inner_join(lineages_t3) %>% # join descriptions
       select(-variant) %>% 
       relocate(reason, .after = lineage),
     
@@ -49,7 +50,22 @@ table_3 <- function(){
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
       mutate(reason = "As B.1.324.1, with the addition of E484K.")
   ) %>% 
-    mutate(across(where(is.numeric), ~replace_na(.x, 0L))) %>% 
+    lineages_table()
+}
+
+table_recombinants <- function(){
+  n_uk_recombinants %>% 
+    filter(variant == "sequences") %>% 
+    left_join(lineages_recomb) %>% # descriptions 
+    select(-variant) %>% 
+    relocate(reason, .after = lineage) %>% 
+    lineages_table
+}
+
+# Format lineages table for display
+lineages_table <- function(summed_lineages){
+  summed_lineages %>% 
+  mutate(across(where(is.numeric), ~replace_na(.x, 0L))) %>% 
     filter(n_sequences_UK > 0) %>%
     relocate(n_sequences_UK, .after = reason) %>% 
     mutate(`UK (%)` = n_sequences_UK / total_sequences,
@@ -65,7 +81,7 @@ table_3 <- function(){
     rename(`Variant` = lineage,	
            UK = n_sequences_UK,	 
            `UK 28 days` = n_sequences_28_UK,                    
-           `Country first detected & lineage defining mutations in Spike` = reason, 
+           Description = reason, 
            
            England = n_sequences_England,
            `Northern Ireland` = n_sequences_Northern_Ireland,
@@ -77,6 +93,7 @@ table_3 <- function(){
            `Scotland 28 Days` = n_sequences_28_Scotland,
            `Wales 28 Days` = n_sequences_28_Wales
     ) 
+  
 }
 
 # T cell table
@@ -304,9 +321,17 @@ shinyServer(function(input, output, session) {
       contentType = "text/csv"
     )
     
-    # Variants
+    # Render VOC/VUI table
     output$table_3 <- renderDT({
       table_3() %>% 
+        datatable(filter = "none", escape = FALSE, rownames = FALSE, 
+                  options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
+        formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)
+    })
+    
+    # Render recombinants table
+    output$table_recomb <- renderDT({
+      table_recombinants() %>% 
         datatable(filter = "none", escape = FALSE, rownames = FALSE, 
                   options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
         formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)

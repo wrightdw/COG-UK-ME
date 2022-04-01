@@ -129,17 +129,32 @@ NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion.
     ) %>% 
   enframe("lineage", "reason")
 
+# Recombinant lineages and descriptions
+lineages_recomb <- 
+  c("XA" = "Recombinant lineage with parental lineages B.1.1.7 and B.1.177, UK lineage.",
+    "XB" = "Recombinant lineage with parental lineages B.1.634 and B.1.631, Central and North America lineage.") %>% 
+  enframe("lineage", "reason")
+
 lineages_t2 <- c(vui_voc %>% levels, lineages_t3$lineage) %>% unique # lineages for counting
 
-# TODO precompute and include lineage/mutation combinations
-n_uk_lineages_all <-
+sum_lineages <- function(lineages){
   left_join(
-    sum_key_mutations_by_lineage_uk(lineages_t2),
-    sum_key_mutations_by_lineage_uk(lineages_t2, date_from = sample_date_28) %>%
+    sum_key_mutations_by_lineage_uk(lineages),
+    sum_key_mutations_by_lineage_uk(lineages, date_from = sample_date_28) %>%
       rename(n_sequences_28 = n_sequences)
   ) %>% 
-  pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
-  mutate(across(where(is.numeric), ~replace_na(.x, 0L)))
+    pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
+    mutate(across(where(is.numeric), ~replace_na(.x, 0L)))
+}
+
+# TODO precompute and include lineage/mutation combinations
+# count VOC/VUI
+n_uk_lineages_all <- sum_lineages(lineages_t2)
+
+n_uk_recombinants <- sum_lineages(
+  consortium_uk %>% distinct(lineage) %>% filter(str_starts(lineage, "X")) %$% lineage
+) %>% 
+  bind_rows(n_uk_lineages_all %>% slice(0)) # dirty hack to ensure all nations columns are included for missing values
 
 # remove VOCs/VUIs with zero counts
 vui_voc %<>% 

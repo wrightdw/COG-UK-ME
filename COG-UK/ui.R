@@ -46,6 +46,7 @@ dashboardPage(
             menuItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
             menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
             menuItem("Omicron and mAb", tabName = "omicron", icon = icon("disease")),
+            menuItem("Recombinants", tabName = "recombinants", icon = icon("mixer")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -886,9 +887,20 @@ tabItem(tabName = "omicron",
                      htmlOutput("omicron_table"))
              )
          )
-) 
-        ) # end map
-    ), # end dashboardBody ##8a7967
+), 
+        
+tabItem(tabName = "recombinants",
+        fluidRow(
+          box(title = "Recombinant variants detected in the UK data", closable = FALSE, width = 12,
+              status = "info", collapsible = FALSE, icon = icon("table"),
+              dataTableOutput("table_recomb")
+          )
+        )
+        
+)
+
+) # end tabItems
+), # end dashboardBody ##8a7967
     
     footer = dashboardFooter(
         left = fluidRow(
