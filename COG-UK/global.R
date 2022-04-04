@@ -131,8 +131,9 @@ NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion.
 
 # Recombinant lineages and descriptions
 lineages_recomb <- 
-  c("XA" = "Recombinant lineage with parental lineages B.1.1.7 and B.1.177, UK lineage.",
-    "XB" = "Recombinant lineage with parental lineages B.1.634 and B.1.631, Central and North America lineage.") %>% 
+  c("XA" = "Recombinant lineage with parental lineages B.1.1.7 and B.1.177, UK.",
+    "XB" = "Recombinant lineage with parental lineages B.1.634 and B.1.631, Central and North America.",
+    "XE" = "Recombinant lineage of BA.1 and BA.2, UK.") %>% 
   enframe("lineage", "reason")
 
 lineages_t2 <- c(vui_voc %>% levels, lineages_t3$lineage) %>% unique # lineages for counting
