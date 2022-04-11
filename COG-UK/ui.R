@@ -46,7 +46,7 @@ dashboardPage(
             menuItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
             menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
             menuItem("Omicron and mAb", tabName = "omicron", icon = icon("disease")),
-            menuItem("Recombinants", tabName = "recombinants", icon = icon("mixer")),
+            menuItem(" Recombinants", tabName = "recombinants", icon = icon("mixer")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
         ),
         
@@ -893,8 +893,7 @@ tabItem(tabName = "recombinants",
         fluidRow(
           box(title = "Recombinant variants detected in the UK data", closable = FALSE, width = 12,
               status = "info", collapsible = FALSE, icon = icon("table"),
-              # p("Recombinant lineage names do not contain information about their putative parental lineages and are named by their order of discovery: XA, XB, XC…, XAA, XAB,…XBA, etc.. Putative parental lineage information (which might be uncertain or incomplete) can be provided in the Pango lineage summary table (https://cov-lineages.org/lineage_list.html)."),
-              p("Recombinant lineage names do not contain information about their putative parental lineages and are named by their order of discovery: XA, XB, XC…, XAA, XAB,…XBA, etc.. Putative parental lineage information (which might be uncertain or incomplete) can be provided in the Pango lineage summary ", a(href = "https://cov-lineages.org/lineage_list.html", target = "_blank", "table", .noWS = "outside"), ".", .noWS = c("after-begin", "before-end")),
+              p("Recombinant lineage names do not contain information about their putative parental lineages and are named by their order of discovery: XA, XB, XC…, XAA, XAB,…XBA, etc.. Putative parental lineage information (which might be uncertain or incomplete) can be provided in the Pango lineage summary ", a(href = "https://cov-lineages.org/lineage_list.html", target = "_blank", "table", .noWS = "outside"), ". These numbers are an underestimate of the circulating recombinants due to detection issues.", .noWS = c("after-begin", "before-end")),
               dataTableOutput("table_recomb")
           )
         )
