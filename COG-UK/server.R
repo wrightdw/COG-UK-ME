@@ -392,10 +392,21 @@ shinyServer(function(input, output, session) {
           group_by(across(-n)) %>% 
           summarise(n = sum(n), .groups = "drop")         
       } else { # deletion
+        # get deletions with n < 5 in UK
+        dels_low <- 
+          mutation_reference_counts %>% 
+          select(-epi_week, -epi_date, -adm1) %>% 
+          filter(str_starts(variant, "del")) %>% 
+          group_by(across(-n)) %>% 
+          summarise(n = sum(n), .groups = "drop") %>% 
+          filter(n < 5) %$% 
+          variant %>% as.character()
+          
         mutation_reference_counts %<>%  
           mutate(variant = fct_collapse(variant, 
                                         "Replacements" = unique(grep("(^del)|(^WT$)", # collapse non-deletions and non-WT
                                                                      variant, value = TRUE, invert = TRUE)))) %>% 
+          mutate(variant = fct_other(variant, drop = dels_low,other_level = "Deletions (n<5)")) %>% 
           group_by(across(-n)) %>% 
           summarise(n = sum(n), .groups = "drop")        
         }
