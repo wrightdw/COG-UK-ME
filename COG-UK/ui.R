@@ -347,16 +347,24 @@ dashboardPage(
                           They are for research use only.
                           Commercial use/resale is not permitted."),
                           
+                          h3("How to cite COG-UK-ME"),
+                          p("Please cite:"),
+                          p(.noWS = c("after-begin", "before-end"), "Derek W Wright, William T Harvey, Joseph Hughes, MacGregor Cox, Thomas P Peacock, Rachel Colquhoun, Ben Jackson, Richard Orton, Morten Nielsen, Nienyun Sharon Hsu, The COVID-19 Genomics UK (COG-UK) consortium, Ewan M Harrison, Thushan I de Silva, Andrew Rambaut, Sharon J Peacock, David L Robertson, Alessandro M Carabelli, 
+                            Tracking SARS-CoV-2 mutations and variants through the COG-UK-Mutation Explorer, ", em("Virus Evolution", .noWS = "outside"), ", Volume 8, Issue 1, 2022, veac023, ",
+                            a(href = "https://doi.org/10.1093/ve/veac023", target = "_blank", .noWS = "outside", "https://doi.org/10.1093/ve/veac023"),
+                            ),
+                          # p(.noWS = c("after-begin", "before-end"), "The analysis described in this report is based on ", strong(total_sequences %>% comma(format = "d"), .noWS = "outside"), " UK-derived genomes after dedeuplication, sequenced by COG-UK: complete data in the MRC-CLIMB database to ", strong(dataset_date %>% format("%d/%m/%Y"), .noWS = "outside"), ", with the latest sequence from ", strong(max(consortium_uk$sample_date) %>% format("%d/%m/%Y"), .noWS = "outside"),  "."),
+                          
                           h3("Credits"),
                           p("COG-UK-ME has been developed as part of the COVID-19 Genomics UK (COG-UK) Consortium by 
                             Derek W Wright, William T Harvey, Joseph Hughes, MacGregor Cox, Thomas P Peacock, 
                             Rachel Colquhoun, Ben Jackson, Richard Orton, Morten Nielsen, 
                             Nienyun Sharon Hsu, Ewan M Harrison, Thushan I de Silva, Andrew Rambaut, 
-                            Sharon J Peacock, David L Robertson and Alessandro M Carabelli (Wright et al. 2022 ",
-                            a(href = "https://doi.org/10.1093/ve/veac023", target = "_blank", .noWS = "outside", "https://doi.org/10.1093/ve/veac023"), ") ",
+                            Sharon J Peacock, David L Robertson and Alessandro M Carabelli (",
+                            a(href = "https://doi.org/10.1093/ve/veac023", target = "_blank", .noWS = "outside", "Wright et al. 2022"), ") ",
                             
-                            "and uses data from the CLIMB-COVID framework (Nicholls et al. ",
-                            a(href = "https://doi.org/10.1186/s13059-021-02395-y", target = "_blank", .noWS = "outside", "https://doi.org/10.1186/s13059-021-02395-y"), ").",
+                            "and uses data from the CLIMB-COVID framework (",
+                            a(href = "https://doi.org/10.1186/s13059-021-02395-y", target = "_blank", .noWS = "outside", "Nicholls et al. 2021"), ").",
                             
                             "The dashboard is maintained by the ",
                             a(href = "https://www.gla.ac.uk/researchinstitutes/iii/cvr/", target = "_blank", .noWS = "outside", "MRC-University of Glasgow Centre for Virus Research"), ".",
@@ -367,15 +375,6 @@ dashboardPage(
                             
                             "Follow", a(href ="https://twitter.com/COGUK_ME", target = "_blank", "COG-UK-ME"), " and ",
                             a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.", .noWS = c("after-begin", "before-end")),
-                          
-                          
-                            
-                          
-                            
-                          
-                          
-                          
-                          
                           
                           h3("Contact Us"),
                           p("To request features or report issues, contact us on ", a(href = "https://github.com/wrightdw/COG-UK-ME/issues", target = "_blank", .noWS = "outside", "GitHub"), ".")
