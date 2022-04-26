@@ -26,7 +26,7 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2022-02-21")
+# dataset_date <- as.Date("2022-03-27")
 
 database_genome <- str_c(dataset_date, "/database_genome.rds") %>% read_rds # mutation database
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
@@ -133,7 +133,13 @@ NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion.
 lineages_recomb <- 
   c("XA" = "Recombinant lineage with parental lineages B.1.1.7 and B.1.177, UK.",
     "XB" = "Recombinant lineage with parental lineages B.1.634 and B.1.631, Central and North America.",
-    "XE" = "Recombinant lineage of BA.1 and BA.2, UK.") %>% 
+    "XE" = "Recombinant lineage of BA.1 and BA.2, UK.",
+    "XN" = "Recombinant lineage of BA.1 and BA.2, UK.",
+    "XL" = "Recombinant lineage of BA.1 and BA.2, UK.",
+    "XM" = "Recombinant lineage of BA.1.1 and BA.2, Europe.",
+    "XQ" = "Recombinant lineage of BA.1.1 and BA.2, UK.",
+    "XR" = "Recombinant lineage of BA.1.1 and BA.2, UK.",
+    "XP" = "Recombinant lineage of BA.1.1 and BA.2, UK.") %>% 
   enframe("lineage", "reason")
 
 lineages_t2 <- c(vui_voc %>% levels, lineages_t3$lineage) %>% unique # lineages for counting
