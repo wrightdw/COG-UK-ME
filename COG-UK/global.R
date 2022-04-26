@@ -139,7 +139,12 @@ lineages_recomb <-
     "XM" = "Recombinant lineage of BA.1.1 and BA.2, Europe.",
     "XQ" = "Recombinant lineage of BA.1.1 and BA.2, UK.",
     "XR" = "Recombinant lineage of BA.1.1 and BA.2, UK.",
-    "XP" = "Recombinant lineage of BA.1.1 and BA.2, UK.") %>% 
+    "XP" = "Recombinant lineage of BA.1.1 and BA.2, UK.",
+    "XF" = "Recombinant lineage of Delta and BA.1, UK.",
+    "XG" = "Recombinant lineage of BA.1 and BA.2, Denmark",
+    "XH" = "Recombinant lineage of BA.1 and BA.2, Denmark",
+    "XJ" = "Recombinant lineage of BA.1 and BA.2, Finland"
+    ) %>% 
   enframe("lineage", "reason")
 
 lineages_t2 <- c(vui_voc %>% levels, lineages_t3$lineage) %>% unique # lineages for counting
