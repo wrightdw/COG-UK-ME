@@ -462,7 +462,7 @@ dashboardPage(
                                           names(picks) <- vui_voc %$% levels(lineage_display)
                                           picks
                                         })(),
-                                        selected = "BA.1"
+                                        selected = "BA.2"
                                     ),
                                     
                                     sliderInput(
