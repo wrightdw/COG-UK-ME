@@ -480,7 +480,7 @@ dashboardPage(
                         
                         p("Mutation counts are grouped by week, starting on Sunday.
                               The most recent sequence data (approx. the last two weeks) have low sample numbers
-                              so are highlighted with a grey box."),
+                              so are highlighted with a grey box. When selecting Replacements, deletions are combined. When selecting Deletions, replacements are combined. Additionally, replacements or deletions with fewer than 5 sequences over all time in the UK are combined."),
                         
                         width = 12,
                         status = "info",
