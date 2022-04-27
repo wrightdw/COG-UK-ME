@@ -400,18 +400,72 @@ shinyServer(function(input, output, session) {
       }
     })
 
-    # Filter mutation data and create plot
+    # Filter mutation and deletion data and create plot
     mutation_plot <- reactive({
-      mutation_reference_counts %<>% 
-        filter(gene == input$gene & position == input$position) %>%
-        arrange(desc(n)) %>%
+      # deletions or mutations only - lump the other category together
+      
+      mutation_reference_counts %<>%  
+        filter(gene == input$gene & position == input$position) 
+       
+      if(input$mutation_type == "replacement"){ # amino acid replacement
+        # replacements with n < 5 over all time in UK
+        reps_low <- 
+          mutation_reference_counts %>% 
+          select(-epi_week, -epi_date, -adm1) %>% 
+          filter(variant != "WT" & !str_starts(variant, "del")) %>% 
+          group_by(across(-n)) %>% 
+          summarise(n = sum(n), .groups = "drop") %>% 
+          filter(n < 5) %$% 
+          variant %>% 
+          as.character %T>% print
+        
+        # substitute combined deletions by date
+        mutation_reference_counts %<>%  
+          mutate(variant = fct_collapse(variant, 
+                                        "Deletions" = unique(grep("^del", # collapse deletions only
+                                                                  variant, value = TRUE)))) %>% 
+          mutate(variant = fct_other(variant, drop = reps_low, other_level = "Replacements (n<5)")) %>% # lump low-level replacements
+          group_by(across(-n)) %>% 
+          summarise(n = sum(n), .groups = "drop")         
+      } else { # deletion
+        # get deletions with n < 5 in UK over all time
+        dels_low <- 
+          mutation_reference_counts %>% 
+          select(-epi_week, -epi_date, -adm1) %>% 
+          filter(str_starts(variant, "del")) %>% 
+          group_by(across(-n)) %>% 
+          summarise(n = sum(n), .groups = "drop") %>% 
+          filter(n < 5) %$% 
+          variant %>% 
+          as.character
+          
+        mutation_reference_counts %<>%  
+          mutate(variant = fct_collapse(variant, 
+                                        "Replacements" = unique(grep("(^del)|(^WT$)", # collapse non-deletions and non-WT
+                                                                     variant, value = TRUE, invert = TRUE)))) %>% 
+          mutate(variant = fct_other(variant, drop = dels_low, other_level = "Deletions (n<5)")) %>% # lump low-level deletions
+          group_by(across(-n)) %>% 
+          summarise(n = sum(n), .groups = "drop")        
+      }
+      
+      # calculate variants ordered by frequency over all time in UK
+      variants_by_frequency <- 
+        mutation_reference_counts %>% 
+        select(-epi_week, -epi_date, -adm1) %>% 
+        group_by(across(-n)) %>% 
+        summarise(n = sum(n), .groups = "drop") %>%
+        arrange(desc(n)) %$% 
+        variant %>% 
+        as.character
+                  
+      mutation_reference_counts %<>%   
         mutate(variant = 
                  variant %>% 
-                 fct_drop %>% 
-                 fct_inorder %>% 
-                 fct_relevel("WT", after = 0)
-               ) %>%   # fix variant colour WT first then by frequency
-        filter(adm1 == input$nation) 
+                 fct_drop %>%
+                 fct_relevel(variants_by_frequency) %>% # order colours by frequency over all time
+                 fct_relevel("WT", after = 0) # then move WT to always be first colour
+               ) %>%   
+        filter(adm1 == input$nation) # keep colours the same when switching between nations
         
       variants <- mutation_reference_counts %$% levels(variant)
       

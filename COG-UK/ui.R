@@ -84,9 +84,16 @@ dashboardPage(
             
         ),
         
+        # mutation chart controls
         conditionalPanel(
             condition =  "input.sidebar_menu == 'dashboard'",
             hr(),
+            prettyRadioButtons(
+              inputId = "mutation_type",
+              label = "Mutation:", 
+              choices = c("Replacement" = "replacement", "Deletion" = "deletion"),
+              selected = "replacement"
+            ),
             selectInput("gene", "Gene:", mutation_reference_counts %>% distinct(gene) %>% arrange(gene), 
                         selected = "S"),
             selectInput("position", "Position:", 
@@ -96,7 +103,7 @@ dashboardPage(
                             arrange(position), 
                         selected = "614", selectize = TRUE),
             prettySwitch("percentage", "Percentage", FALSE, status = "info", fill = TRUE),
-            prettySwitch("ref", "Wild type / other", TRUE,  status = "info", fill = TRUE),
+            prettySwitch("ref", "Wild type/other", TRUE,  status = "info", fill = TRUE),
             
             prettyRadioButtons(
                 inputId = "nation",
@@ -498,7 +505,7 @@ dashboardPage(
                         
                         p("Mutation counts are grouped by week, starting on Sunday.
                               The most recent sequence data (approx. the last two weeks) have low sample numbers
-                              so are highlighted with a grey box."),
+                              so are highlighted with a grey box. When selecting Replacements, deletions are combined. When selecting Deletions, replacements are combined. Additionally, replacements or deletions with fewer than 5 sequences over all time in the UK are combined."),
                         
                         width = 12,
                         status = "info",
