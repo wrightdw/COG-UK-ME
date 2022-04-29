@@ -430,7 +430,9 @@ dashboardPage(
                                    status = "info", collapsible = FALSE, icon = icon("file-download"),
                                    p("Download a CSV file, for each variant, containing COG-UK sequence name, sample date, epidemiological week, epidemiological week start date and global lineage. Cumulative UK sequences are filtered by the selected lineage of concern."), 
                                    selectizeInput("concern", "Choose lineage:",
-                                                  choices = lineages_t3$lineage %>% sort),
+                                                  choices = c(lineages_t3$lineage, 
+                                                              "BA.1/BA.1.x" = "BA.1", 
+                                                              "BA.2/BA.2.x" = "BA.2") %>% sort),
                                    downloadButton("downloadConcern", "Download", class = "btn-info")),
                                
                                box(title = "Download table", closable = FALSE, width = NULL, 

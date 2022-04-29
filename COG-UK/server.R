@@ -32,7 +32,7 @@ database_genome %>%
            `Sequences over the last 28 days in Scotland` = `numSeqs Scotland 28 days`,
            `Sequences over the last 28 days in Wales` = `numSeqs Wales 28 days`,
            `Sequences over the last 28 days in Northern Ireland` = `numSeqs NI 28 days`,
-           `Date of first detection in UK` = earliest) #%T>% print
+           `Date of first detection in UK` = earliest)
 }
 
 # Variants
@@ -48,7 +48,19 @@ table_3 <- function(){
     n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.324.1") %>%
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
-      mutate(reason = "As B.1.324.1, with the addition of E484K.")
+      mutate(reason = "As B.1.324.1, with the addition of E484K."),
+    
+    n_uk_lineages_ba_2 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.2/BA.2.x",
+             reason =  "Southern Africa. Full Spike profile: T19I, Δ24-26/A27S, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    n_uk_lineages_ba_1 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.1/BA.1.x",
+             reason =  "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F. WHO label: <strong>Omicron</strong>.")
   ) %>% 
     lineages_table()
 }
@@ -220,7 +232,7 @@ shinyServer(function(input, output, session) {
       } else {
         concern_download <- 
           consortium_uk %>% 
-          filter(lineage == input$concern)
+          filter(lineage == input$concern | str_starts(lineage, fixed(str_c(input$concern, "."))))
           # filter(lineage == input$concern | str_detect(lineage, sublineage_regex(input$concern)))
       }
       
@@ -417,7 +429,7 @@ shinyServer(function(input, output, session) {
           summarise(n = sum(n), .groups = "drop") %>% 
           filter(n < 5) %$% 
           variant %>% 
-          as.character %T>% print
+          as.character
         
         # substitute combined deletions by date
         mutation_reference_counts %<>%  
