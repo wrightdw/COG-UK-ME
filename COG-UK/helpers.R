@@ -91,7 +91,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_ra
     )))
   )
   
-  domain_palette <- qualitative_hcl(6, palette = "Set 3")
+  domain_palette <- qualitative_hcl(7, palette = "Set 3")
   
   # domain
   row_ha2 = rowAnnotation(
@@ -108,7 +108,9 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_ra
         "FP" = domain_palette[3],
         "RBD" = domain_palette[1],
         "RBM" = domain_palette[6],
-        "S2" = domain_palette[5]
+        "S2" = domain_palette[5],
+        "S1_other" = domain_palette[7]
+        
       ),
       `Ab class 1` = c ("TRUE" = "lightgreen"),
       `Ab class 2` = c("TRUE" = "goldenrod1"),
@@ -162,7 +164,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_ra
     na_col = 'white',
     column_names_gp = grid::gpar(fontsize = 9),
     row_names_gp = grid::gpar(fontsize = 11),
-    right_annotation = row_ha,
+    # right_annotation = row_ha,
     left_annotation = row_ha2
   )
   heatmap
