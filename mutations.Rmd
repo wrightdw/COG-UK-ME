@@ -255,7 +255,6 @@ deletions_complete <-
 
 deletions_complete
 ```
-
 ## Mutation / REF counts
 ```{r mutations_refs}
 mutations_deletions_uk <- bind_rows(mutations_uk, deletions_complete)
@@ -314,8 +313,7 @@ mutation_reference_counts <-
 
 mutation_reference_counts
 ```
-
-
+## Mapping
 ```{r database_deletions}
 deletions_uk <-
   deletions_mapping %>% 
@@ -336,7 +334,7 @@ deletions_nations_28 <-
   deletions_mapping %>% 
     filter(sample_date >= sample_date_28) %>% 
     dplyr::count(gene, del_start, del_end, del_id, adm1) %>% 
-    pivot_wider(names_from = adm1, values_from = n) %>% 
+    pivot_wider(names_from = adm1, values_from = n, names_expand = TRUE) %>% 
     rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
 
 database_deletions <- 
@@ -410,7 +408,7 @@ insertions_nations_28 <-
   insertions_mapping %>% 
     filter(sample_date >= sample_date_28) %>% 
     dplyr::count(gene, ref_start, insertion, insertion_id, adm1) %>% 
-    pivot_wider(names_from = adm1, values_from = n) %>% 
+    pivot_wider(names_from = adm1, values_from = n, names_expand = TRUE) %>% 
     rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
 
 database_insertions <- 
@@ -966,12 +964,16 @@ mutations_s_uk_wide
 # convert Delta and Omicron sublineages to parent for counting
 consortium_uk_parent <-
   bind_rows(
-    # convert AY.x sublineages to parent B.1.617.2
-    # convert BA.1.x sublineages to parent BA.1
+    # convert sublineages to parent 
     consortium_uk %>%
       mutate(lineage = gsub(sublineage_regex_gsub("AY"), "B.1.617.2", lineage)) %>% # convert AY.x to B.1.617.2
       mutate(lineage = gsub(sublineage_regex_gsub("BA.1"), "BA.1", lineage)) %>%  # convert BA.1.x to BA.1
-      mutate(lineage = gsub(sublineage_regex_gsub("BA.2"), "BA.2", lineage)), # convert BA.2.x to BA.2
+      mutate(lineage = gsub(sublineage_regex_gsub("BA.2"), "BA.2", lineage)) %>%  # convert BA.2.x to BA.2
+      mutate(lineage = gsub(sublineage_regex_gsub("B.1.177"), "B.1.177", lineage)) %>%  # convert B.1.177.x to B.1.177
+      mutate(lineage = gsub(sublineage_regex_gsub("P.1"), "P.1", lineage)) %>%  # convert P.1.x to P.1
+      mutate(lineage = gsub(sublineage_regex_gsub("B.1.351"), "B.1.351", lineage)), # convert B.1.351.x to B.1.351
+  
+  #TODO count lineage_full
   
     # filter AY.4 and sublineages then convert AY.4.x sublineages to parent AY.4 
     consortium_uk %>% 
