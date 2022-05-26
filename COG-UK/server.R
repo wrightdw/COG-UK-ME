@@ -747,6 +747,7 @@ shinyServer(function(input, output, session) {
                                   "AY.4" = "AY.4/AY.4.x (Delta)",
                                   "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
                                   "P.1" = "P.1 (Gamma)",
+                                  "B.1.177" = "B.1.177/B.1.177.x",
                                   "Other" = "Other"
                                   )) %>% 
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
@@ -888,6 +889,7 @@ shinyServer(function(input, output, session) {
                                          "AY.4" = "AY.4/AY.4.x (Delta)",
                                          "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
                                          "P.1" = "P.1 (Gamma)",
+                                         "B.1.177" = "B.1.177/B.1.177.x",
                                          "Other" = "Other"
           )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
