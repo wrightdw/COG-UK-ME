@@ -164,7 +164,7 @@ antibody_complex_heatmap <- function(mutations_lineages_epi_weeks, percentage_ra
     na_col = 'white',
     column_names_gp = grid::gpar(fontsize = 9),
     row_names_gp = grid::gpar(fontsize = 11),
-    # right_annotation = row_ha,
+    right_annotation = row_ha,
     left_annotation = row_ha2
   )
   heatmap
