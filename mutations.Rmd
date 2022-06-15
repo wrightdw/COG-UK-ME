@@ -323,7 +323,7 @@ deletions_uk <-
 deletions_nations <- 
   deletions_mapping %>% 
   dplyr::count(gene, del_start, del_end, del_id, adm1) %>% 
-  pivot_wider(names_from = adm1, values_from = n)
+  pivot_wider(names_from = adm1, values_from = n, names_expand = TRUE)
 
 deletions_uk_28 <- 
   deletions_mapping %>% 
@@ -397,7 +397,7 @@ insertions_uk <-
 insertions_nations <- 
   insertions_mapping %>% 
   dplyr::count(gene, ref_start, insertion, insertion_id, adm1) %>% 
-  pivot_wider(names_from = adm1, values_from = n)
+  pivot_wider(names_from = adm1, values_from = n,  names_expand = TRUE)
 
 insertions_uk_28 <- 
   insertions_mapping %>% 
@@ -445,7 +445,7 @@ variants_uk <-
 variants_nations <- 
   mutations_uk %>% 
   dplyr::count(gene, position, variant, adm1) %>% 
-  pivot_wider(names_from = adm1, values_from = n)
+  pivot_wider(names_from = adm1, values_from = n, names_expand = TRUE)
 
 # Sample dates in last 28 days
 variants_uk_28 <- 
@@ -457,7 +457,7 @@ variants_nations_28 <-
   mutations_uk %>% 
     filter(sample_date >= sample_date_28) %>% 
     dplyr::count(gene, position, variant, adm1) %>% 
-    pivot_wider(names_from = adm1, values_from = n) %>% 
+    pivot_wider(names_from = adm1, values_from = n,  names_expand = TRUE) %>% 
     rename_with(~paste0(., "_28"), .cols = c(England, Northern_Ireland, Scotland, Wales))
 
 database_genome <- 
