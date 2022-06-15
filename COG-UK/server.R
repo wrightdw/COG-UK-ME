@@ -48,7 +48,7 @@ table_3 <- function(){
     n_uk_lineages_all %>%
       filter(variant == "E484K" & lineage == "B.1.324.1") %>%
       mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
-      mutate(reason = "As B.1.324.1, with the addition of E484K."),
+      mutate(reason = "As B.1.324.1, with the addition of E484K."), # zero count - not displayed
     
     n_uk_lineages_ba_2 %>% 
       filter(variant == "sequences") %>%
@@ -60,7 +60,25 @@ table_3 <- function(){
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
       mutate(lineage = "BA.1/BA.1.x",
-             reason =  "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F. WHO label: <strong>Omicron</strong>.")
+             reason =  "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F. WHO label: <strong>Omicron</strong>."),
+    
+    n_uk_lineages_ba_4 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.4/BA.4.x",
+             reason =  "Southern Africa. Full Spike profile:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+
+    n_uk_lineages_ba_3 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.3/BA.3.x",
+             reason =  "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, G339D, S371F, S373P, S375F, D405N, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    n_uk_lineages_ba_5 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.5/BA.5.x",
+             reason =  "Southern Africa. Full Spike profile:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>.")
   ) %>% 
     lineages_table()
 }
@@ -740,8 +758,6 @@ shinyServer(function(input, output, session) {
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                   "BA.1" = "BA.1/BA.1.x (Omicron)",
                                   "BA.2" = "BA.2/BA.2.x (Omicron)",
-                                  "BA.4" = "BA.4/BA.4.x (Omicron)",
-                                  "BA.5" = "BA.5/BA.5.x (Omicron)",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -750,6 +766,8 @@ shinyServer(function(input, output, session) {
                                   "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
                                   "P.1" = "P.1 (Gamma)",
                                   "B.1.177" = "B.1.177/B.1.177.x",
+                                  "BA.4" = "BA.4/BA.4.x (Omicron)",
+                                  "BA.5" = "BA.5/BA.5.x (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
@@ -884,8 +902,6 @@ shinyServer(function(input, output, session) {
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                          "BA.1" = "BA.1/BA.1.x (Omicron)",
                                          "BA.2" = "BA.2/BA.2.x (Omicron)",
-                                         "BA.4" = "BA.4/BA.4.x (Omicron)",
-                                         "BA.5" = "BA.5/BA.5.x (Omicron)",
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -894,6 +910,8 @@ shinyServer(function(input, output, session) {
                                          "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
                                          "P.1" = "P.1 (Gamma)",
                                          "B.1.177" = "B.1.177/B.1.177.x",
+                                         "BA.4" = "BA.4/BA.4.x (Omicron)",
+                                         "BA.5" = "BA.5/BA.5.x (Omicron)",
                                          "Other" = "Other"
           )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)
