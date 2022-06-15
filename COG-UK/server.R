@@ -740,6 +740,8 @@ shinyServer(function(input, output, session) {
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                   "BA.1" = "BA.1/BA.1.x (Omicron)",
                                   "BA.2" = "BA.2/BA.2.x (Omicron)",
+                                  "BA.4" = "BA.4/BA.4.x (Omicron)",
+                                  "BA.5" = "BA.5/BA.5.x (Omicron)",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -882,6 +884,8 @@ shinyServer(function(input, output, session) {
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                          "BA.1" = "BA.1/BA.1.x (Omicron)",
                                          "BA.2" = "BA.2/BA.2.x (Omicron)",
+                                         "BA.4" = "BA.4/BA.4.x (Omicron)",
+                                         "BA.5" = "BA.5/BA.5.x (Omicron)",
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
