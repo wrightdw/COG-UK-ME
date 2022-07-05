@@ -159,41 +159,42 @@ sum_lineages <- function(lineages, use_regex = FALSE){
 }
 
 # TODO precompute and include lineage/mutation combinations
-# count VOC/VUI
-n_uk_lineages_all <- sum_lineages(lineages_t2)
+## count VOC/VUI
+n_uk_lineages_all <- sum_lineages(lineages_t2) # count non-omicron VOC/VUI
 
-n_uk_lineages_ba_2 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage) %>% 
-    filter(lineage == "BA.2" | str_starts(lineage, fixed("BA.2."))) %$% 
-    lineage # sum BA.2 and sublineages
-)
-
+# TODO refactor
+# count Omicron sublineages by filtering full lineage names to include renamed sublineages
 n_uk_lineages_ba_1 <- sum_lineages(
   consortium_uk %>% 
-    distinct(lineage) %>% 
-    filter(lineage == "BA.1" | str_starts(lineage, fixed("BA.1."))) %$% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BA.1" | str_starts(lineage_full, fixed("B.1.1.529.1."))) %$% 
     lineage # sum BA.1 and sublineages
 )
 
+n_uk_lineages_ba_2 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BA.2" | str_starts(lineage_full, fixed("B.1.1.529.2."))) %$% 
+    lineage # sum BA.2 and sublineages
+)
+
+n_uk_lineages_ba_3 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BA.3" | str_starts(lineage_full, fixed("B.1.1.529.3."))) %$% 
+    lineage # sum BA.1 and sublineages
+)
 n_uk_lineages_ba_4 <- sum_lineages(
   consortium_uk %>% 
-    distinct(lineage) %>% 
-    filter(lineage == "BA.4" | str_starts(lineage, fixed("BA.4."))) %$% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BA.4" | str_starts(lineage_full, fixed("B.1.1.529.4."))) %$% 
     lineage # sum BA.1 and sublineages
 )
 
 n_uk_lineages_ba_5 <- sum_lineages(
   consortium_uk %>% 
-    distinct(lineage) %>% 
-    filter(lineage == "BA.5" | str_starts(lineage, fixed("BA.5."))) %$% 
-    lineage # sum BA.1 and sublineages
-)
-
-n_uk_lineages_ba_3 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage) %>% 
-    filter(lineage == "BA.3" | str_starts(lineage, fixed("BA.3."))) %$% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BA.5" | str_starts(lineage_full, fixed("B.1.1.529.5."))) %$% 
     lineage # sum BA.1 and sublineages
 )
 
