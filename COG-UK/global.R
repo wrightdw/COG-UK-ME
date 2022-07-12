@@ -91,6 +91,9 @@ total_sequences_28 <-
   filter(sample_date >= sample_date_28) %$% 
   n_distinct(sequence_name)
 
+# Lineage names and descriptions for lineage table
+# Counted without sublineages TODO count sublineages for everything
+# Omicron BA.x dealt with separately to include sublineages
 lineages_t3 <- 
   c(
     "B.1.1.7" = "UK. L18F, Δ69-70, Δ144, N501Y, A570D, P681H, T716I, S982A and D1118H. WHO label: <strong>Alpha</strong>.", 
@@ -116,15 +119,10 @@ lineages_t3 <-
     # Gamma
     "P.1" = " Japan ex Brazil. L18F, T20N, P26S, D138Y, R190S, K417T, E484K, N501Y, H655Y and T1027I. WHO label: <strong>Gamma</strong>.",
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
-NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>."
+NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
-# Omicron
-# "BA.1" = "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F. WHO label: <strong>Omicron</strong>.",
-# "BA.1.1" = "Sublineage of BA.1. WHO label: <strong>Omicron</strong>.",
-# "BA.2" = "Southern Africa. Full Spike profile: T19I, Δ24-26/A27S, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>.",
-# "BA.3" = "Southern Africa. Full Spike profile: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, G339D, S371F, S373P, S375F, D405N, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."
-# "BA.4" = "Southern Africa. Full Spike profile:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>.",
-# "BA.5" = "Southern Africa. Full Spike profile:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."
+  # Omicron
+  "Unassigned" = "Omicron sequences not yet assigned lineages. WHO label: <strong>Omicron</strong>."
   ) %>% 
   enframe("lineage", "reason")
 
@@ -222,7 +220,8 @@ vui_voc_lineages <-
   setNames(levels(vui_voc_lineages$lineage_display)) %>% 
   append(list("B.1.177/B.1.177.x" = "B.1.177", 
               "BA.4/BA.4.x (Omicron)" = "BA.4",
-              "BA.5/BA.5.x (Omicron)" = "BA.5")) # special cases, add only to lineage bar chart
+              "BA.5/BA.5.x (Omicron)" = "BA.5",
+              "Unassigned (Omicron)" = "Unassigned")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe

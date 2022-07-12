@@ -768,6 +768,7 @@ shinyServer(function(input, output, session) {
                                   "B.1.177" = "B.1.177/B.1.177.x",
                                   "BA.4" = "BA.4/BA.4.x (Omicron)",
                                   "BA.5" = "BA.5/BA.5.x (Omicron)",
+                                  "Unassigned" = "Unassigned (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
@@ -912,6 +913,7 @@ shinyServer(function(input, output, session) {
                                          "B.1.177" = "B.1.177/B.1.177.x",
                                          "BA.4" = "BA.4/BA.4.x (Omicron)",
                                          "BA.5" = "BA.5/BA.5.x (Omicron)",
+                                         "Unassigned" = "Unassigned (Omicron)",
                                          "Other" = "Other"
           )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)

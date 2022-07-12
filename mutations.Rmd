@@ -961,6 +961,9 @@ mutations_s_uk_wide
 ```
 ### VUI/VOC/other
 ```{r vui_voc_other}
+# TODO count all lineages to include sublineages
+# TODO fix colours in chart for missing lineages when changing time frame - include zero values?
+
 # convert Delta and Omicron sublineages to parent for counting
 consortium_uk_parent <-
   bind_rows(
@@ -1035,7 +1038,7 @@ lineages_weeks_uk_all <- bind_rows(
    mutate(adm1 = "UK") %>% 
    mutate(across(adm1, as_factor))
 )
- 
+
 lineages_days_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
 lineages_weeks_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
