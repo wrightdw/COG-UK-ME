@@ -23,10 +23,10 @@ get_dataset_date <- function(rollover = 7){
 # Dataset directories are named according to date e.g. "2021-11-24".
 # if after midnight, use yesterday
 # else before midnight, use 2 days ago
-dataset_date <- get_dataset_date(0)
+# dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2022-05-26")
+dataset_date <- as.Date("2022-07-25")
 
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates) # TODO remove dependency
@@ -122,7 +122,10 @@ lineages_t3 <-
 NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
   # Omicron
-  "Unassigned" = "Omicron sequences not yet assigned lineages. WHO label: <strong>Omicron</strong>."
+  "Unassigned" = "Omicron sequences not yet assigned lineages. WHO label: <strong>Omicron</strong>.",
+  "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
+in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
+terminal domain. G339H, G446S, and N460K in the receptor binding domain. WHO label: <strong>Omicron</strong>."
   ) %>% 
   enframe("lineage", "reason")
 
