@@ -23,7 +23,9 @@ params:
   evol_summary_json: "Evolutionary Selection/summary.json"
   esm_dms_data_csv: "Evolutionary Selection/dms_data@13.csv"
 ---
+
 # Setup
+
 ```{r setup}
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(magrittr))
@@ -42,6 +44,7 @@ sublineage_regex_gsub <- function(lineage){
     paste0("^", ., "\\..*")
 }
 ```
+
 ```{r climb}
 Sys.setenv(TZ="Europe/London")
 
@@ -81,7 +84,9 @@ dir.create(str_c("COG-UK/", params$dataset_date))
 ```
 
 # Consortium
+
 ## Read
+
 ```{r consortium_read, include=FALSE}
 message("Reading ", consortium_csv)
 consortium_uk <- 
@@ -97,6 +102,7 @@ consortium_uk <-
 
 consortium_uk
 ```
+
 ```{r consortium_clean, include=FALSE}
 # Data cleaning:
 # Exclude duplicate Delta sequences with incorrect dates in April 2020
@@ -143,18 +149,24 @@ consortium_uk %<>%
 
 consortium_uk
 ```
+
 ## Sample - dev only
+
 ```{r consortium_sample, eval=FALSE, include=TRUE}
 # Sample of 100K sequences from full dataset for development purposes
 consortium_uk %<>% slice_sample(n = 100000)
 consortium_uk
 ```
+
 ## 28 days
+
 ```{r consortium_constants, include=FALSE}
 sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
 message("28 days date: ", sample_date_28)
 ```
+
 ## Alias
+
 ```{r consortium_alias, include=FALSE}
 message("Looking up PANGO designation lineage alias key on GitHub")
 # reconstruct lineage full names from alias JSON
@@ -177,7 +189,9 @@ for (i in 1:length(alias_key)) {
 
 consortium_uk
 ```
+
 ## Write
+
 ```{r consortium_write}
 mutations_uk <- 
   consortium_uk %>% 
@@ -192,7 +206,9 @@ consortium_uk %<>%
 
 consortium_uk
 ```
+
 # Mutations
+
 ```{r mutations_consortium}
 mutations_uk %<>%    
   separate_rows(mutations, sep = '\\|') %>% 
@@ -208,6 +224,7 @@ mutations_uk
 ```
 
 ## Read - dev only
+
 ```{r mutations_read, eval=FALSE, include=TRUE}
 # read mutations from RDS to shortcut CSV parsing
 mutations_uk <- str_c("COG-UK/", params$dataset_date, "/mutations_uk.rds") %>% read_rds
@@ -215,6 +232,7 @@ mutations_uk
 ```
 
 # Deletions
+
 ```{r deletions}
 deletions <- 
   read_tsv(params$deletions_tsv) %>% 
@@ -225,6 +243,7 @@ deletions %<>% semi_join(consortium_uk, by = c("samples" = "sequence_name")) # r
 message("Writing deletions.rds")
 deletions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions.rds"))
 ```
+
 ```{r deletions_mapping}
 deletions_mapping <- 
   read_csv(params$deletions_mapping_csv, 
@@ -242,7 +261,9 @@ deletions_mapping <-
 
 deletions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/deletions_mapping.rds"))
 ```
+
 ## Complete
+
 ```{r deletions_complete}
 deletions_complete <- 
   deletions_mapping %>% 
@@ -259,7 +280,9 @@ deletions_complete <-
 
 deletions_complete
 ```
+
 ## Mutation / REF counts
+
 ```{r mutations_refs}
 mutations_deletions_uk <- bind_rows(mutations_uk, deletions_complete)
 
@@ -317,7 +340,9 @@ mutation_reference_counts <-
 
 mutation_reference_counts
 ```
+
 ## Mapping
+
 ```{r database_deletions}
 deletions_uk <-
   deletions_mapping %>% 
@@ -353,6 +378,7 @@ database_deletions %T>%
 ```
 
 # Insertions
+
 ```{r}
 insertions <- 
   read_tsv(params$insertions_tsv) %>% 
@@ -364,7 +390,9 @@ message("Writing insertions.rds")
 insertions %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions.rds"))
 
 ```
+
 ### Mapping
+
 ```{r insertions_mapping}
 insertions_mapping <- 
   read_csv(params$insertions_mapping_csv) %>%
@@ -381,7 +409,9 @@ insertions_mapping <-
 insertions_mapping %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/insertions_mapping.rds"))
 
 ```
+
 # Mutations + indels
+
 ```{r mutations_indels}
 # for mutations/indels downloads
 mutations_indels_uk_28 <-
@@ -425,7 +455,9 @@ database_insertions <-
 database_insertions %T>% 
   write_rds(str_c("COG-UK/", params$dataset_date, "/database_insertions.rds"))
 ```
+
 # Database
+
 ```{r database_genome}
 lineage_distinct <- 
   mutations_uk %>% 
@@ -517,6 +549,7 @@ database_genome %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_
 ```
 
 # Escape mutations
+
 ```{r}
 # mutations_uk <- read_rds("COG-UK/2022-02-20/mutations_uk.rds")
 # database_genome <- read_rds("COG-UK/2022-02-20/database_genome.rds")
@@ -535,7 +568,9 @@ mutations_s_escape_uk <-
   mutate(across(c(variant), fct_drop)) %T>% # drop non-spike and non-escape mutations from factor levels
   write_rds(str_c("COG-UK/", params$dataset_date, "/mutations_s_escape_uk.rds"))
 ```
+
 # Drug resistance
+
 ```{r therapeutics}
 # ORF1ab positions https://www.ncbi.nlm.nih.gov/protein/1796318597
 # see mat_peptide annotation
@@ -591,7 +626,9 @@ thera_data %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/therapeutics.r
 ```
 
 # T cell
+
 ## Epitopes
+
 ```{r tcell}
 tcell <- read_csv(params$tcell_csv,
                   col_types = cols(
@@ -659,7 +696,9 @@ database_tcell_predictions <-
 database_tcell_predictions
 
 ```
+
 ## Functional
+
 ```{r functional}
 functional <- 
   read_csv(params$functional_csv) 
@@ -691,9 +730,8 @@ database_functional_predictions
 bind_rows(database_tcell_predictions, database_functional_predictions) %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/database_tcell_predictions.rds"))
 ```
 
-
-
 ### Lineages
+
 ```{r lineage_counts}
 n_uk_lineages <- 
   consortium_uk %>% 
@@ -714,10 +752,11 @@ n_uk_lineages <-
 n_uk_lineages
 ```
 
-
 ## Antigenic
+
 ### Antigenic mutations by lineage
-Would you be able to prepare a file with all the antigenic mutations (filtered from Will’s antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
+
+Would you be able to prepare a file with all the antigenic mutations (filtered from Will's antigenic table) that have accumulated on the top of B.1.1.7 (so non lineage defining mutations) with numbers of sequences per week? We would like to prepare a heat map like the attached picture.
 
 ```{r antigenic_mutations, eval=FALSE, include=TRUE}
 antigenic <- 
@@ -726,7 +765,9 @@ antigenic <-
 
 antigenic
 ```
+
 ### Antigenic heatmap
+
 ```{r antigenic_heatmap, eval=FALSE, include=FALSE}
 suppressPackageStartupMessages(library(ComplexHeatmap))
 suppressPackageStartupMessages(library(circlize))
@@ -871,7 +912,9 @@ hm
 #         )
 
 ```
+
 ### ggseqlogo
+
 ```{r ggseqlogo}
 wt <-
   mutation_reference_counts %>% 
@@ -897,8 +940,8 @@ wt %<>%
 wt %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/wt.rds"))
 ```
 
-
 ### mydata
+
 ```{r eval=FALSE, include=FALSE}
 # library(tidyverse)
 # library(magrittr)
@@ -921,7 +964,9 @@ df
 ```
 
 ## VUI and VOC
+
 ### VUI and VOC defining mutations
+
 ```{r vui_voc}
 vui_voc <-
   read_csv(params$vui_voc_csv) %>% 
@@ -932,6 +977,7 @@ vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
 ```
 
 ### VUI and VOC plot
+
 ```{r lineages_plot, eval=FALSE, include=TRUE}
 lineages_weeks_nations <-
   consortium_uk %>% dplyr::count(lineage, epi_week, adm1)
@@ -952,7 +998,9 @@ lineages_weeks_uk %>%
   scale_x_discrete(drop = FALSE) + # include all epi_week factor levels
   theme_classic()
 ```
+
 ### Constellations UpSet plot
+
 ```{r upset, eval=FALSE, include=FALSE}
 mutations_s_uk_wide <-
   mutations_s_uk %>% 
@@ -963,7 +1011,9 @@ mutations_s_uk_wide <-
 
 mutations_s_uk_wide
 ```
+
 ### VUI/VOC/other
+
 ```{r vui_voc_other}
 # TODO count all lineages to include sublineages
 # TODO fix colours in chart for missing lineages when changing time frame - include zero values?
@@ -1046,7 +1096,9 @@ lineages_weeks_uk_all <- bind_rows(
 lineages_days_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_days_uk_all.rds"))
 lineages_weeks_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
+
 ## GISAID
+
 ```{r gisaid, eval=FALSE, include=TRUE}
 # GISAID Delta sequences
 gisaid <- 
@@ -1113,7 +1165,9 @@ mutations_s_gisaid
 #   mutate(across(c(gene, position, variant), as_factor)) %T>% 
 
 ```
+
 ### GISAID antigenic
+
 ```{r eval=FALSE, include=TRUE}
 
 sequences_by_week_gisaid <- 
@@ -1153,7 +1207,9 @@ dev.off()
 
 antigenic_mutations_gisaid_all
 ```
+
 ## Geo
+
 ```{r geo}
 # TOPOJSON objectid
 # 1 North East (England)
@@ -1257,8 +1313,11 @@ geo
 geo_variants
 geo_all
 ```
+
 ## MAP
+
 ### Geo distribution - run once
+
 ```{r geo_map_variant_alias, eval=FALSE, include=TRUE}
 # Shapefile: NUTS Level 1 (January 2018) Ultra Generalised Clipped Boundaries in the United Kingdom
 # https://data.gov.uk/dataset/37edc0ad-ffff-47c9-a01c-cb8d6123ec79/nuts-level-1-january-2018-ultra-generalised-clipped-boundaries-in-the-united-kingdom
@@ -1289,7 +1348,9 @@ mapdata <-
 
 mapdata
 ```
+
 ### Antigenic and map
+
 ```{r geo_map_antigenic_alias, eval=FALSE, include=FALSE}
 # del243-244 sample IDs
 del_22289_6_samples <- 
@@ -1346,7 +1407,9 @@ antigenic_mutations_lineages_all %T>% write_rds(str_c("COG-UK/", params$dataset_
 ```
 
 ## ISARIC
+
 ### Alias
+
 ```{r isaric_alias, eval=FALSE, include=FALSE}
 library(jsonlite)
 alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
@@ -1374,7 +1437,9 @@ for (i in 1:length(alias_key)) {
     mutate(lineage_full = str_replace(lineage_full, str_c("^", names(alias_key)[i], "(?=\\.)"), str_c(alias_key[[i]])))
 }
 ```
+
 ### Filter
+
 ```{r isaric}
 # source("COG-UK/out_frame_del.R")
 # source("COG-UK/wuhan_ref_aa.R")
@@ -1514,7 +1579,9 @@ isaric_dfr <-
 
 isaric_dfr
 ```
+
 ### Compare
+
 ```{r isaric_compare}
 # list isaric TSV files
 isaric_files <- list.files(pattern = "isaric_.*_cumulative\\.tsv") 
@@ -1548,6 +1615,7 @@ isaric_latest
 ```
 
 ### Collapse
+
 ```{r isaric_collapse}
 collapse_isaric <- function(isaric_hits){
   isaric_hits %>% 
@@ -1573,7 +1641,9 @@ isaric_dfr_collapse <-
 
 isaric_dfr_collapse
 ```
+
 ## Ronapreve plot
+
 ```{r ronopreve_plot}
 source("mab_upset_regeneron.R")
 ronapreve_upset <- generate_upset()
@@ -1604,6 +1674,7 @@ dev.off()
 ```
 
 ## Spike profiles for table/plots
+
 ```{r spike_profiles}
 source("spike_profiles.R")
 viruses <- virus_profiles(mutation_df = mutations_uk)
@@ -1611,13 +1682,57 @@ spike_tab <- spike_profiles_nations(viruses)
 write_rds(viruses, str_c("COG-UK/", params$dataset_date, "/spike_viruses.rds"))
 write_rds(spike_tab, str_c("COG-UK/", params$dataset_date, "/spike_table.rds"))
 ```
+
+# Evolutionary selection
+
+## Read JSON/ ESM-1b scores
+
+```{r dms_integrated_data@13}
+annotation_json = read_json(params$evol_annotation_json)
+summary_json = read_json(params$evol_summary_json)
+dms_antigenic <- read.csv(params$esm_dms_data_csv, header = TRUE)
+dms_antigenic <- toJSON(dms_antigenic)
+```
+
+## Javascript resources
+
+```{r parse-json-data.js}
+ctx <- v8()
+ctx$source("https://cdn.jsdelivr.net/npm/lodash@4.17.19/lodash.min.js")
+ctx$source("https://d3js.org/d3.v4.min.js")
+ctx$source("COG-UK/www/parse_evol_selection_data.js") # JS script with parsing functions
+```
+
+## Write integrated output
+
+```{r dms_antigenic_res}
+# Call JS functions to parse both selection analysis and ESM results and return output of integrated CSV table
+res = ctx$call("_main", annotation_json, summary_json, dms_antigenic)
+dms_antigenic_res <- read_csv(res, col_names = TRUE)
+# Assign selection labels
+dms_antigenic_res %<>%
+          mutate(evol_selection = case_when((conserved == "Yes" & positive == "Yes" & negative == "Yes") ~ "Conserved/ Positive/ Negative",
+                                            (conserved == "Yes" & positive == "Yes") ~ "Conserved/ Positive",
+                                            (positive == "Yes" & negative == "Yes") ~ "Positive/ Negative",
+                                            (conserved == "Yes" & negative == "Yes") ~ "Conserved/ Negative",
+                                            (conserved == "No" & positive == "No" & negative == "No") ~ "Undefined",
+                                            conserved == "Yes" ~ "Conserved",
+                                            positive == "Yes" ~ "Positive",
+                                            negative == "Yes" ~ "Negative"
+          )) %>% relocate(evol_selection, .before = entropy)
+
+dms_antigenic_res %T>% write_rds("dms_integrated_data@13.rds")
+```
+
 # RDS check
+
 ```{r rds_check}
 # TODO Check that RDS files can be read
 # filedata <- map(filenames, function(x){print(x); read_rds(x)} )
 ```
 
 ## Done
+
 ```{r success}
 message("PIPELINE COMPLETED")
 ```
