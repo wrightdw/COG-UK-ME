@@ -1205,6 +1205,211 @@ shinyServer(function(input, output, session) {
   })
   ### 'Spike profiles' tab - outputs - end
   
+  ### 'Evolutionary selection' tab - outputs - start
+  output$esm1b_plot <- renderPlotly({
+    esm1b_mut_plot() %>% ggplotly(source = "esm1b_plot") %>%
+      event_register("plotly_click") %>% event_register("plotly_doubleclick") %>% event_register("plotly_deselect") %>%
+      event_register("plotly_relayout") %>% event_register('plotly_legendclick') %>% event_register('plotly_legenddoubleclick')
+  })
+  
+  esm1b_mut_plot <- reactive({
+    updateESM1B_3DStructure(NULL)
+  })
+  
+  observeEvent(event_data("plotly_selected", source = "esm1b_plot"), {
+    b <- event_data("plotly_selected", source = "esm1b_plot")
+    req(b)
+    updateESM1B_3DStructure(b)
+  })
+  
+  observeEvent(event_data("plotly_deselect", source = "esm1b_plot"), {
+    b <- event_data("plotly_deselect", source = "esm1b_plot")
+    req(b)
+    updateESM1B_3DStructure(NULL)
+    runjs("Shiny.setInputValue('plotly_selected-esm1b_plot', null);")
+  })
+  
+  updateESM1B_3DStructure <- function(sel_data) {
+    titleTxt <- "All possible amino acid mutations"
+    df <- data.frame()
+    if(input$variant_evol_selection != "None") {
+      if(input$textSpike != "") {
+        query_seq_v <- unlist(strsplit(input$textSpike, split = "", fixed=T))
+        df <- as.data.frame(cbind(ref_wuhan, query_seq_v)) 
+        df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(mut = paste(ref_wuhan, paste(pos, query_seq_v, sep = ""), sep = "") )
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% df$mut, ]
+        titleTxt <- "Amino acid mutations present in the uploaded SARS-CoV-2 spike protein sequence"
+      } else {
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% (mutations_s_uk[mutations_s_uk$lineage == input$variant_evol_selection,]$variant), ]
+        df <- as.data.frame(cbind(dms_antigenic$label, dms_antigenic$position)) 
+        df %<>% rename(mut = V1, pos = V2)
+        
+        titleTxt <- str_c("Amino acid mutations present in ", input$variant_evol_selection)
+      }
+    }
+    
+    if(!is.null(input$escape_3d)) {
+      if("escape" %in% input$escape_3d) {
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database[!is.na(database$escape), ]$mutation,]
+      }
+      
+      if("monoclonal" %in% input$escape_3d){
+        database %<>% filter(mab == TRUE)
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+      }
+      
+      if("convalescent" %in% input$escape_3d){
+        database %<>% filter(plasma == TRUE)
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+      }
+      
+      if("vaccine" %in% input$escape_3d){
+        database %<>% filter(vaccine_sera == TRUE)
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+      }
+    }
+    
+    if(input$esm1b_t_cell_experiment == "recognition"){
+      database_tcell_predictions %<>% 
+        filter(assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
+    } else if(input$esm1b_t_cell_experiment == "epitope_studies"){ # epitope_studies
+      database_tcell_predictions %<>% 
+        filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
+    }
+    
+    dms_antigenic_res <- as.data.frame(dms_antigenic)
+    if(!is.null(dim(dms_antigenic_res))) {
+      
+      #plotting theme
+      .theme <- theme(
+        axis.line = element_line(colour = 'gray', size = .75),
+        panel.background = element_blank(),
+        plot.background = element_blank()
+      )	 
+      
+      index <- switch(  
+        input$esm_score_index,  
+        "Semantic score"= "semantic_score",  
+        "Grammaticality"= "grammaticality",  
+        "Evolutionary index"= "evolutionary_index",
+        "Entropy"= "entropy"
+      )
+      
+      dms_antigenic_res %<>% filter(semantic_score >= input$esm1b_semantic_indx[1] & semantic_score <= input$esm1b_semantic_indx[2])
+      dms_antigenic_res %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2])
+      dms_antigenic_res %<>% filter(evolutionary_index >= input$esm1b_evol_indx[1] & evolutionary_index <= input$esm1b_evol_indx[2])
+      dms_antigenic_res %<>% filter(entropy >= input$esm1b_entropy_indx[1] & entropy <= input$esm1b_entropy_indx[2])
+      
+      key <- dms_antigenic_res$position
+      p <- dms_antigenic_res %>% rename(c(`Evol. Selection` = evol_selection, mutation = label)) %>% ggplot(
+        aes_string(
+          x = "position",
+          y = index,
+          # shape = "`Evol. Selection`",
+          label = "mutation",
+          color = "`Evol. Selection`")
+      ) + geom_point() + guides(color = guide_legend(title = "Evol. Selection"))
+      
+      p <- p + theme_minimal() + theme(plot.title = element_text(hjust = 0.5)) + scale_x_continuous(breaks = integer_breaks()) + labs(
+        title = titleTxt,
+        x 		= "Position",
+        y 		= input$esm_score_index
+      ) +
+        .theme
+      
+    } else {
+      p <- ggplot() + theme_void()
+    }
+    
+    g <- ggplot_build(p)
+    colours <- g$data[[1]]$colour
+    if(!is.null(sel_data)) { dms_antigenic_res <- dms_antigenic_res[dms_antigenic_res$position %in% sel_data$x, ]
+    colours <- g$data[[1]][g$data[[1]]$x %in% sel_data$x, ]$colour
+    }
+    wuhan_data_js <- toJSON(dms_antigenic_res)
+    
+    session$sendCustomMessage(type = 'vizSpike',
+                              message = list(a=wuhan_data_js, b = df$mut, c = df$pos, d=index, e=colours, f=tolower(input$esm_structure_repr)))
+    p %>% onRender(js)
+  }
+  
+  output$table_esm1b <- renderDT({
+    df <- data.frame()
+    if(input$variant_evol_selection != "None") {
+      if(input$textSpike != "") {
+        query_seq_v <- unlist(strsplit(input$textSpike, split = "", fixed=T))
+        df <- as.data.frame(cbind(ref_wuhan, query_seq_v)) 
+        df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(mut = paste(ref_wuhan, paste(pos, query_seq_v, sep = ""), sep = "") )
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% df$mut, ]
+      } else {
+        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% (mutations_s_uk[mutations_s_uk$lineage == input$variant_evol_selection,]$variant), ]
+        df <- as.data.frame(cbind(dms_antigenic$label, dms_antigenic$position)) 
+        df %<>% rename(mut = V1, pos = V2)
+      }
+    }
+    
+    if("escape" %in% input$escape_3d) {
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database[!is.na(database$escape), ]$mutation,]
+    }
+    
+    if("monoclonal" %in% input$escape_3d){
+      database %<>% filter(mab == TRUE)
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+    }
+    
+    if("convalescent" %in% input$escape_3d){
+      database %<>% filter(plasma == TRUE)
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+    }
+    
+    if("vaccine" %in% input$escape_3d){
+      database %<>% filter(vaccine_sera == TRUE)
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+    }
+    
+    if(input$esm1b_t_cell_experiment == "recognition"){
+      database_tcell_predictions %<>% 
+        filter(assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
+    } else if(input$esm1b_t_cell_experiment == "epitope_studies"){ # epitope_studies
+      database_tcell_predictions %<>% 
+        filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
+    }
+    
+    dms_antigenic %<>% filter(semantic_score >= input$esm1b_semantic_indx[1] & semantic_score <= input$esm1b_semantic_indx[2])
+    dms_antigenic %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2])
+    dms_antigenic %<>% filter(evolutionary_index >= input$esm1b_evol_indx[1] & evolutionary_index <= input$esm1b_evol_indx[2])
+    dms_antigenic %<>% filter(entropy >= input$esm1b_entropy_indx[1] & entropy <= input$esm1b_entropy_indx[2])
+    
+    dms_antigenic %>%
+      rename(Label = label,
+             Reference = ref, 
+             `Amino acid replacement` = alt, 
+             Position = position,
+             `Semantic score` = semantic_score,
+             Grammaticality = grammaticality,
+             `Evolutionary index` = evolutionary_index,
+             Subunit = subunit,
+             Domain = domain,
+             `Reference amino acid property basic` = reference_amino_acid_property_basic,
+             `Reference amino acid property complex` = reference_amino_acid_property_complex,
+             `Mutant amino acid property basic`	= `mutant_amino_acid_property_basic`,
+             `Mutant amino acid property complex`	= `mutant_amino_acid_property_complex`,
+             Conserved = conserved,
+             Positive = positive,
+             Negative = negative,
+             `Evolutionary selection` =  evol_selection,
+             Entropy = entropy
+      ) %>% 
+      datatable(filter = "top", rownames = FALSE, 
+                options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20, scrollX = TRUE)) 
+    
+  })
+  ### 'Evolutionary selection' tab - outputs - end
+  
   ## Function to set axes to integer values in 'ggplot2'
   # Source: https://joshuacook.netlify.app/post/integer-values-ggplot-axis/
   integer_breaks <- function(n = 5, ...) {
