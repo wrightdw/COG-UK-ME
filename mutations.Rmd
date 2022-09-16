@@ -19,6 +19,9 @@ params:
   functional_csv:   "tcell_functional_mutations.csv"
   deletions_mapping_csv: "deletion_mapping.csv"
   insertions_mapping_csv: "insertion_mapping.csv"
+  evol_annotation_json: "Evolutionary Selection/annotation.json"
+  evol_summary_json: "Evolutionary Selection/summary.json"
+  esm_dms_data_csv: "Evolutionary Selection/dms_data@13.csv"
 ---
 # Setup
 ```{r setup}
@@ -28,6 +31,7 @@ suppressPackageStartupMessages(library(lubridate))
 library(fuzzyjoin)
 library(htmltools)
 suppressPackageStartupMessages(library(jsonlite))
+suppressPackageStartupMessages(library(V8))
 # also require seqinr - loaded later on to avoid name clash of dplyr count function
 library(UpSetR)
 
