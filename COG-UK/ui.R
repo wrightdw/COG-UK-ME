@@ -225,6 +225,8 @@ dashboardPage(
             tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
             tags$link(rel = "stylesheet", type = "text/css", href = "lightbox2-2.11.3/dist/css/lightbox.min.css"),
             tags$script(src = "lightbox2-2.11.3/dist/js/lightbox.min.js"),
+            tags$script(type="text/javascript", src="https://unpkg.com/ngl@2.0.0-dev.39/dist/ngl.js"), # nglViewer dependencies
+            tags$script(includeHTML("www/ngl_viewer_shiny.js")),
             includeHTML("google-analytics.html")
         ),
         
