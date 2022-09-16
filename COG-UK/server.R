@@ -1204,4 +1204,16 @@ shinyServer(function(input, output, session) {
               options = list(lengthMenu = c(20, 50, 100, 200)), rownames = FALSE) 
   })
   ### 'Spike profiles' tab - outputs - end
+  
+  ## Function to set axes to integer values in 'ggplot2'
+  # Source: https://joshuacook.netlify.app/post/integer-values-ggplot-axis/
+  integer_breaks <- function(n = 5, ...) {
+    fxn <- function(x) {
+      breaks <- floor(pretty(x, n, ...))
+      names(breaks) <- attr(breaks, "labels")
+      breaks
+    }
+    return(fxn)
+  }
+  
 })
