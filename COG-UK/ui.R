@@ -36,6 +36,7 @@ dashboardPage(
             id = "sidebar_menu",
             menuItem("VOCs/VUIs in the UK", tabName = "vui_voc", selected = TRUE, icon = icon("viruses")),
             menuItem("VOC Spike Structures", tabName = "strucure_voc", icon = icon("virus")),
+            menuItem("Evolutionary Selection", tabName = "evol_selection", icon = icon("chain")),
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
@@ -82,6 +83,66 @@ dashboardPage(
               selected = "UK"
             ),
             
+        ),
+        
+        conditionalPanel(
+          condition =  "input.sidebar_menu == 'evol_selection'",
+          hr(),
+          selectInput("variant_evol_selection", "Select lineage:", choices = (function(){
+            picks <- vui_voc %$% levels(lineage)
+            names(picks) <- vui_voc %$% levels(lineage_display)
+            picks %>% c("Delta non-AY.4" = "Delta_minus_AY.4",
+                        "Delta non-AY.4.2" = "Delta_minus_AY.4.2")
+          })(), 
+          selected = "BA.1"),
+          
+          textAreaInput("textSpike", "Or submit full spike sequence (1273aa in length):", ""),
+          hr(style = "border-style: dotted;"),
+          
+          selectInput("esm_score_index", "ESM-1b model index:", choices = c("Semantic score", "Grammaticality", "Evolutionary index", "Entropy")),
+          sliderInput(
+            inputId = "esm1b_semantic_indx",
+            label = "Semantic score:",
+            value = c(floor(dms_antigenic %>% select(semantic_score) %>% min()), ceiling(dms_antigenic %>% select(semantic_score) %>% max())),
+            min = floor(dms_antigenic %>% select(semantic_score) %>% min()), max = ceiling(dms_antigenic %>% select(semantic_score) %>% max())
+          ),
+          
+          sliderInput(
+            inputId = "esm1b_grammaticality_indx",
+            label = "Grammaticality:",
+            value = c(floor(dms_antigenic %>% select(grammaticality) %>% min()), ceiling(dms_antigenic %>% select(grammaticality) %>% max())),
+            min = floor(dms_antigenic %>% select(grammaticality) %>% min()), max = ceiling(dms_antigenic %>% select(grammaticality) %>% max())
+          ),
+          
+          sliderInput(
+            inputId = "esm1b_evol_indx",
+            label = "Evolutionary index:",
+            value = c(floor(dms_antigenic %>% select(evolutionary_index) %>% min()), ceiling(dms_antigenic %>% select(evolutionary_index) %>% max())),
+            min = floor(dms_antigenic %>% select(evolutionary_index) %>% min()), max = ceiling(dms_antigenic %>% select(evolutionary_index) %>% max())
+          ),
+          
+          sliderInput(
+            inputId = "esm1b_entropy_indx",
+            label = "Entropy:",
+            value = c(floor(dms_antigenic %>% select(entropy) %>% min()), ceiling(dms_antigenic %>% select(entropy) %>% max())),
+            min = floor(dms_antigenic %>% select(entropy) %>% min()), max = ceiling(dms_antigenic %>% select(entropy) %>% max())
+          ),
+          hr(style = "border-style: dotted;"),
+          prettyCheckboxGroup("escape_3d", "Antigenic mutations:",
+                              c("Escape (all)" = "escape",
+                                "Monoclonal Ab" = "monoclonal",
+                                "Convalescent sera" = "convalescent",
+                                "Vaccine sera" = "vaccine")),
+          
+          prettyRadioButtons("esm1b_t_cell_experiment", "T cell epitope mutations (type of experiment):",
+                             c("Reduced T cell recognition" = "recognition",
+                               "Epitope studies" = "epitope_studies",
+                               "None" = "none"),
+                             shape = "round",
+                             status = "info",
+                             selected = "none"),
+          hr(style = "border-style: dotted;"),
+          selectInput("esm_structure_repr", "Spike structure representation:", choices = c("Spacefill", "Cartoon", "Backbone", "Ball+stick"))
         ),
         
         # mutation chart controls
