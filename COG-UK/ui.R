@@ -349,6 +349,90 @@ dashboardPage(
                     
                     ), # end of Spike structure tab
             
+            tabItem(tabName = "evol_selection", class = "active",
+                    fluidRow(
+                      box(width = 8, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("line-chart"),
+                          title = "ESM-1b model scores and evolutionary selection signals of spike amino acid replacements",
+                          plotlyOutput("esm1b_plot", height = '600px') # depends on input
+                      ),
+                      
+                      box(width = 4, height = 600, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("microscope"),
+                          title = "Structural context of spike amino acid replacements",
+                          
+                          htmltools::tagList(
+                            tags$div(
+                              id="viewportMut",
+                              style="height:600px;"
+                            )
+                          )
+                      )
+                      
+                    ),
+                    
+                    fluidRow(
+                      box(width = 12, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("table"),
+                          title = "List of spike mutations with relevant ESM-1b scores, selection analysis signals and amino acid properties",
+                          dataTableOutput("table_esm1b")
+                      )
+                    ),
+                    
+                    fluidRow(
+                      box(title = "Prediction of amino acid replacements with high immune escape potential and evolutionary selection signals in the SARS-CoV-2 spike",
+                          closable = FALSE, 
+                          width = 12, 
+                          status = "info", 
+                          collapsible = FALSE, 
+                          icon = icon("info-circle"), 
+                          
+                          p("ESM-1b (",a("paper", href = "https://www.pnas.org/doi/10.1073/pnas.2016239118#:~:text=https%3A//doi.org/10.1073/pnas.2016239118", 
+                                         target = "_blank", .noWS = "outside"),", ",a("repository", href = "https://github.com/facebookresearch/esm", target = "_blank", 
+                                                                                      .noWS = "outside"),") is a machine learning (ML) technique for natural language processing 
+                            that has been found useful in assessing the effects of mutations on viral function and predicting 
+                            mutations that may lead to viral escape. The model operates in an unsupervised fashion, meaning 
+                            that it is trained to predict amino acids from the surrounding sequence context, with two components: 
+                            grammar (or syntax) and meaning (or semantics). Semantic change corresponds 
+                            to antigenic change, grammaticality captures viral fitness, and both high semantic 
+                            change and grammaticality help predict escape potential. In addition to grammaticality, viral fitness 
+                            can be assessed based on the evolutionary index as a more well-defined score."),
+                          p("The plot above displays the ESM-1b model scores for every possible amino acid mutation in the 
+                            SARS-CoV-2 spike protein either in variants of concern (VOC) and variants under investigation (VUI) 
+                            or in a given spike protein sequence (complete spike sequence) which is checked for 
+                            mutations against the reference Wuhan-Hu-1 sequence. Mutations present in the 
+                            spikes with available ESM-1b embedding scores are shown on the plot and listed on the above table. 
+                            Filters are present to subset these mutations as needed or results can be refined further by filtering 
+                            for mutations that were reported to confer antigenic change relevant to antibodies or for amino acid 
+                            replacements in T cell epitopes, based on published studies."),
+                          p("In addition to the ESM-1b scores, evolutionary selection signals obtained for the subset of sarbecoviruses 
+                            that are more closely related to SARS-CoV-2, referred to as the nCoV clade (Lytras et al. 2022) 
+                            are also displayed  and can be overlayed on the spike protein structure (RCSB Protein Data 
+                            Bank (PDB) ID: 6VXX (Walls et al., 2020)). Selection signals were inferred using the FEL (Kosakovsky 
+                            Pond and Frost 2005) and MEME (Murrell et al. 2015) methods as in MacLean et al. (2021) and include:"),
+                          tags$ul(
+                            tags$li(
+                              #span(style = "background-color:firebrick; color:snow", "High", .noWS = "after"),
+                              "Sites found to be under positive selection by MEME on internal branches in the nCOV clade.",
+                              .noWS = c("after-begin", "before-end")
+                            ),
+                            tags$li(
+                              #span(style = "background-color:darkorange; color:white", "Medium", .noWS = "after"),
+                              "Sites found to be under negative selection by FEL on internal branches in the nCOV clade.",
+                              .noWS = c("after-begin", "before-end")
+                            ),
+                            tags$li(
+                              #span(style = "background-color:lemonchiffon; color:darkslategrey", "Lower", .noWS = "after"),
+                              "SARS-CoV-2 sites that are conserved on the amino-acid level among all sequences and,",
+                              .noWS = c("after-begin", "before-end")
+                            ),
+                            tags$li(
+                              #span(style = "background-color:lemonchiffon; color:darkslategrey", "Lower", .noWS = "after"),
+                              "evolutionary \"flexibility\" of the site in the SARS-CoV-2 sequence; entropy of the predicted distribution of credible evolutionary states.",
+                              .noWS = c("after-begin", "before-end")
+                            )
+                          )
+                      )) # End of box and fluid row
+                    
+            ), # end of 'Evolutionary Selection' tab
+            
             tabItem(tabName = "about",
                     fluidRow(
                         box(title = "About COG-UK/Mutation Explorer", closable = FALSE, width = 12,
