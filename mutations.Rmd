@@ -1690,7 +1690,7 @@ write_rds(spike_tab, str_c("COG-UK/", params$dataset_date, "/spike_table.rds"))
 ```{r dms_integrated_data@13}
 annotation_json = read_json(params$evol_annotation_json)
 summary_json = read_json(params$evol_summary_json)
-dms_antigenic <- read.csv(params$esm_dms_data_csv, header = TRUE)
+dms_antigenic <- read.csv(params$esm_dms_data_csv, header = TRUE, sep = ";")
 dms_antigenic <- toJSON(dms_antigenic)
 ```
 
