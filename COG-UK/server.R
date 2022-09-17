@@ -7,6 +7,7 @@ library(DT)
 library(ggseqlogo)
 library(RColorBrewer)
 library(viridis)
+library(jsonlite)
 
 ## Table functions
 # TODO table caching
@@ -1332,7 +1333,7 @@ shinyServer(function(input, output, session) {
     
     session$sendCustomMessage(type = 'vizSpike',
                               message = list(a=wuhan_data_js, b = df$mut, c = df$pos, d=index, e=colours, f=tolower(input$esm_structure_repr)))
-    p %>% onRender(js)
+    p
   }
   
   output$table_esm1b <- renderDT({
