@@ -23,10 +23,10 @@ get_dataset_date <- function(rollover = 7){
 # Dataset directories are named according to date e.g. "2021-11-24".
 # if after midnight, use yesterday
 # else before midnight, use 2 days ago
-# dataset_date <- get_dataset_date(0)
+dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-dataset_date <- as.Date("2022-07-25")
+# dataset_date <- as.Date("2022-06-14")
 
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates) # TODO remove dependency
@@ -222,8 +222,6 @@ vui_voc_lineages <-
   levels(vui_voc_lineages$lineage) %>% 
   setNames(levels(vui_voc_lineages$lineage_display)) %>% 
   append(list("B.1.177/B.1.177.x" = "B.1.177", 
-              "BA.4/BA.4.x (Omicron)" = "BA.4",
-              "BA.5/BA.5.x (Omicron)" = "BA.5",
               "Unassigned (Omicron)" = "Unassigned")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
