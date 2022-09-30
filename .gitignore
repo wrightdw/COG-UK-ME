@@ -33,3 +33,4 @@ Ronapreve*.png
 *.history
 !deletion_mapping.csv
 !insertion_mapping.csv
+**/.DS_Store

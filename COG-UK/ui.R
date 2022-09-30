@@ -6,6 +6,7 @@ library(shinydashboardPlus)
 library(shinyjs)
 library(formattable)
 library(plotly)
+library(JBrowseR)
 
 dashboardPage(
     title = "COG-UK/Mutation Explorer",
@@ -719,6 +720,29 @@ dashboardPage(
                               a(.noWS = c("after-begin", "before-end"), href = "https://doi.org/10.1093/bioinformatics/btx469", target = "_blank", "ggseqlogo: a versatile R package for drawing sequence logos."), em("Bioinformatics (2017)"), ".")
                         )
                     ),
+                    
+                    # JBrowse genome browser
+                    fluidRow(
+                      box(title = "T cell genome browser", closable = FALSE, width = 12,
+                          status = "info", collapsible = FALSE, icon = icon("grip-lines"), 
+                          
+                          # this adds to the browser to the UI, and specifies the output ID in the server
+                          JBrowseROutput("browserOutput")
+                          )
+                      ),
+                    
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
+                    br(),
                     
                     fluidRow(
                         column(width = 10, offset = 1,

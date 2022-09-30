@@ -7,6 +7,7 @@ library(DT)
 library(ggseqlogo)
 library(RColorBrewer)
 library(viridis)
+library(JBrowseR)
 
 ## Table functions
 # TODO table caching
@@ -685,6 +686,50 @@ shinyServer(function(input, output, session) {
         ""
       }
     })
+    
+    # JBrowse genome browser
+    assembly <- assembly(
+      # "https://jbrowse.org/genomes/sars-cov2/fasta/sars-cov2.fa.gz",
+      "https://bioinformatics.cvr.ac.uk/sars-cov2.fa.gz",
+      bgzip = TRUE
+    )
+    
+    # create configuration for a JB2 GFF FeatureTrack
+    annotations_track <- track_feature(
+      # "https://jbrowse.org/genomes/sars-cov2/sars-cov2-annotations.sorted.gff.gz",
+      "https://bioinformatics.cvr.ac.uk/sars-cov2-annotations.sorted.gff.gz",
+      assembly
+    )
+    
+    epitopes_track <- track_feature(
+      "https://bioinformatics.cvr.ac.uk/spike_epitopes_sorted.gff.gz",
+      assembly)
+    
+    # create the tracks array to pass to browser
+    tracks <- tracks(
+      annotations_track,
+      epitopes_track
+    )
+    
+    # set up the default session for the browser
+    default_session <- default_session(
+      assembly,
+      c(annotations_track, epitopes_track)
+    )
+    
+    theme <- theme("#5da8a3", "#333")
+    
+    # JBrowseR output
+    output$browserOutput <- renderJBrowseR(
+      JBrowseR(
+        view = "View",
+        assembly = assembly,
+        tracks = tracks,
+        location = "NC_045512.2:21563..21663",
+        defaultSession = default_session,
+        theme = theme
+      )
+    )    
     
     variant_plot <- reactive({
       # only generate plot if variant selected and exclude other switch is off
