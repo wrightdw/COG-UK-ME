@@ -1264,6 +1264,8 @@ geo_variants <- bind_rows(
   mutate(lineage = gsub(sublineage_regex_gsub("AY"), "B.1.617.2", lineage)) %>%  # convert AY.x lineages to B.617.2
   mutate(lineage = gsub(sublineage_regex_gsub("BA.1"), "BA.1", lineage)) %>%  # convert BA.1.x lineages to BA.1  
   mutate(lineage = gsub(sublineage_regex_gsub("BA.2"), "BA.2", lineage)) %>% # convert BA.2.x lineages to BA.2  
+  mutate(lineage = gsub(sublineage_regex_gsub("BA.4"), "BA.4", lineage)) %>% # convert BA.4.x lineages to BA.4  
+  mutate(lineage = gsub(sublineage_regex_gsub("BA.5"), "BA.5", lineage)) %>% # convert BA.4.x lineages to BA.4  
   mutate(across(lineage, as_factor)) %>%
   mutate(lineage = fct_other(lineage, 
                              keep = 

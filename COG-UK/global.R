@@ -233,8 +233,6 @@ vui_voc_lineages <-
   levels(vui_voc_lineages$lineage) %>% 
   setNames(levels(vui_voc_lineages$lineage_display)) %>% 
   append(list("B.1.177/B.1.177.x" = "B.1.177", 
-              "BA.4/BA.4.x (Omicron)" = "BA.4",
-              "BA.5/BA.5.x (Omicron)" = "BA.5",
               "Unassigned (Omicron)" = "Unassigned")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
