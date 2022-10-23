@@ -1723,7 +1723,7 @@ dms_antigenic_res %<>%
                                             negative == "Yes" ~ "Negative"
           )) %>% relocate(evol_selection, .before = entropy)
 
-dms_antigenic_res %T>% write_rds("dms_integrated_data@13.rds")
+dms_antigenic_res %T>% write_rds(str_c("COG-UK/", "dms_integrated_data@13.rds"))
 ```
 
 # RDS check
