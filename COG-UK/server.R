@@ -1234,7 +1234,7 @@ shinyServer(function(input, output, session) {
     titleTxt <- "All possible amino acid mutations"
     df <- data.frame()
     if(input$variant_evol_selection != "None") {
-      if(input$textSpike != "") {
+      if(input$textSpike != "" && nchar(input$textSpike) == 1273) {
         query_seq_v <- unlist(strsplit(input$textSpike, split = "", fixed=T))
         df <- as.data.frame(cbind(ref_wuhan, query_seq_v)) 
         df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(mut = paste(ref_wuhan, paste(pos, query_seq_v, sep = ""), sep = "") )
@@ -1339,7 +1339,7 @@ shinyServer(function(input, output, session) {
   output$table_esm1b <- renderDT({
     df <- data.frame()
     if(input$variant_evol_selection != "None") {
-      if(input$textSpike != "") {
+      if(input$textSpike != "" && nchar(input$textSpike) == 1273) {
         query_seq_v <- unlist(strsplit(input$textSpike, split = "", fixed=T))
         df <- as.data.frame(cbind(ref_wuhan, query_seq_v)) 
         df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(mut = paste(ref_wuhan, paste(pos, query_seq_v, sep = ""), sep = "") )
