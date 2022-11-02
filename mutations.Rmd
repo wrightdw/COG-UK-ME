@@ -33,7 +33,6 @@ suppressPackageStartupMessages(library(lubridate))
 library(fuzzyjoin)
 library(htmltools)
 suppressPackageStartupMessages(library(jsonlite))
-suppressPackageStartupMessages(library(V8))
 # also require seqinr - loaded later on to avoid name clash of dplyr count function
 library(UpSetR)
 
@@ -1689,16 +1688,18 @@ write_rds(spike_tab, str_c("COG-UK/", params$dataset_date, "/spike_table.rds"))
 
 ## Read JSON/ ESM-1b scores
 
-```{r dms_integrated_data@13}
+```{r dms_integrated_data@13, eval=FALSE, include=TRUE}
+suppressPackageStartupMessages(library(V8))
+
 annotation_json = read_json(params$evol_annotation_json)
 summary_json = read_json(params$evol_summary_json)
-dms_antigenic <- read.csv(params$esm_dms_data_csv, header = TRUE, sep = ";")
+dms_antigenic <- read_csv(params$esm_dms_data_csv)
 dms_antigenic <- toJSON(dms_antigenic)
 ```
 
 ## Javascript resources
 
-```{r parse-json-data.js}
+```{r parse-json-data.js, eval=FALSE, include=TRUE}
 ctx <- v8()
 ctx$source("https://cdn.jsdelivr.net/npm/lodash@4.17.19/lodash.min.js")
 ctx$source("https://d3js.org/d3.v4.min.js")
@@ -1707,7 +1708,7 @@ ctx$source("COG-UK/www/parse_evol_selection_data.js") # JS script with parsing f
 
 ## Write integrated output
 
-```{r dms_antigenic_res}
+```{r dms_antigenic_res, eval=FALSE, include=TRUE}
 # Call JS functions to parse both selection analysis and ESM results and return output of integrated CSV table
 res = ctx$call("_main", annotation_json, summary_json, dms_antigenic)
 dms_antigenic_res <- read_csv(res, col_names = TRUE)
@@ -1727,14 +1728,12 @@ dms_antigenic_res %T>% write_rds(str_c("COG-UK/", "dms_integrated_data@13.rds"))
 ```
 
 # RDS check
-
-```{r rds_check}
+```{r rds_check, eval=FALSE, include=FALSE}
 # TODO Check that RDS files can be read
 # filedata <- map(filenames, function(x){print(x); read_rds(x)} )
 ```
 
 ## Done
-
 ```{r success}
 message("PIPELINE COMPLETED")
 ```
