@@ -79,7 +79,14 @@ table_3 <- function(){
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
       mutate(lineage = "BA.5/BA.5.x",
-             reason =  "Southern Africa. Full Spike profile:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>.")
+             reason =  "Southern Africa. Full Spike profile:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    n_uk_lineages_ba_2_75 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.2.75/BA.2.75.x",
+             reason =  "India. Full Spike profile: T19I, Δ24-26/A27S, G142D, K147E, W152R, F157L, I210V, V213G, G257S, G339H, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, G446S, N460K, S477N, T478K, E484A, R493Q, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>.")
+    
   ) %>% 
     lineages_table()
 }
