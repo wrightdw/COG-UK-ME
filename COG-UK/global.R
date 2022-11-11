@@ -144,11 +144,18 @@ lineages_t3 <-
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
 NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
-  # Omicron
+  ## Omicron
   "Unassigned" = "Omicron sequences not yet assigned lineages. WHO label: <strong>Omicron</strong>.",
-  "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
-in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
-terminal domain. G339H, G446S, and N460K in the receptor binding domain. WHO label: <strong>Omicron</strong>."
+  "BQ.1.1" = "Found globally. Sublineage of BQ.1 with defining mutations ORF1b:N1191S and S:R346T. WHO label: <strong>Omicron</strong>.",
+  "BF.7" = "Belgium, England and Denmark. Descendant of BA.5. WHO label: <strong>Omicron</strong>.",
+  "BA.5.9" = "Germany, Switzerland and Denmark. WHO label: <strong>Omicron</strong>.",
+  "BA.4.6" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
+  "BA.2.75.5" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
+  "BA.2.75.2" = "Asia and Australia. WHO label: <strong>Omicron</strong>."
+  
+#   "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
+# in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
+# terminal domain. G339H, G446S, and N460K in the receptor binding domain. WHO label: <strong>Omicron</strong>."
   ) %>% 
   enframe("lineage", "reason")
 
