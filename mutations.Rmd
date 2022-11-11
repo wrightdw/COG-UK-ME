@@ -25,7 +25,6 @@ params:
 ---
 
 # Setup
-
 ```{r setup}
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(magrittr))
@@ -43,7 +42,7 @@ sublineage_regex_gsub <- function(lineage){
     paste0("^", ., "\\..*")
 }
 ```
-
+## CLIMB
 ```{r climb}
 Sys.setenv(TZ="Europe/London")
 
@@ -83,7 +82,6 @@ dir.create(str_c("COG-UK/", params$dataset_date))
 ```
 
 # Consortium
-
 ## Read
 
 ```{r consortium_read, include=FALSE}
@@ -94,14 +92,53 @@ consortium_uk <-
   select(-gisaid_id, -submission_org_code, -root_sample_id, -(adm2:travel_history), NUTS1,
          -lineages_version, -country,
          -received_date, -collection_date, -published_date, -starts_with("scorpio"),
-         -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user
+         -lineage_conflict, -lineage_ambiguity_score, -sequencing_org_code, -submission_user,
+         -usher_lineages_version, -lineage # replace lineage with usher_lineage
          ) %>% # remove unused columns
   relocate(NUTS1,.after = adm1) %>% 
+  rename(lineage = usher_lineage) %>% 
   type_convert 
 
 consortium_uk
 ```
 
+## Sample - dev only
+```{r consortium_sample, eval=FALSE, include=TRUE}
+# Sample of 100K sequences from full dataset for development purposes
+consortium_uk %<>% slice_sample(n = 100000)
+consortium_uk
+```
+
+## 28 days
+```{r consortium_constants, include=FALSE}
+sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
+message("28 days date: ", sample_date_28)
+```
+
+## Alias
+```{r consortium_alias, include=FALSE}
+message("Looking up PANGO designation lineage alias key on GitHub")
+# reconstruct lineage full names from alias JSON
+alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
+
+alias_key %<>% 
+  keep(~ length(.x) == 1) %>% # drop recombinants
+  purrr::discard(~ .x == "") # drop top level lineages
+
+# copy lineage column
+consortium_uk %<>% 
+  mutate(lineage_full = lineage, .after = lineage)
+
+# overwrite aliases with full lineage names
+for (i in 1:length(alias_key)) {
+  consortium_uk <<- 
+    consortium_uk %>% 
+    mutate(lineage_full = str_replace(lineage_full, str_c("^", names(alias_key)[i], "(?=\\.)"), str_c(alias_key[[i]])))
+}
+
+consortium_uk
+```
+## Clean
 ```{r consortium_clean, include=FALSE}
 # Data cleaning:
 # Exclude duplicate Delta sequences with incorrect dates in April 2020
@@ -149,48 +186,7 @@ consortium_uk %<>%
 consortium_uk
 ```
 
-## Sample - dev only
-
-```{r consortium_sample, eval=FALSE, include=TRUE}
-# Sample of 100K sequences from full dataset for development purposes
-consortium_uk %<>% slice_sample(n = 100000)
-consortium_uk
-```
-
-## 28 days
-
-```{r consortium_constants, include=FALSE}
-sample_date_28 <- max(consortium_uk$sample_date) - days(27) # calculate 28 day period up to and including latest sample date
-message("28 days date: ", sample_date_28)
-```
-
-## Alias
-
-```{r consortium_alias, include=FALSE}
-message("Looking up PANGO designation lineage alias key on GitHub")
-# reconstruct lineage full names from alias JSON
-alias_key <- fromJSON("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json")
-
-alias_key %<>% 
-  keep(~ length(.x) == 1) %>% # drop recombinants
-  purrr::discard(~ .x == "") # drop top level lineages
-
-# copy lineage column
-consortium_uk %<>% 
-  mutate(lineage_full = lineage, .after = lineage)
-
-# overwrite aliases with full lineage names
-for (i in 1:length(alias_key)) {
-  consortium_uk <<- 
-    consortium_uk %>% 
-    mutate(lineage_full = str_replace(lineage_full, str_c("^", names(alias_key)[i], "(?=\\.)"), str_c(alias_key[[i]])))
-}
-
-consortium_uk
-```
-
 ## Write
-
 ```{r consortium_write}
 mutations_uk <- 
   consortium_uk %>% 
@@ -207,7 +203,6 @@ consortium_uk
 ```
 
 # Mutations
-
 ```{r mutations_consortium}
 mutations_uk %<>%    
   separate_rows(mutations, sep = '\\|') %>% 
