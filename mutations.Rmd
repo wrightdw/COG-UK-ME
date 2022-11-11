@@ -116,7 +116,7 @@ dodgy_delta <-
 # Exclude Omicron sequences with erroneous dates before November 2021
 dodgy_omicron <- 
   consortium_uk %>% 
-  filter( (lineage == "BA.1" | str_starts(lineage, fixed("BA.1."))) & sample_date < "2021-11-20")
+  filter(str_starts(lineage_full, fixed("B.1.1.529.")) & sample_date < "2021-11-20")
 
 consortium_uk %<>% 
   anti_join(dodgy_delta) %>% 
