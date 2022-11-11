@@ -226,7 +226,14 @@ n_uk_lineages_ba_2_75 <- sum_lineages(
   consortium_uk %>% 
     distinct(lineage, lineage_full) %>% 
     filter(lineage == "BA.2.75" | str_starts(lineage_full, fixed("B.1.1.529.2.75."))) %$% 
-    lineage # sum BA.1 and sublineages
+    lineage # sum BA.2.75 and sublineages
+)
+
+n_uk_lineages_bq_1 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BQ.1" | str_starts(lineage_full, fixed("B.1.1.529.5.3.1.1.1.1.1."))) %$% 
+    lineage # sum BQ.1 and sublineages
 )
 
 n_uk_recombinants <- sum_lineages(
