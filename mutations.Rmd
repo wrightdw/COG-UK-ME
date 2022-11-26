@@ -695,20 +695,38 @@ library(janitor)
 # epitopes
 epitopes_gff <- 
   database_tcell_predictions %>% 
-  select(`Start position`, `End position`, Epitope) %>% 
-  clean_names() %>% 
+  clean_names %>% 
+  filter(num_seqs_uk > 0) %>% 
+  select(start_position, end_position, epitope) %>% 
   distinct() %>% 
   mutate(seqid = "NC_045512.2", source = "RefSeq", type = "epitope", .before = 1) %>% 
   mutate(score = ".", strand = "+", phase = ".", .after = end_position) %>% 
   rename(attributes = epitope) %>% 
-  mutate(attributes = paste0("Name=", attributes)) %>% 
+  mutate(attributes = paste0("ID=", start_position, attributes, ";", "Name=", attributes)) %>% 
   mutate(start = start_position * 3 + 21560, .after = start_position, .keep = "unused") %>%  # calculate genomic coordinates for spike start positions
   mutate(end = end_position * 3 + 21560 + 2, .after = end_position, .keep = "unused") # calculate genomic coordinates for spike end positions
 
-
 # mutations referring to epitope parent ID
+epitopes_mutations_gff <- 
+  database_tcell_predictions %>% 
+  clean_names %>% 
+  select(start_position, epitope, position, mutation, num_seqs_uk, num_seqs_uk_28_days) %>% 
+  filter(num_seqs_uk > 0) %>% 
+  distinct() %>% 
+  mutate(seqid = "NC_045512.2", source = "RefSeq", type = "amino_acid_substitution", .before = 1) %>% 
+  mutate(start = position * 3 + 21560, .after = position) %>%  # calculate genomic coordinates for spike start positions
+  mutate(end = position * 3 + 21560 + 2, .after = start, .keep = "unused") %>%  # calculate genomic coordinates for spike end positions
+  mutate(score = ".", strand = "+", phase = ".", .after = end) %>% 
+  rename(attributes = mutation) %>% 
+  mutate(attributes = paste0("Parent=", start_position, epitope, ";", 
+                             "Name=", attributes, ";", 
+                             "num_seqs_uk=", num_seqs_uk, ";", 
+                             "num_seqs_uk_28_days=", num_seqs_uk_28_days), .keep = "unused") 
 
-epitopes_gff
+# Create GFF3 file
+epitopes_gff %>% 
+  bind_rows(epitopes_mutations_gff) %T>% 
+  write_tsv("spike_epitopes.gff3", col_names = FALSE) 
 ```
 
 
