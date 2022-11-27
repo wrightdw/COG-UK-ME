@@ -26,7 +26,7 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2022-06-14")
+# dataset_date <- as.Date("2022-11-22")
 
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates) # TODO remove dependency
