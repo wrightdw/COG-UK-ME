@@ -2,6 +2,7 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 library(waiter)
+library(stringi)
 
 # Work out choice of dataset based on hour of day or most recent dataset
 get_dataset_date <- function(rollover = 7){
@@ -52,6 +53,28 @@ spike_tab <- read_rds(str_c(dataset_date, "/spike_table.rds"))
 database_insertions <- read_rds(str_c(dataset_date, "/database_insertions.rds"))
 
 source("helpers.R")
+
+dms_antigenic <- read_rds("dms_integrated_data@13.rds")
+dms_antigenic %<>% select(-c("real", "convergent", "bloom_bind_avg", "bloom_expr_avg", "color")) %>%
+  filter(!is.na(semantic_score)) %>%
+  filter(!is.na(grammaticality)) %>%
+  filter(!is.na(evolutionary_index)) %>%
+  filter(!is.na(entropy))
+
+ref_wuhan = paste("MFVFLVLLPLVSSQCVNLTTRTQLPPAYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHAIHVSGTNGTKRFDNPVLPFNDGVYFASTEKSNIIR", 
+                  "GWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCNDPFLGVYYHKNNKSWMESEFRVYSSANNCTFEYVSQPFLMDLEGKQGNFKNLREFVFKNIDGYFKIYS",
+                  "KHTPINLVRDLPQGFSALEPLVDLPIGINITRFQTLLALHRSYLTPGDSSSGWTAGAAAYYVGYLQPRTFLLKYNENGTITDAVDCALDPLSETKCTLKSFTV",
+                  "EKGIYQTSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIA",
+                  "PGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSKVGGNYNYLYRLFRKSNLKPFERDISTEIYQAGSTPCNGVEGFNCYFPLQSYGFQPTNGVGYQPYRVVVLS",
+                  "FELLHAPATVCGPKKSTNLVKNKCVNFNFNGLTGTGVLTESNKKFLPFQQFGRDIADTTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCT",
+                  "EVPVAIHADQLTPTWRVYSTGSNVFQTRAGCLIGAEHVNNSYECDIPIGAGICASYQTQTNSPRRARSVASQSIIAYTMSLGAENSVAYSNNSIAIPTNFTISV",
+                  "TTEILPVSMTKTSVDCTMYICGDSTECSNLLLQYGSFCTQLNRALTGIAVEQDKNTQEVFAQVKQIYKTPPIKDFGGFNFSQILPDPSKPSKRSFIEDLLFNKV",
+                  "TLADAGFIKQYGDCLGDIAARDLICAQKFNGLTVLPPLLTDEMIAQYTSALLAGTITSGWTFGAGAALQIPFAMQMAYRFNGIGVTQNVLYENQKLIANQFNSA",
+                  "IGKIQDSLSSTASALGKLQDVVNQNAQALNTLVKQLSSNFGAISSVLNDILSRLDKVEAEVQIDRLITGRLQSLQTYVTQQLIRAAEIRASANLAATKMSECVL",
+                  "GQSKRVDFCGKGYHLMSFPQSAPHGVVFLHVTYVPAQEKNFTTAPAICHDGKAHFPREGVFVSNGTHWFVTQRNFYEPQIITTDNTFVSGNCDVVIGIVNNTVY",
+                  "DPLQPELDSFKEELDKYFKNHTSPDVDLGDISGINASVVNIQKEIDRLNEVAKNLNESLIDLQELGKYEQYIKWPWYIWLGFIAGLIAIVMVTIMLCCMTSCCS",
+                  "CLKGCCSCGSCCKFDEDDSEPVLKGVKLHYT", sep = "")
+ref_wuhan <- unlist(strsplit(ref_wuhan, split = "", fixed=T)) # Split into individual amino acid characters
 
 database <- 
   database_genome %>% 
@@ -121,11 +144,18 @@ lineages_t3 <-
     "P.1.8" = "Brazil. S: Gamma + T470N, P681R, C1235F;
 NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
-  # Omicron
+  ## Omicron
   "Unassigned" = "Omicron sequences not yet assigned lineages. WHO label: <strong>Omicron</strong>.",
-  "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
-in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
-terminal domain. G339H, G446S, and N460K in the receptor binding domain. WHO label: <strong>Omicron</strong>."
+  "BQ.1.1" = "Found globally. Sublineage of BQ.1 with defining mutations ORF1b:N1191S and S:R346T. WHO label: <strong>Omicron</strong>.",
+  "BF.7" = "Belgium, England and Denmark. Descendant of BA.5. WHO label: <strong>Omicron</strong>.",
+  "BA.5.9" = "Germany, Switzerland and Denmark. WHO label: <strong>Omicron</strong>.",
+  "BA.4.6" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
+  "BA.2.75.5" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
+  "BA.2.75.2" = "Asia and Australia. WHO label: <strong>Omicron</strong>."
+  
+#   "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
+# in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
+# terminal domain. G339H, G446S, and N460K in the receptor binding domain. WHO label: <strong>Omicron</strong>."
   ) %>% 
   enframe("lineage", "reason")
 
@@ -199,6 +229,20 @@ n_uk_lineages_ba_5 <- sum_lineages(
     lineage # sum BA.1 and sublineages
 )
 
+n_uk_lineages_ba_2_75 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BA.2.75" | str_starts(lineage_full, fixed("B.1.1.529.2.75."))) %$% 
+    lineage # sum BA.2.75 and sublineages
+)
+
+n_uk_lineages_bq_1 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "BQ.1" | str_starts(lineage_full, fixed("B.1.1.529.5.3.1.1.1.1.1."))) %$% 
+    lineage # sum BQ.1 and sublineages
+)
+
 n_uk_recombinants <- sum_lineages(
   consortium_uk %>% 
     distinct(lineage) %>% 
@@ -222,8 +266,6 @@ vui_voc_lineages <-
   levels(vui_voc_lineages$lineage) %>% 
   setNames(levels(vui_voc_lineages$lineage_display)) %>% 
   append(list("B.1.177/B.1.177.x" = "B.1.177", 
-              "BA.4/BA.4.x (Omicron)" = "BA.4",
-              "BA.5/BA.5.x (Omicron)" = "BA.5",
               "Unassigned (Omicron)" = "Unassigned")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
