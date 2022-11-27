@@ -34,3 +34,5 @@ Ronapreve*.png
 !deletion_mapping.csv
 !insertion_mapping.csv
 .DS_Store
+*.gff3
+*.tbi
