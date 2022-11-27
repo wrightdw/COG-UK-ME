@@ -715,7 +715,7 @@ shinyServer(function(input, output, session) {
     )
     
     epitopes_track <- track_feature(
-      "https://bioinformatics.cvr.ac.uk/spike_epitopes_sorted_2.gff3.gz",
+      "https://bioinformatics.cvr.ac.uk/spike_epitopes_sorted_2022-11-27.gff3.gz",
       assembly)
     
     # create the tracks array to pass to browser
@@ -1341,7 +1341,7 @@ shinyServer(function(input, output, session) {
     if(!is.null(dim(dms_antigenic_res))) {
       
       #plotting theme
-      .theme <- theme(
+      .theme <- ggplot2::theme(
         axis.line = element_line(colour = 'gray', size = .75),
         panel.background = element_blank(),
         plot.background = element_blank()
@@ -1370,7 +1370,7 @@ shinyServer(function(input, output, session) {
           color = "`Evol. Selection`")
       ) + geom_point() + guides(color = guide_legend(title = "Evol. Selection"))
       
-      p <- p + theme_minimal() + theme(plot.title = element_text(hjust = 0.5)) + scale_x_continuous(breaks = integer_breaks()) + labs(
+      p <- p + theme_minimal() + ggplot2::theme(plot.title = element_text(hjust = 0.5)) + scale_x_continuous(breaks = integer_breaks()) + labs(
         title = titleTxt,
         x 		= "Position",
         y 		= input$esm_score_index
