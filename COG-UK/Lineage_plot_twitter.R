@@ -57,7 +57,7 @@ vui_voc_lineages <-
     
     scale_x_date(breaks = date_breaks("1 month"),
                  labels = date_format("%b %y")) +
-    theme(plot.title = element_text(hjust = 0.5)) +
+    ggplot2::theme(plot.title = element_text(hjust = 0.5)) +
     labs(x = "Sample date",
          y = "Sequences"
     )
