@@ -40,6 +40,7 @@ dashboardPage(
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
+            menuItem("T Cell Epitope Browser", tabName = "t_cell_browser", icon = icon("bars-staggered")),
             # menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Spike Profiles", icon = icon("chart-line"), tabName = "spike_profiles"),
@@ -653,7 +654,7 @@ dashboardPage(
             
             tabItem(tabName = "t_cell",
                     fluidRow(
-                        box(title = "Spike amino acid replacements in T cell epitopes, detected in the UK data", closable = FALSE, width = 12,
+                        box(title = "Spike amino acid replacements in T cell epitopes, detected in UK data", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),   
                             
                             p("T-cell epitope data have been compiled by Dhruv Shah, Sharon Hsu and Thushan de Silva, University of Sheffield."),
@@ -721,29 +722,6 @@ dashboardPage(
                         )
                     ),
                     
-                    # JBrowse genome browser
-                    fluidRow(
-                      box(title = "T cell genome browser", closable = FALSE, width = 12,
-                          status = "info", collapsible = FALSE, icon = icon("grip-lines"), 
-                          
-                          # this adds to the browser to the UI, and specifies the output ID in the server
-                          JBrowseROutput("browserOutput")
-                          )
-                      ),
-                    
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    br(),
-                    
                     fluidRow(
                         column(width = 10, offset = 1,
                                box(title = "Download table", closable = FALSE, width = 12,
@@ -763,6 +741,19 @@ dashboardPage(
                     )
             ), # end tabItem t_cell
             
+            tabItem(tabName = "t_cell_browser",
+                    
+                    # JBrowse genome browser
+                    fluidRow(
+                      box(title = "Genome browser showing T cell epitopes containing spike amino acid replacements, detected in UK data", closable = FALSE, width = 12,
+                          status = "info", collapsible = FALSE, icon = icon("bars-staggered"),
+                          p("Click on an epitope to reveal details of amino acid replacements, including counts of sequences."),
+                          
+                          # add the browser to the UI, and specify the output ID in the server
+                          JBrowseROutput("browserOutput", height = "1200px")
+                      )
+                    )
+            ),
             
             # Spike Profiles tab
             tabItem(tabName = "spike_profiles",
