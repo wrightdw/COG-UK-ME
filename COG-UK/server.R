@@ -512,7 +512,7 @@ shinyServer(function(input, output, session) {
         rename(`Sample date` = epi_date, Sequences = n, Mutation = variant) %>% # display names
         ggplot(aes(fill = Mutation, y = Sequences, x = `Sample date`) ) +
         theme_classic() +
-        theme(plot.title = element_text(hjust = 0.5)) +
+        ggplot2::theme(plot.title = element_text(hjust = 0.5)) +
         labs(title = str_c(c("Gene", "Position"), c(input$gene, input$position), sep = " : ", collapse = "\n")) +
         scale_fill_discrete_qualitative(palette = "Set 3", 
                                         nmax = mutation_reference_counts %$% levels(variant) %>% length,
@@ -702,7 +702,7 @@ shinyServer(function(input, output, session) {
     )
     
     epitopes_track <- track_feature(
-      "https://bioinformatics.cvr.ac.uk/spike_epitopes_sorted.gff.gz",
+      "https://bioinformatics.cvr.ac.uk/spike_epitopes_sorted_2.gff3.gz",
       assembly)
     
     # create the tracks array to pass to browser
@@ -717,7 +717,7 @@ shinyServer(function(input, output, session) {
       c(annotations_track, epitopes_track)
     )
     
-    theme <- theme("#5da8a3", "#333")
+    theme <- JBrowseR::theme("#5da8a3", "#333")
     
     # JBrowseR output
     output$browserOutput <- renderJBrowseR(
@@ -845,7 +845,7 @@ shinyServer(function(input, output, session) {
           
           scale_x_date(breaks = date_breaks("2 month"),
                        labels = date_format("%b %y")) +
-          theme(plot.title = element_text(hjust = 0.5)) +
+          ggplot2::theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
                y = "Sequences"
           ) 
@@ -990,7 +990,7 @@ shinyServer(function(input, output, session) {
           
           scale_x_date(breaks = date_breaks("2 month"),
                        labels = date_format("%b %y")) +
-          theme(plot.title = element_text(hjust = 0.5)) +
+          ggplot2::theme(plot.title = element_text(hjust = 0.5)) +
           labs(x = "Sample date",
                y = "Sequences"
           ) 
@@ -1152,15 +1152,15 @@ shinyServer(function(input, output, session) {
       gg <- gg + coord_fixed(1) # TODO conic conformal map projection?
       gg <- gg + theme_minimal()
       gg <- gg + scale_fill_viridis(name= c, direction = -1, limits = c(0,max_val)) 
-      gg <- gg + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = 'right')
-      gg <- gg + theme(axis.title.x=element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
-      gg <- gg + theme(axis.title.y=element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+      gg <- gg + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = 'right')
+      gg <- gg + ggplot2::theme(axis.title.x=element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
+      gg <- gg + ggplot2::theme(axis.title.y=element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
       gg
     }) 
     
     output$map <- renderPlotly({
       y <- map_weekInput() 
-      ggplotly(y + theme(legend.position = 'bottom')) %>% 
+      ggplotly(y + ggplot2::theme(legend.position = 'bottom')) %>% 
         layout(legend = list(orientation = "h", x = -0.5, y =-1))
     })
   
@@ -1194,7 +1194,7 @@ shinyServer(function(input, output, session) {
                          labels = c("1", "10", "100", "1,000", "10k", "100k")) +
       xlab('Count of sequences in latest 28-day period') +
       theme_minimal() +
-      theme(text = element_text(size = 13))
+      ggplot2::theme(text = element_text(size = 13))
     
     ## Depending on input$spike_y, need different scale and label
     if (input$spike_y == "Expansion") {
