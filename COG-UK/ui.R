@@ -41,7 +41,7 @@ dashboardPage(
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
-            menuItem("T Cell Epitope Browser", tabName = "t_cell_browser", icon = icon("bars-staggered")),
+            # menuItem("T Cell Epitope Browser", tabName = "t_cell_browser", icon = icon("bars-staggered")),
             # menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Spike Profiles", icon = icon("chart-line"), tabName = "spike_profiles"),
@@ -885,16 +885,13 @@ dashboardPage(
                                    )
                                )
                         )
-                    )
+                    ),
                     
-            ), # end tabItem t_cell
-            
-            # JBrowse genome browser
-            tabItem(tabName = "t_cell_browser",
+                    # JBrowse genome browser
                     fluidRow(
                       box(title = "Genome browser showing T cell epitopes containing spike amino acid replacements, detected in UK data", closable = FALSE, width = 12,
-                          status = "info", collapsible = FALSE, collapsed = FALSE, icon = icon("bars-staggered"),
-                          p("The SARS-CoV-2 reference genome is displayed at the top, with the genomic sequence in the 4th row and the amino acid translations in the 3rd row. 
+                          status = "info", collapsible = TRUE, collapsed = TRUE, icon = icon("bars"),
+                          p("The SARS-CoV-2 reference genome is displayed at the top, with the genomic sequence in the 4th row and the amino acid translations in the 2nd row. 
                             The other rows show a theoretical complementary strand sequence and alternative frame amino acid translations.  
                             Annotations for all genes are displayed in the annotations track.
                             The epitopes track displays epitopes in the spike protein, in which amino acid replacements have been detected in COG-UK data.
@@ -905,7 +902,13 @@ dashboardPage(
                           JBrowseROutput("browserOutput", height = "1200px")
                       )
                     )
-            ),
+                    
+                    
+            ), # end tabItem t_cell
+            
+            # JBrowse genome browser
+            # tabItem(tabName = "t_cell_browser",
+            # ),
             
             # Spike Profiles tab
             tabItem(tabName = "spike_profiles",

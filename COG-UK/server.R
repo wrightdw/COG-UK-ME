@@ -702,20 +702,23 @@ shinyServer(function(input, output, session) {
     
     # JBrowse genome browser
     assembly <- assembly(
-      # "https://jbrowse.org/genomes/sars-cov2/fasta/sars-cov2.fa.gz",
-      "https://bioinformatics.cvr.ac.uk/sars-cov2.fa.gz",
+      "https://jbrowse.org/genomes/sars-cov2/fasta/sars-cov2.fa.gz",
+      # "https://bioinformatics.cvr.ac.uk/sars-cov2.fa.gz",
+      # "https://sars2.cvr.gla.ac.uk/cog-uk/sars-cov2.fa.gz", 
       bgzip = TRUE
     )
     
     # create configuration for a JB2 GFF FeatureTrack
     annotations_track <- track_feature(
-      # "https://jbrowse.org/genomes/sars-cov2/sars-cov2-annotations.sorted.gff.gz",
-      "https://bioinformatics.cvr.ac.uk/sars-cov2-annotations.sorted.gff.gz",
+      "https://jbrowse.org/genomes/sars-cov2/sars-cov2-annotations.sorted.gff.gz",
+      # "https://bioinformatics.cvr.ac.uk/sars-cov2-annotations.sorted.gff.gz",
+      # "https://sars2.cvr.gla.ac.uk/cog-uk/sars-cov2-annotations.sorted.gff.gz",
       assembly
     )
     
     epitopes_track <- track_feature(
       "https://bioinformatics.cvr.ac.uk/spike_epitopes_sorted_2022-11-27.gff3.gz",
+      # "https://sars2.cvr.gla.ac.uk/cog-uk/spike_epitopes_sorted_2022-11-27.gff3.gz",
       assembly)
     
     # create the tracks array to pass to browser
