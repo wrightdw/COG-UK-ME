@@ -729,13 +729,13 @@ bind_rows(database_tcell_predictions, database_functional_predictions) %T>% writ
 library(janitor)
 # See GFF3 specification https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
-# epitopes
+# Spike epitopes with mutations
 epitopes_gff <- 
   database_tcell_predictions %>% 
   clean_names %>% 
-  filter(num_seqs_uk > 0) %>% 
+  filter(gene == "S" & num_seqs_uk > 0) %>% 
   select(start_position, end_position, epitope) %>% 
-  distinct() %>% 
+  distinct %>% 
   mutate(seqid = "NC_045512.2", source = "RefSeq", type = "epitope", .before = 1) %>% 
   mutate(score = ".", strand = "+", phase = ".", .after = end_position) %>% 
   rename(attributes = epitope) %>% 
@@ -743,13 +743,13 @@ epitopes_gff <-
   mutate(start = start_position * 3 + 21560, .after = start_position, .keep = "unused") %>%  # calculate genomic coordinates for spike start positions
   mutate(end = end_position * 3 + 21560 + 2, .after = end_position, .keep = "unused") # calculate genomic coordinates for spike end positions
 
-# mutations referring to epitope parent ID
+# Spike epitope mutations referring to epitope parent ID
 epitopes_mutations_gff <- 
   database_tcell_predictions %>% 
   clean_names %>% 
+  filter(gene == "S" & num_seqs_uk > 0) %>% 
   select(start_position, epitope, position, mutation, num_seqs_uk, num_seqs_uk_28_days) %>% 
-  filter(num_seqs_uk > 0) %>% 
-  distinct() %>% 
+  distinct %>% 
   mutate(seqid = "NC_045512.2", source = "RefSeq", type = "amino_acid_substitution", .before = 1) %>% 
   mutate(start = position * 3 + 21560, .after = position) %>%  # calculate genomic coordinates for spike start positions
   mutate(end = position * 3 + 21560 + 2, .after = start, .keep = "unused") %>%  # calculate genomic coordinates for spike end positions
