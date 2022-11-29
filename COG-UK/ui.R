@@ -896,7 +896,7 @@ dashboardPage(
                             Annotations for all genes are displayed in the annotations track.
                             The epitopes track displays epitopes in the spike protein, in which amino acid replacements have been detected in COG-UK data.
                             Click on an epitope to reveal details of amino acid replacements, including counts of sequences. 
-                            This genome browser displays epitope mutation data compiled on 27th November 2022."),
+                            This genome browser displays epitope mutation data compiled on 28th November 2022."),
                           
                           # add the browser to the UI, and specify the output ID in the server
                           JBrowseROutput("browserOutput", height = "1200px")
