@@ -47,7 +47,7 @@ dashboardPage(
             menuItem("Spike Profiles", icon = icon("chart-line"), tabName = "spike_profiles"),
             menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
-            menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
+            # menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
             menuItem("Omicron and mAb", tabName = "omicron", icon = icon("disease")),
             menuItem(" Recombinants", tabName = "recombinants", icon = icon("mixer")),
             menuItem("About", tabName = "about", icon = icon("info-circle"))
