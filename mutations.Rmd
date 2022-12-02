@@ -1078,10 +1078,20 @@ consortium_uk_parent <-
       filter(lineage == "BA.4" | str_starts(lineage_full, fixed("B.1.1.529.4."))) %>% 
       mutate(lineage = "BA.4"),
 
+    ## Special case for BA.5 and BQ.1. Report BA.5 as BA.5 minus BQ.1 ##
+    # Report BA.5 as BA.5 minus BQ.1/BQ.1.*
     consortium_uk %>% 
       filter(lineage == "BA.5" | str_starts(lineage_full, fixed("B.1.1.529.5."))) %>% 
+      filter(lineage != "BQ.1" & !str_starts(lineage_full, fixed("B.1.1.529.5.3.1.1.1.1.1."))) %>% # minus BQ.1/BQ.1.*
       mutate(lineage = "BA.5"),
   
+    # BQ.1/BQ.1.*
+    consortium_uk %>% 
+      filter(lineage == "BQ.1" | str_starts(lineage_full, fixed("B.1.1.529.5.3.1.1.1.1.1."))) %>% 
+      mutate(lineage = "BQ.1"),
+    
+    ####
+    
     # filter AY.4 and sublineages then convert AY.4.x sublineages to parent AY.4 
     consortium_uk %>% 
       filter(lineage == "AY.4" | str_starts(lineage, fixed("AY.4."))) %>% 

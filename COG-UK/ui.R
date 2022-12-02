@@ -61,7 +61,7 @@ dashboardPage(
             prettySwitch("other_switch", "Exclude Other", FALSE, status = "info", fill = TRUE),
             prettyCheckboxGroup("variant_vui_voc", "Variant:",
                                 vui_voc_lineages,
-                                selected = c("B.1.1.7", "B.1.617.2", "BA.1", "BA.2", "BA.4", "BA.5", "Unassigned"),
+                                selected = c("B.1.1.7", "B.1.617.2", "BA.1", "BA.2", "BA.4", "BA.5", "BQ.1"),
                                 shape = "curve",
                                 status = "info",
                                 fill = TRUE),
@@ -558,7 +558,7 @@ dashboardPage(
                                 timeFormat = "%d %b %y"
                             ),
                             
-                            p("Variant sequence counts are grouped either by week starting on Sunday or by day.
+                            p("Variant sequence counts in the chart above are grouped either by week, starting on Sunday, or by day, and include counts of subvariants, except in the case of BA.5, where counts of the renamed subvariant BQ.1 have been subtracted.
                               The most recent sequence data (approx. the last two weeks) have low sample numbers,
                               so are highlighted with a grey box for the last two weeks of the weekly chart 
                               or from the second-to-last Sunday onwards for the daily chart.")
@@ -568,7 +568,9 @@ dashboardPage(
                     fluidRow(
                         box(title = "Variants of concern (VOC) and under investigation (VUI) detected in the UK data", closable = FALSE, width = 12,
                             status = "info", collapsible = FALSE, icon = icon("table"),
-                            p("DISCLAIMER: COG-UK uses curated sequences for determining the counts of a given lineage. Other sources of information may be reporting cases with partial sequence information or other forms of PCR testing."),
+                            p("Variant sequence counts in the table below include counts of subvariants, where the variant names are denoted with .x, otherwise counts are for the specific variant names."),
+                            p("DISCLAIMER: COG-UK uses curated sequences for determining the counts of a given lineage. 
+                              Other sources of information may be reporting cases with partial sequence information or other forms of PCR testing."),
                             dataTableOutput("table_3")
                         )
                     ),

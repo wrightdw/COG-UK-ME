@@ -817,19 +817,20 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                  "BA.1" = "BA.1/BA.1.x (Omicron)",
-                                  "BA.2" = "BA.2/BA.2.x (Omicron)",
-                                  "BA.4" = "BA.4/BA.4.x (Omicron)",
-                                  "BA.5" = "BA.5/BA.5.x (Omicron)",
+                                  "BA.1" = "BA.1 (Omicron)",
+                                  "BA.2" = "BA.2 (Omicron)",
+                                  "BA.4" = "BA.4 (Omicron)",
+                                  "BA.5" = "BA.5 minus BQ.1 (Omicron)",
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                   "Other Delta" = "Other Delta",
-                                  "AY.4" = "AY.4/AY.4.x (Delta)",
-                                  "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
+                                  "AY.4" = "AY.4 (Delta)",
+                                  "AY.4.2" = "AY.4.2 (Delta)",
                                   "P.1" = "P.1 (Gamma)",
-                                  "B.1.177" = "B.1.177/B.1.177.x",
-                                  "Unassigned" = "Unassigned (Omicron)",
+                                  "B.1.177" = "B.1.177",
+                                  "BQ.1" = "BQ.1 (Omicron)",
+                                  # "Unassigned" = "Unassigned (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
           rename(Variant = lineage, `Sample date` = sample_date, Sequences = n_day)
@@ -962,19 +963,20 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4.2" = "Other Delta",
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
-                                         "BA.1" = "BA.1/BA.1.x (Omicron)",
-                                         "BA.2" = "BA.2/BA.2.x (Omicron)",
-                                         "BA.4" = "BA.4/BA.4.x (Omicron)",
-                                         "BA.5" = "BA.5/BA.5.x (Omicron)",
+                                         "BA.1" = "BA.1 (Omicron)",
+                                         "BA.2" = "BA.2 (Omicron)",
+                                         "BA.4" = "BA.4 (Omicron)",
+                                         "BA.5" = "BA.5 minus BQ.1 (Omicron)",
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
                                          "Other Delta" = "Other Delta",
-                                         "AY.4" = "AY.4/AY.4.x (Delta)",
-                                         "AY.4.2" = "AY.4.2/AY.4.2.x (Delta)",
+                                         "AY.4" = "AY.4 (Delta)",
+                                         "AY.4.2" = "AY.4.2 (Delta)",
                                          "P.1" = "P.1 (Gamma)",
-                                         "B.1.177" = "B.1.177/B.1.177.x",
-                                         "Unassigned" = "Unassigned (Omicron)",
+                                         "B.1.177" = "B.1.177",
+                                         "BQ.1" = "BQ.1",
+                                         # "Unassigned" = "Unassigned (Omicron)",
                                          "Other" = "Other"
           )) %>% 
           rename(Variant = lineage, `Start date` = epi_date, Sequences = n_week)

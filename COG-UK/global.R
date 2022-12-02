@@ -145,7 +145,7 @@ lineages_t3 <-
 NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion. WHO label: <strong>Gamma</strong>.",
 
   ## Omicron
-  "Unassigned" = "Omicron sequences not yet assigned lineages. WHO label: <strong>Omicron</strong>.",
+  # "Unassigned" = "Omicron sequences not yet assigned lineages. WHO label: <strong>Omicron</strong>.",
   "BQ.1.1" = "Found globally. Sublineage of BQ.1 with defining mutations ORF1b:N1191S and S:R346T. WHO label: <strong>Omicron</strong>.",
   "BF.7" = "Belgium, England and Denmark. Descendant of BA.5. WHO label: <strong>Omicron</strong>.",
   "BA.5.9" = "Germany, Switzerland and Denmark. WHO label: <strong>Omicron</strong>.",
@@ -265,8 +265,8 @@ vui_voc_lineages <-
 vui_voc_lineages <- 
   levels(vui_voc_lineages$lineage) %>% 
   setNames(levels(vui_voc_lineages$lineage_display)) %>% 
-  append(list("B.1.177/B.1.177.x" = "B.1.177", 
-              "Unassigned (Omicron)" = "Unassigned")) # special cases, add only to lineage bar chart
+  append(list("B.1.177/B.1.177.x" = "B.1.177",
+              "BQ.1/BQ.1.x (Omicron)" = "BQ.1")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe
