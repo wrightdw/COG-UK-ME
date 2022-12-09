@@ -718,7 +718,8 @@ shinyServer(function(input, output, session) {
     
     epitopes_track <- track_feature(
       # "https://bioinformatics.cvr.ac.uk/spike_epitopes_sorted_2022-11-28.gff3.gz",
-      "https://sars2.cvr.gla.ac.uk/cog-uk/spike_epitopes_sorted_2022-11-28.gff3.gz",
+      # "https://sars2.cvr.gla.ac.uk/cog-uk/spike_epitopes_sorted_2022-11-28.gff3.gz",
+      "https://sars2.cvr.gla.ac.uk/jbrowser/spike_epitopes_sorted_2022-11-28.gff3.gz",
       assembly)
     
     # create the tracks array to pass to browser
