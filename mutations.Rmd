@@ -725,7 +725,7 @@ bind_rows(database_tcell_predictions, database_functional_predictions) %T>% writ
 ```
 
 ##  GFF3
-```{r eval=FALSE, include=TRUE}
+```{r gff3}
 library(janitor)
 # See GFF3 specification https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
@@ -763,7 +763,7 @@ epitopes_mutations_gff <-
 # Create GFF3 file
 epitopes_gff %>% 
   bind_rows(epitopes_mutations_gff) %T>% 
-  write_tsv("spike_epitopes.gff3", col_names = FALSE) 
+  write_tsv(str_c("COG-UK/", params$dataset_date, "/spike_epitopes.gff3"), col_names = FALSE) 
 ```
 
 
