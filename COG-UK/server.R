@@ -1350,13 +1350,13 @@ shinyServer(function(input, output, session) {
       index <- switch(  
         input$esm_score_index,  
         "Semantic score"= "semantic_score",  
-        "Grammaticality"= "grammaticality",  
+        #"Grammaticality"= "grammaticality",  # have excluded grammaticality until new scores become available  
         "Evolutionary index"= "evolutionary_index",
         "Entropy"= "entropy"
       )
       
       dms_antigenic_res %<>% filter(semantic_score >= input$esm1b_semantic_indx[1] & semantic_score <= input$esm1b_semantic_indx[2])
-      dms_antigenic_res %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2])
+      #dms_antigenic_res %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
       dms_antigenic_res %<>% filter(evolutionary_index >= input$esm1b_evol_indx[1] & evolutionary_index <= input$esm1b_evol_indx[2])
       dms_antigenic_res %<>% filter(entropy >= input$esm1b_entropy_indx[1] & entropy <= input$esm1b_entropy_indx[2])
       
@@ -1438,17 +1438,18 @@ shinyServer(function(input, output, session) {
     }
     
     dms_antigenic %<>% filter(semantic_score >= input$esm1b_semantic_indx[1] & semantic_score <= input$esm1b_semantic_indx[2])
-    dms_antigenic %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2])
+    #dms_antigenic %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
     dms_antigenic %<>% filter(evolutionary_index >= input$esm1b_evol_indx[1] & evolutionary_index <= input$esm1b_evol_indx[2])
     dms_antigenic %<>% filter(entropy >= input$esm1b_entropy_indx[1] & entropy <= input$esm1b_entropy_indx[2])
     
-    dms_antigenic %>%
+    # have excluded grammaticality until new scores become available
+    dms_antigenic %>% select(-c(grammaticality)) %>%
       rename(Label = label,
              Reference = ref, 
              `Amino acid replacement` = alt, 
              Position = position,
              `Semantic score` = semantic_score,
-             Grammaticality = grammaticality,
+             #Grammaticality = grammaticality, # have excluded grammaticality until new scores become available
              `Evolutionary index` = evolutionary_index,
              Subunit = subunit,
              Domain = domain,

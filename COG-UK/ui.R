@@ -101,7 +101,7 @@ dashboardPage(
           textAreaInput("textSpike", "Or submit full spike sequence (1273aa in length):", ""),
           hr(style = "border-style: dotted;"),
           
-          selectInput("esm_score_index", "ESM-1b model index:", choices = c("Semantic score", "Grammaticality", "Evolutionary index", "Entropy")),
+          selectInput("esm_score_index", "ESM-1b model index:", choices = c("Semantic score", "Evolutionary index", "Entropy")), # have excluded grammaticality until new scores become available
           sliderInput(
             inputId = "esm1b_semantic_indx",
             label = "Semantic score:",
@@ -109,11 +109,13 @@ dashboardPage(
             min = floor(dms_antigenic %>% select(semantic_score) %>% min()), max = ceiling(dms_antigenic %>% select(semantic_score) %>% max())
           ),
           
-          sliderInput(
-            inputId = "esm1b_grammaticality_indx",
-            label = "Grammaticality:",
-            value = c(floor(dms_antigenic %>% select(grammaticality) %>% min()), ceiling(dms_antigenic %>% select(grammaticality) %>% max())),
-            min = floor(dms_antigenic %>% select(grammaticality) %>% min()), max = ceiling(dms_antigenic %>% select(grammaticality) %>% max())
+          hidden( # hide element until new grammaticality scores become available
+            sliderInput(
+              inputId = "esm1b_grammaticality_indx",
+              label = "Grammaticality:",
+              value = c(floor(dms_antigenic %>% select(grammaticality) %>% min()), ceiling(dms_antigenic %>% select(grammaticality) %>% max())),
+              min = floor(dms_antigenic %>% select(grammaticality) %>% min()), max = ceiling(dms_antigenic %>% select(grammaticality) %>% max())
+            )
           ),
           
           sliderInput(
@@ -393,9 +395,18 @@ dashboardPage(
                             mutations that may lead to viral escape. The model operates in an unsupervised fashion, meaning 
                             that it is trained to predict amino acids from the surrounding sequence context, with two components: 
                             grammar (or syntax) and meaning (or semantics). Semantic change corresponds 
-                            to antigenic change, grammaticality captures viral fitness, and both high semantic 
-                            change and grammaticality help predict escape potential. In addition to grammaticality, viral fitness 
-                            can be assessed based on the evolutionary index as a more well-defined score."),
+                            to antigenic change, evolutionary index captures viral fitness, and both high semantic 
+                            change and evolutionary index help predict escape potential."),
+                          # p("ESM-1b (",a("paper", href = "https://www.pnas.org/doi/10.1073/pnas.2016239118#:~:text=https%3A//doi.org/10.1073/pnas.2016239118", 
+                          #                target = "_blank", .noWS = "outside"),", ",a("repository", href = "https://github.com/facebookresearch/esm", target = "_blank", 
+                          #                                                             .noWS = "outside"),") is a machine learning (ML) technique for natural language processing 
+                          #   that has been found useful in assessing the effects of mutations on viral function and predicting 
+                          #   mutations that may lead to viral escape. The model operates in an unsupervised fashion, meaning 
+                          #   that it is trained to predict amino acids from the surrounding sequence context, with two components: 
+                          #   grammar (or syntax) and meaning (or semantics). Semantic change corresponds 
+                          #   to antigenic change, grammaticality captures viral fitness, and both high semantic 
+                          #   change and grammaticality help predict escape potential. In addition to grammaticality, viral fitness 
+                          #   can be assessed based on the evolutionary index as a more well-defined score."), # Commented out until grammaticality becomes again available
                           p("The plot above displays the ESM-1b model scores for every possible amino acid mutation in the 
                             SARS-CoV-2 spike protein either in variants of concern (VOC) and variants under investigation (VUI) 
                             or in a given spike protein sequence (complete spike sequence) which is checked for 
