@@ -355,6 +355,19 @@ dashboardPage(
             
             tabItem(tabName = "evol_selection", class = "active",
                     fluidRow(
+                      column(2, offset=11,
+                             box(
+                               id = 'under_dev_box',  # use an id to only select this box
+                               background = "orange",
+                               span( icon("info-circle"), "UNDER DEVELOPMENT"),
+                               tags$style(type="text/css", "#under_dev_box { float:right; text-align:center; font-size: 11px; font-weight: bold; height:25px !important; width: 170px !important; padding: 0px 0px 33px 0px;}"),
+                               tags$head(tags$style('#under_dev_box .box-header{ display: none}'))
+                               
+                             )
+                      )
+                    ),
+                    
+                    fluidRow(
                       box(width = 8, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("line-chart"),
                           title = "ESM-1b model scores and evolutionary selection signals of spike amino acid replacements",
                           plotlyOutput("esm1b_plot", height = '600px') # depends on input
