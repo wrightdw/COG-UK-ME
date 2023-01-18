@@ -101,9 +101,9 @@ dashboardPage(
           textAreaInput("textSpike", "Or submit full spike sequence (1273aa in length):", ""),
           hr(style = "border-style: dotted;"),
           
-          selectInput("esm_score_index", "ESM-1b model index:", choices = c("Semantic score", "Evolutionary index", "Entropy")), # have excluded grammaticality until new scores become available
+          selectInput("esm_score_index", "ESM-2 model index:", choices = c("Semantic score", "Relative grammaticality", "Entropy")), # have excluded grammaticality until new scores become available
           sliderInput(
-            inputId = "esm1b_semantic_indx",
+            inputId = "esm_semantic_indx",
             label = "Semantic score:",
             value = c(floor(dms_antigenic %>% select(semantic_score) %>% min()), ceiling(dms_antigenic %>% select(semantic_score) %>% max())),
             min = floor(dms_antigenic %>% select(semantic_score) %>% min()), max = ceiling(dms_antigenic %>% select(semantic_score) %>% max())
@@ -111,7 +111,7 @@ dashboardPage(
           
           hidden( # hide element until new grammaticality scores become available
             sliderInput(
-              inputId = "esm1b_grammaticality_indx",
+              inputId = "esm_grammaticality_indx",
               label = "Grammaticality:",
               value = c(floor(dms_antigenic %>% select(grammaticality) %>% min()), ceiling(dms_antigenic %>% select(grammaticality) %>% max())),
               min = floor(dms_antigenic %>% select(grammaticality) %>% min()), max = ceiling(dms_antigenic %>% select(grammaticality) %>% max())
@@ -119,14 +119,14 @@ dashboardPage(
           ),
           
           sliderInput(
-            inputId = "esm1b_evol_indx",
-            label = "Evolutionary index:",
+            inputId = "esm_evol_indx",
+            label = "Relative grammaticality:",
             value = c(floor(dms_antigenic %>% select(evolutionary_index) %>% min()), ceiling(dms_antigenic %>% select(evolutionary_index) %>% max())),
             min = floor(dms_antigenic %>% select(evolutionary_index) %>% min()), max = ceiling(dms_antigenic %>% select(evolutionary_index) %>% max())
           ),
           
           sliderInput(
-            inputId = "esm1b_entropy_indx",
+            inputId = "esm_entropy_indx",
             label = "Entropy:",
             value = c(floor(dms_antigenic %>% select(entropy) %>% min()), ceiling(dms_antigenic %>% select(entropy) %>% max())),
             min = floor(dms_antigenic %>% select(entropy) %>% min()), max = ceiling(dms_antigenic %>% select(entropy) %>% max())
@@ -138,7 +138,7 @@ dashboardPage(
                                 "Convalescent sera" = "convalescent",
                                 "Vaccine sera" = "vaccine")),
           
-          prettyRadioButtons("esm1b_t_cell_experiment", "T cell epitope mutations (type of experiment):",
+          prettyRadioButtons("esm_t_cell_experiment", "T cell epitope mutations (type of experiment):",
                              c("Reduced T cell recognition" = "recognition",
                                "Epitope studies" = "epitope_studies",
                                "None" = "none"),
@@ -369,8 +369,8 @@ dashboardPage(
                     
                     fluidRow(
                       box(width = 8, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("line-chart"),
-                          title = "ESM-1b model scores and evolutionary selection signals of spike amino acid replacements",
-                          plotlyOutput("esm1b_plot", height = '600px') # depends on input
+                          title = "ESM-2 model scores and evolutionary selection signals of spike amino acid replacements",
+                          plotlyOutput("esm_plot", height = '600px') # depends on input
                       ),
                       
                       box(width = 4, height = 600, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("microscope"),
@@ -388,8 +388,8 @@ dashboardPage(
                     
                     fluidRow(
                       box(width = 12, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("table"),
-                          title = "List of spike mutations with relevant ESM-1b scores, selection analysis signals and amino acid properties",
-                          dataTableOutput("table_esm1b")
+                          title = "List of spike mutations with relevant ESM-2 scores, selection analysis signals and amino acid properties",
+                          dataTableOutput("table_esm")
                       )
                     ),
                     
@@ -401,16 +401,16 @@ dashboardPage(
                           collapsible = FALSE, 
                           icon = icon("info-circle"), 
                           
-                          p("ESM-1b (",a("paper", href = "https://www.pnas.org/doi/10.1073/pnas.2016239118#:~:text=https%3A//doi.org/10.1073/pnas.2016239118", 
+                          p("ESM-2 (",a("paper", href = "https://www.pnas.org/doi/10.1073/pnas.2016239118#:~:text=https%3A//doi.org/10.1073/pnas.2016239118", 
                                          target = "_blank", .noWS = "outside"),", ",a("repository", href = "https://github.com/facebookresearch/esm", target = "_blank", 
                                                                                       .noWS = "outside"),") is a machine learning (ML) technique for natural language processing 
                             that has been found useful in assessing the effects of mutations on viral function and predicting 
                             mutations that may lead to viral escape. The model operates in an unsupervised fashion, meaning 
                             that it is trained to predict amino acids from the surrounding sequence context, with two components: 
                             grammar (or syntax) and meaning (or semantics). Semantic change corresponds 
-                            to antigenic change, evolutionary index captures viral fitness, and both high semantic 
-                            change and evolutionary index help predict escape potential."),
-                          # p("ESM-1b (",a("paper", href = "https://www.pnas.org/doi/10.1073/pnas.2016239118#:~:text=https%3A//doi.org/10.1073/pnas.2016239118", 
+                            to antigenic change, relative grammaticality captures viral fitness, and both high semantic 
+                            change and relative grammaticality help predict escape potential."),
+                          # p("ESM-2 (",a("paper", href = "https://www.pnas.org/doi/10.1073/pnas.2016239118#:~:text=https%3A//doi.org/10.1073/pnas.2016239118", 
                           #                target = "_blank", .noWS = "outside"),", ",a("repository", href = "https://github.com/facebookresearch/esm", target = "_blank", 
                           #                                                             .noWS = "outside"),") is a machine learning (ML) technique for natural language processing 
                           #   that has been found useful in assessing the effects of mutations on viral function and predicting 
@@ -419,16 +419,16 @@ dashboardPage(
                           #   grammar (or syntax) and meaning (or semantics). Semantic change corresponds 
                           #   to antigenic change, grammaticality captures viral fitness, and both high semantic 
                           #   change and grammaticality help predict escape potential. In addition to grammaticality, viral fitness 
-                          #   can be assessed based on the evolutionary index as a more well-defined score."), # Commented out until grammaticality becomes again available
-                          p("The plot above displays the ESM-1b model scores for every possible amino acid mutation in the 
+                          #   can be assessed based on the relative grammaticality as a more well-defined score."), # Commented out until grammaticality becomes again available
+                          p("The plot above displays the ESM-2 model scores of antigenic amino acid mutations present in the 
                             SARS-CoV-2 spike protein either in variants of concern (VOC) and variants under investigation (VUI) 
-                            or in a given spike protein sequence (complete spike sequence) which is checked for 
+                            or for every possible amino acid mutation present in a given spike protein sequence (complete spike sequence) which is checked for 
                             mutations against the reference Wuhan-Hu-1 sequence. Mutations present in the 
-                            spikes with available ESM-1b embedding scores are shown on the plot and listed on the above table. 
+                            spikes with available ESM-2 embedding scores are shown on the plot and listed on the above table. 
                             Filters are present to subset these mutations as needed or results can be refined further by filtering 
-                            for mutations that were reported to confer antigenic change relevant to antibodies or for amino acid 
-                            replacements in T cell epitopes, based on published studies."),
-                          p("In addition to the ESM-1b scores, evolutionary selection signals obtained for the subset of sarbecoviruses 
+                            for mutations that were reported to confer antigenic change relevant specifically to antibodies or for amino acid 
+                            replacements in T cell epitopes, based on published studies (see also 'Antigenic Mutations' tab)."),
+                          p("In addition to the ESM-2 scores, evolutionary selection signals obtained for the subset of sarbecoviruses 
                             that are more closely related to SARS-CoV-2, referred to as the nCoV clade (Lytras et al. 2022) 
                             are also displayed  and can be overlayed on the spike protein structure (RCSB Protein Data 
                             Bank (PDB) ID: 6VXX (Walls et al., 2020)). Selection signals were inferred using the FEL (Kosakovsky 
