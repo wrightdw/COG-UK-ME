@@ -1264,30 +1264,30 @@ shinyServer(function(input, output, session) {
   ### 'Spike profiles' tab - outputs - end
   
   ### 'Evolutionary selection' tab - outputs - start
-  output$esm1b_plot <- renderPlotly({
-    esm1b_mut_plot() %>% ggplotly(source = "esm1b_plot") %>%
+  output$esm_plot <- renderPlotly({
+    esm_mut_plot() %>% ggplotly(source = "esm_plot") %>%
       event_register("plotly_click") %>% event_register("plotly_doubleclick") %>% event_register("plotly_deselect") %>%
       event_register("plotly_relayout") %>% event_register('plotly_legendclick') %>% event_register('plotly_legenddoubleclick')
   })
   
-  esm1b_mut_plot <- reactive({
-    updateESM1B_3DStructure(NULL)
+  esm_mut_plot <- reactive({
+    updateESM_3DStructure(NULL)
   })
   
-  observeEvent(event_data("plotly_selected", source = "esm1b_plot"), {
-    b <- event_data("plotly_selected", source = "esm1b_plot")
+  observeEvent(event_data("plotly_selected", source = "esm_plot"), {
+    b <- event_data("plotly_selected", source = "esm_plot")
     req(b)
-    updateESM1B_3DStructure(b)
+    updateESM_3DStructure(b)
   })
   
-  observeEvent(event_data("plotly_deselect", source = "esm1b_plot"), {
-    b <- event_data("plotly_deselect", source = "esm1b_plot")
+  observeEvent(event_data("plotly_deselect", source = "esm_plot"), {
+    b <- event_data("plotly_deselect", source = "esm_plot")
     req(b)
-    updateESM1B_3DStructure(NULL)
-    runjs("Shiny.setInputValue('plotly_selected-esm1b_plot', null);")
+    updateESM_3DStructure(NULL)
+    runjs("Shiny.setInputValue('plotly_selected-esm_plot', null);")
   })
   
-  updateESM1B_3DStructure <- function(sel_data) {
+  updateESM_3DStructure <- function(sel_data) {
     titleTxt <- "All possible amino acid mutations"
     df <- data.frame()
     if(input$variant_evol_selection != "None") {
@@ -1302,7 +1302,7 @@ shinyServer(function(input, output, session) {
         df <- as.data.frame(cbind(dms_antigenic$label, dms_antigenic$position)) 
         df %<>% rename(mut = V1, pos = V2)
         
-        titleTxt <- str_c("Amino acid mutations present in ", input$variant_evol_selection)
+        titleTxt <- str_c("Antigenic amino acid mutations present in ", input$variant_evol_selection)
       }
     }
     
@@ -1327,11 +1327,11 @@ shinyServer(function(input, output, session) {
       }
     }
     
-    if(input$esm1b_t_cell_experiment == "recognition"){
+    if(input$esm_t_cell_experiment == "recognition"){
       database_tcell_predictions %<>% 
         filter(assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
       dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
-    } else if(input$esm1b_t_cell_experiment == "epitope_studies"){ # epitope_studies
+    } else if(input$esm_t_cell_experiment == "epitope_studies"){ # epitope_studies
       database_tcell_predictions %<>% 
         filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
       dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
@@ -1351,14 +1351,14 @@ shinyServer(function(input, output, session) {
         input$esm_score_index,  
         "Semantic score"= "semantic_score",  
         #"Grammaticality"= "grammaticality",  # have excluded grammaticality until new scores become available  
-        "Evolutionary index"= "evolutionary_index",
+        "Relative grammaticality"= "evolutionary_index",
         "Entropy"= "entropy"
       )
       
-      dms_antigenic_res %<>% filter(semantic_score >= input$esm1b_semantic_indx[1] & semantic_score <= input$esm1b_semantic_indx[2])
-      #dms_antigenic_res %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
-      dms_antigenic_res %<>% filter(evolutionary_index >= input$esm1b_evol_indx[1] & evolutionary_index <= input$esm1b_evol_indx[2])
-      dms_antigenic_res %<>% filter(entropy >= input$esm1b_entropy_indx[1] & entropy <= input$esm1b_entropy_indx[2])
+      dms_antigenic_res %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
+      #dms_antigenic_res %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
+      dms_antigenic_res %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
+      dms_antigenic_res %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
       
       key <- dms_antigenic_res$position
       p <- dms_antigenic_res %>% rename(c(`Evol. Selection` = evol_selection, mutation = label)) %>% ggplot(
@@ -1393,7 +1393,7 @@ shinyServer(function(input, output, session) {
     p
   }
   
-  output$table_esm1b <- renderDT({
+  output$table_esm <- renderDT({
     df <- data.frame()
     if(input$variant_evol_selection != "None") {
       if(input$textSpike != "" && nchar(input$textSpike) == 1273) {
@@ -1427,20 +1427,20 @@ shinyServer(function(input, output, session) {
       dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
     }
     
-    if(input$esm1b_t_cell_experiment == "recognition"){
+    if(input$esm_t_cell_experiment == "recognition"){
       database_tcell_predictions %<>% 
         filter(assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
       dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
-    } else if(input$esm1b_t_cell_experiment == "epitope_studies"){ # epitope_studies
+    } else if(input$esm_t_cell_experiment == "epitope_studies"){ # epitope_studies
       database_tcell_predictions %<>% 
         filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
       dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
     }
     
-    dms_antigenic %<>% filter(semantic_score >= input$esm1b_semantic_indx[1] & semantic_score <= input$esm1b_semantic_indx[2])
-    #dms_antigenic %<>% filter(grammaticality >= input$esm1b_grammaticality_indx[1] & grammaticality <= input$esm1b_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
-    dms_antigenic %<>% filter(evolutionary_index >= input$esm1b_evol_indx[1] & evolutionary_index <= input$esm1b_evol_indx[2])
-    dms_antigenic %<>% filter(entropy >= input$esm1b_entropy_indx[1] & entropy <= input$esm1b_entropy_indx[2])
+    dms_antigenic %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
+    #dms_antigenic %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
+    dms_antigenic %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
+    dms_antigenic %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
     
     # have excluded grammaticality until new scores become available
     dms_antigenic %>% select(-c(grammaticality)) %>%
@@ -1450,7 +1450,10 @@ shinyServer(function(input, output, session) {
              Position = position,
              `Semantic score` = semantic_score,
              #Grammaticality = grammaticality, # have excluded grammaticality until new scores become available
-             `Evolutionary index` = evolutionary_index,
+             `Relative grammaticality` = evolutionary_index,
+             `Semantic rank` = semantic_rank,
+             `Aquisition priority` = aquisition_priority,
+             `Probability` = probability,
              Subunit = subunit,
              Domain = domain,
              `Reference amino acid property basic` = reference_amino_acid_property_basic,
