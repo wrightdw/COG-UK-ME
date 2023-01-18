@@ -1740,6 +1740,8 @@ suppressPackageStartupMessages(library(V8))
 annotation_json = read_json(params$evol_annotation_json)
 summary_json = read_json(params$evol_summary_json)
 dms_antigenic <- read_csv(params$esm_dms_data_csv)
+if("bloom_bind_avg" %in% colnames(dms_antigenic)) dms_antigenic <- dms_antigenic %>% select(-c("bloom_bind_avg")) # Drop column containing lots of NAs and causing trouble
+if("bloom_expr_avg" %in% colnames(dms_antigenic)) dms_antigenic <- dms_antigenic %>% select(-c("bloom_expr_avg")) # Drop column containing lots of NAs and causing trouble
 dms_antigenic <- toJSON(dms_antigenic)
 ```
 
