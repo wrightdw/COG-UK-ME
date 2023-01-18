@@ -1770,9 +1770,10 @@ dms_antigenic_res %<>%
                                             conserved == "Yes" ~ "Conserved",
                                             positive == "Yes" ~ "Positive",
                                             negative == "Yes" ~ "Negative"
-          )) %>% relocate(evol_selection, .before = entropy)
+          )) %>% relocate(evol_selection, .before = entropy) %>% arrange(position)
 
-dms_antigenic_res %T>% write_rds(str_c("COG-UK/", "dms_integrated_data@13.rds"))
+dms_antigenic_res$entropy <- NULL # Better join the two datasets within the global.R file
+dms_antigenic_res %T>% write_rds("dms_integrated_data@13.rds")
 ```
 
 # RDS check
