@@ -55,7 +55,7 @@ database_insertions <- read_rds(str_c(dataset_date, "/database_insertions.rds"))
 source("helpers.R")
 
 dms_antigenic <- read_rds("dms_integrated_data@13.rds")
-dms_antigenic %<>% select(-c("grammatical_rank")) %>% # grammatical_rank temporarily excluded until correct data become available
+dms_antigenic %<>% select(-c("grammatical_rank", "semantic_rank", "aquisition_priority", "probability")) %>% # grammatical_rank temporarily excluded until correct data become available
   filter(!is.na(semantic_score)) %>%
   filter(!is.na(grammaticality)) %>%
   filter(!is.na(evolutionary_index))

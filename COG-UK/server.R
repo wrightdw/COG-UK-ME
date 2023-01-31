@@ -1451,9 +1451,9 @@ shinyServer(function(input, output, session) {
              `Semantic score` = semantic_score,
              #Grammaticality = grammaticality, # have excluded grammaticality until new scores become available
              `Relative grammaticality` = evolutionary_index,
-             `Semantic rank` = semantic_rank,
-             `Aquisition priority` = aquisition_priority,
-             `Probability` = probability,
+             # `Semantic rank` = semantic_rank,
+             # `Aquisition priority` = aquisition_priority,
+             # `Probability` = probability,
              Subunit = subunit,
              Domain = domain,
              `Reference amino acid property basic` = reference_amino_acid_property_basic,
