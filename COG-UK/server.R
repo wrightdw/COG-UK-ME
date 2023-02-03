@@ -92,7 +92,15 @@ table_3 <- function(){
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
       mutate(lineage = "BQ.1/BQ.1.x",
-             reason =  "Nigeria. Descendant of BA.5. Full Spike profile of BQ.1: T19I, Δ24-26/A27S, Δ69-70, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, K444TL452R, N460, KS477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>.")
+             reason =  "Nigeria. Descendant of BA.5. Full Spike profile of BQ.1: T19I, Δ24-26/A27S, Δ69-70, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, K444TL452R, N460, KS477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    n_uk_lineages_ch_1_1 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "CH.1.1/CH.1.1.x",
+             reason =  "Southeast Asia. Descendant of BA.2.75, defined by S:L452R. Informal name: <strong>Orthrus</strong>. WHO label: <strong>Omicron</strong>.")
+    
+    
   ) %>% 
     lineages_table()
 }

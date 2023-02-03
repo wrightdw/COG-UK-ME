@@ -156,7 +156,7 @@ NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion.
   "BA.4.6" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
   "BA.2.75.5" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
   "BA.2.75.2" = "Asia and Australia. WHO label: <strong>Omicron</strong>.",
-  "XBB.1.5" = "Recombinant (XBB + additional mutations).\ Informal name: <strong>Kraken</strong>."
+  "XBB.1.5" = "Recombinant (XBB + additional mutations). Informal name: <strong>Kraken</strong>. WHO label: <strong>Omicron</strong>."
   
 #   "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
 # in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
@@ -245,6 +245,13 @@ n_uk_lineages_bq_1 <- sum_lineages(
   consortium_uk %>% 
     distinct(lineage, lineage_full) %>% 
     filter(lineage == "BQ.1" | str_starts(lineage_full, fixed("B.1.1.529.5.3.1.1.1.1.1."))) %$% 
+    lineage # sum BQ.1 and sublineages
+)
+
+n_uk_lineages_ch_1_1 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "CH.1.1" | str_starts(lineage_full, fixed("B.1.1.529.2.75.3.4.1.1.1.1."))) %$% 
     lineage # sum BQ.1 and sublineages
 )
 
