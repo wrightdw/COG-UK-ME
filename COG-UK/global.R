@@ -155,7 +155,8 @@ NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion.
   "BA.5.9" = "Germany, Switzerland and Denmark. WHO label: <strong>Omicron</strong>.",
   "BA.4.6" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
   "BA.2.75.5" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
-  "BA.2.75.2" = "Asia and Australia. WHO label: <strong>Omicron</strong>."
+  "BA.2.75.2" = "Asia and Australia. WHO label: <strong>Omicron</strong>.",
+  "XBB.1.5" = "Recombinant (XBB + additional mutations).\ Informal name: <strong>Kraken</strong>."
   
 #   "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
 # in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
@@ -270,7 +271,8 @@ vui_voc_lineages <-
   levels(vui_voc_lineages$lineage) %>% 
   setNames(levels(vui_voc_lineages$lineage_display)) %>% 
   append(list("B.1.177/B.1.177.x" = "B.1.177",
-              "BQ.1/BQ.1.x (Omicron)" = "BQ.1")) # special cases, add only to lineage bar chart
+              "BQ.1/BQ.1.x (Omicron)" = "BQ.1", 
+              "XBB.1.5 (Omicron)" = "XBB.1.5")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe

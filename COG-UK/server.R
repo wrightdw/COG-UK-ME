@@ -816,6 +816,7 @@ shinyServer(function(input, output, session) {
                                   "BA.2" = "BA.2 (Omicron)",
                                   "BA.4" = "BA.4 (Omicron)",
                                   "BA.5" = "BA.5 minus BQ.1 (Omicron)",
+                                  
                                   "B.1.1.7" = "B.1.1.7 (Alpha)",
                                   "B.1.351" = "B.1.351 (Beta)",
                                   "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -825,6 +826,7 @@ shinyServer(function(input, output, session) {
                                   "P.1" = "P.1 (Gamma)",
                                   "B.1.177" = "B.1.177",
                                   "BQ.1" = "BQ.1 (Omicron)",
+                                  "XBB.1.5" = "XBB.1.5 (Omicron)",
                                   # "Unassigned" = "Unassigned (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
@@ -962,6 +964,7 @@ shinyServer(function(input, output, session) {
                                          "BA.2" = "BA.2 (Omicron)",
                                          "BA.4" = "BA.4 (Omicron)",
                                          "BA.5" = "BA.5 minus BQ.1 (Omicron)",
+                                         
                                          "B.1.1.7" = "B.1.1.7 (Alpha)",
                                          "B.1.351" = "B.1.351 (Beta)",
                                          "B.1.617.2" = "B.1.617.2/AY.x (Delta)",
@@ -971,6 +974,7 @@ shinyServer(function(input, output, session) {
                                          "P.1" = "P.1 (Gamma)",
                                          "B.1.177" = "B.1.177",
                                          "BQ.1" = "BQ.1",
+                                         "XBB.1.5" = "XBB.1.5 (Omicron)",
                                          # "Unassigned" = "Unassigned (Omicron)",
                                          "Other" = "Other"
           )) %>% 
