@@ -98,7 +98,7 @@ table_3 <- function(){
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
       mutate(lineage = "CH.1.1/CH.1.1.x",
-             reason =  "Southeast Asia. Descendant of BA.2.75, defined by S:L452R. Informal name: <strong>Orthrus</strong>. WHO label: <strong>Omicron</strong>.")
+             reason =  "Southeast Asia. Descendant of BA.2.75, defined by S:L452R. WHO label: <strong>Omicron</strong>.")
     
     
   ) %>% 
