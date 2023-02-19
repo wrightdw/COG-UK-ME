@@ -729,6 +729,10 @@ bind_rows(database_tcell_predictions, database_functional_predictions) %T>% writ
 library(janitor)
 # See GFF3 specification https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
+# Read entropy values
+sergei_entropies_spike_all = read.csv("sergei_entropies_spike_coordinates.csv", sep=";")
+sergei_entropies_spike_all$position = as.numeric(rownames(sergei_entropies_spike_all))
+
 # Spike epitopes with mutations
 epitopes_gff <- 
   database_tcell_predictions %>% 
@@ -748,7 +752,8 @@ epitopes_mutations_gff <-
   database_tcell_predictions %>% 
   clean_names %>% 
   filter(gene == "S" & num_seqs_uk > 0) %>% 
-  select(start_position, epitope, position, mutation, num_seqs_uk, num_seqs_uk_28_days) %>% 
+  inner_join(sergei_entropies_spike_all) %>% 
+  select(start_position, epitope, position, mutation, num_seqs_uk, num_seqs_uk_28_days, entropy) %>% 
   distinct %>% 
   mutate(seqid = "NC_045512.2", source = "RefSeq", type = "amino_acid_substitution", .before = 1) %>% 
   mutate(start = position * 3 + 21560, .after = position) %>%  # calculate genomic coordinates for spike start positions
@@ -757,8 +762,10 @@ epitopes_mutations_gff <-
   rename(attributes = mutation) %>% 
   mutate(attributes = paste0("Parent=", start_position, epitope, ";", 
                              "Name=", attributes, ";", 
-                             "num_seqs_uk=", num_seqs_uk, ";", 
-                             "num_seqs_uk_28_days=", num_seqs_uk_28_days), .keep = "unused") 
+                             "sequences=", num_seqs_uk, ";", 
+                             "sequences (28 days)=", num_seqs_uk_28_days, ";",
+                             "entropy=", entropy), 
+         .keep = "unused") 
 
 # Create GFF3 file
 epitopes_gff %>% 
