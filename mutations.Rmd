@@ -733,6 +733,22 @@ library(janitor)
 sergei_entropies_spike_all = read.csv("sergei_entropies_spike_coordinates.csv", sep=";")
 sergei_entropies_spike_all$position = as.numeric(rownames(sergei_entropies_spike_all))
 
+# Calculate average entropy per epitope
+avg_entropies <-
+  database_tcell_predictions %>% 
+  clean_names %>% 
+  select(epitope, start_position, end_position) %>% 
+  distinct %>% 
+  fuzzy_inner_join(
+      sergei_entropies_spike_all,
+      by = c(
+        "start_position" = "position",
+        "end_position" = "position"),
+      match_fun = list(
+        `<=`, `>=`)) %>% 
+  group_by(start_position, epitope) %>% 
+  summarise(avg_entropy = mean(entropy), .groups = "drop")  
+
 # Spike epitopes with mutations
 epitopes_gff <- 
   database_tcell_predictions %>% 
@@ -740,10 +756,12 @@ epitopes_gff <-
   filter(gene == "S" & num_seqs_uk > 0) %>% 
   select(start_position, end_position, epitope) %>% 
   distinct %>% 
-  mutate(seqid = "NC_045512.2", source = "RefSeq", type = "epitope", .before = 1) %>% 
-  mutate(score = ".", strand = "+", phase = ".", .after = end_position) %>% 
-  rename(attributes = epitope) %>% 
-  mutate(attributes = paste0("ID=", start_position, attributes, ";", "Name=", attributes)) %>% 
+  inner_join(avg_entropies) %>% 
+  mutate(seqid = "NC_045512.2", source = "RefSeq", type = "epitope", .before = 1) %>%
+  mutate(score = ".", strand = "+", phase = ".", .after = end_position) %>%
+  rename(attributes = epitope) %>%
+  mutate(attributes = paste0("ID=", start_position, attributes, ";", "Name=", attributes, ";", "mean entropy=", avg_entropy)) %>%
+  select(-avg_entropy) %>% 
   mutate(start = start_position * 3 + 21560, .after = start_position, .keep = "unused") %>%  # calculate genomic coordinates for spike start positions
   mutate(end = end_position * 3 + 21560 + 2, .after = end_position, .keep = "unused") # calculate genomic coordinates for spike end positions
 
@@ -765,10 +783,10 @@ epitopes_mutations_gff <-
                              "sequences=", num_seqs_uk, ";", 
                              "sequences (28 days)=", num_seqs_uk_28_days, ";",
                              "entropy=", entropy), 
-         .keep = "unused") 
+         .keep = "unused")
 
 # Create GFF3 file
-epitopes_gff %>% 
+epitopes_gff %<>% 
   bind_rows(epitopes_mutations_gff) %T>% 
   write_tsv(str_c("COG-UK/", params$dataset_date, "/spike_epitopes.gff3"), col_names = FALSE) 
 ```
