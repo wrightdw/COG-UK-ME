@@ -573,9 +573,12 @@ dashboardPage(
                                 inputId = "variant_range", 
                                 label = "Date range:",
                                 min = lineages_days_uk_all %$% min(sample_date), 
-                                max = lineages_days_uk_all %$% max(sample_date), 
-                                value = c(lineages_weeks_uk_all %>% filter(lineage %in% vui_voc_lineages) %$% min(epi_date),
+                                max = lineages_days_uk_all %$% max(sample_date),
+                                
+                                # set date slider to beginning of the week when the earliest Omicron sequence was detected
+                                value = c(lineages_weeks_uk_all %>% filter(str_starts(lineage, fixed("BA."))) %$% min(epi_date), 
                                           lineages_days_uk_all %$% max(sample_date)),
+                                
                                 step = 1,
                                 ticks = FALSE,
                                 animate = TRUE,
@@ -671,9 +674,12 @@ dashboardPage(
                           inputId = "mutation_range", 
                           label = "Date range:",
                           min = mutation_reference_counts %$% min(epi_date), 
-                          max = mutation_reference_counts %$% max(epi_date), 
-                          value = c(mutation_reference_counts %$% min(epi_date),
+                          max = mutation_reference_counts %$% max(epi_date),
+                          
+                          # set date slider to beginning of the week when the earliest Omicron sequence was detected
+                          value = c(lineages_weeks_uk_all %>% filter(str_starts(lineage, fixed("BA."))) %$% min(epi_date),
                                     mutation_reference_counts %$% max(epi_date)),
+                          
                           step = 7,
                           ticks = FALSE,
                           animate = TRUE,
