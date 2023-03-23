@@ -1275,187 +1275,534 @@ shinyServer(function(input, output, session) {
   })
   ### 'Spike profiles' tab - outputs - end
   
-  ### 'Evolutionary selection' tab - outputs - start
+  ### 'Variant Assessment' tab - outputs - start
   output$esm_plot <- renderPlotly({
     esm_mut_plot() %>% ggplotly(source = "esm_plot") %>%
-      event_register("plotly_click") %>% event_register("plotly_doubleclick") %>% event_register("plotly_deselect") %>%
-      event_register("plotly_relayout") %>% event_register('plotly_legendclick') %>% event_register('plotly_legenddoubleclick')
+      event_register("plotly_selected") %>% event_register("plotly_deselect")
+  })
+  
+  output$radarchart <- renderPlotly({
+    radar_plot()
   })
   
   esm_mut_plot <- reactive({
     updateESM_3DStructure(NULL)
   })
   
+  radar_plot <- reactive({
+    updateRadarchart(NULL)
+  })
+  
   observeEvent(event_data("plotly_selected", source = "esm_plot"), {
     b <- event_data("plotly_selected", source = "esm_plot")
     req(b)
     updateESM_3DStructure(b)
+    output$radarchart <- renderPlotly({
+      updateRadarchart(b)
+    })
   })
   
   observeEvent(event_data("plotly_deselect", source = "esm_plot"), {
     b <- event_data("plotly_deselect", source = "esm_plot")
     req(b)
     updateESM_3DStructure(NULL)
+    output$radarchart <- renderPlotly({
+      updateRadarchart(NULL)
+    })
     runjs("Shiny.setInputValue('plotly_selected-esm_plot', null);")
   })
   
   updateESM_3DStructure <- function(sel_data) {
     titleTxt <- "All possible amino acid mutations"
     df <- data.frame()
-    if(input$variant_evol_selection != "None") {
-      if(input$textSpike != "" && nchar(input$textSpike) == 1273) {
-        query_seq_v <- unlist(strsplit(input$textSpike, split = "", fixed=T))
-        df <- as.data.frame(cbind(ref_wuhan, query_seq_v)) 
-        df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(mut = paste(ref_wuhan, paste(pos, query_seq_v, sep = ""), sep = "") )
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% df$mut, ]
-        titleTxt <- "Amino acid mutations present in the uploaded SARS-CoV-2 spike protein sequence"
-      } else {
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% (mutations_s_uk[mutations_s_uk$lineage == input$variant_evol_selection,]$variant), ]
-        df <- as.data.frame(cbind(dms_antigenic$label, dms_antigenic$position)) 
-        df %<>% rename(mut = V1, pos = V2)
-        
-        titleTxt <- str_c("Antigenic amino acid mutations present in ", input$variant_evol_selection)
+    ref_wuhan_v <- unlist(strsplit(ref_wuhan, split = "", fixed=T))
+    
+    query_seq = gsub(
+      "[\r\n ]",
+      "",
+      input$textSpike
+    )
+    
+    #TODO Define better the use-cases of invalid input
+    if (query_seq == "" || grepl("[^A-Za-z]", query_seq) || nchar(query_seq) < 1200 || nchar(query_seq) > 1320) {
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% (mutations_s_uk[mutations_s_uk$lineage == input$variant_evol_selection,]$variant), ]
+      df <- data.frame(position = seq(1 : length(ref_wuhan_v)))
+      df %<>% left_join(dms_antigenic, by="position")
+      df %<>% select(c(position, label))
+      df %<>% rename(pos = position)
+      
+      titleTxt <- str_c("Antigenic amino acid mutations present in ", input$variant_evol_selection)
+    } else {
+      df_lis = list(Wuhan_Hu_1 = ref_wuhan, Query_seq = query_seq)
+      dio1s_vector <- rep(NA, length(df_lis))
+      
+      # populating the vector with the reference and query fasta sequences
+      for (i in 1:length(df_lis)) {
+        dio1s_vector[i] <- df_lis[[i]]
       }
+      #  labeling the sequences with the names from the list.
+      names(dio1s_vector) <- names(df_lis)
+      
+      dio1s_vector_ss <- Biostrings::AAStringSet(dio1s_vector)
+      dio1s_msa <- as.matrix(msa(dio1s_vector_ss, method="Muscle"))
+      ref_wuhan <- paste(dio1s_msa[1, ], collapse = "")
+      query_seq <- paste(dio1s_msa[2, ], collapse = "")
+      
+      query_seq_v <- unlist(strsplit(query_seq, split = "", fixed=T))
+      ref_wuhan_v <- unlist(strsplit(ref_wuhan, split = "", fixed=T))
+      
+      df <- as.data.frame(cbind(ref_wuhan_v, query_seq_v)) 
+      df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(label = paste(ref_wuhan_v, paste(pos, query_seq_v, sep = ""), sep = "") )
+      
+      titleTxt <- "Amino acid mutations present in the uploaded SARS-CoV-2 spike protein sequence"
     }
     
-    if(!is.null(input$escape_3d)) {
-      if("escape" %in% input$escape_3d) {
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database[!is.na(database$escape), ]$mutation,]
-      }
+    if(!is.null(dim(df))) {
+      dms_antigenic %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
+      #dms_antigenic %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
+      dms_antigenic %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
+      dms_antigenic %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
+      dms_antigenic %<>% filter(epitope_max >= input$esm_access_indx[1] & epitope_max <= input$esm_access_indx[2])
       
-      if("monoclonal" %in% input$escape_3d){
-        database %<>% filter(mab == TRUE)
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
-      }
-      
-      if("convalescent" %in% input$escape_3d){
-        database %<>% filter(plasma == TRUE)
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
-      }
-      
-      if("vaccine" %in% input$escape_3d){
-        database %<>% filter(vaccine_sera == TRUE)
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
-      }
+      dms_antigenic <- filterByEscapeProperty(dms_antigenic)
+      df %<>% left_join(dms_antigenic, by="label")
     }
     
-    if(input$esm_t_cell_experiment == "recognition"){
-      database_tcell_predictions %<>% 
-        filter(assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
-    } else if(input$esm_t_cell_experiment == "epitope_studies"){ # epitope_studies
-      database_tcell_predictions %<>% 
-        filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
+    index <- ""
+    if(input$esm_score_index == "Semantic score") {
+      index = "semantic_score"
+    } else if(input$esm_score_index == "Grammaticality") {
+      index = "grammaticality"
+    } else if(input$esm_score_index == "Relative grammaticality") {
+      index = "evolutionary_index"
+    } else if(input$esm_score_index == "Entropy") {
+      index = "entropy"
+    } else if(input$esm_score_index == "Accessibility") {
+      index = "epitope_max"
     }
     
-    dms_antigenic_res <- as.data.frame(dms_antigenic)
-    if(!is.null(dim(dms_antigenic_res))) {
+    df <- as.data.frame(df)
+    if(dim(na.omit(df))[1] > 0) {
       
-      #plotting theme
-      .theme <- ggplot2::theme(
-        axis.line = element_line(colour = 'gray', size = .75),
-        panel.background = element_blank(),
-        plot.background = element_blank()
-      )	 
-      
-      index <- switch(  
-        input$esm_score_index,  
-        "Semantic score"= "semantic_score",  
-        #"Grammaticality"= "grammaticality",  # have excluded grammaticality until new scores become available  
-        "Relative grammaticality"= "evolutionary_index",
-        "Entropy"= "entropy"
-      )
-      
-      dms_antigenic_res %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
-      #dms_antigenic_res %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
-      dms_antigenic_res %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
-      dms_antigenic_res %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
-      
-      key <- dms_antigenic_res$position
-      p <- dms_antigenic_res %>% rename(c(`Evol. Selection` = evol_selection, mutation = label)) %>% ggplot(
+      p <- df %>% rename(c(`Evol. Selection` = evol_selection, mutation = label)) %>% ggplot(
         aes_string(
           x = "position",
           y = index,
           # shape = "`Evol. Selection`",
           label = "mutation",
           color = "`Evol. Selection`")
-      ) + geom_point() + guides(color = guide_legend(title = "Evol. Selection"))
+      ) + geom_point() + guides(color = guide_legend(title = "Evol. Selection")) 
       
-      p <- p + theme_minimal() + ggplot2::theme(plot.title = element_text(hjust = 0.5)) + scale_x_continuous(breaks = integer_breaks()) + labs(
-        title = titleTxt,
-        x 		= "Position",
-        y 		= input$esm_score_index
-      ) +
-        .theme
       
+      # extract colours to be used in the 3d structure
+      g <- ggplot_build(p)
+      colours <- g$data[[1]]$colour
+      if(!is.null(sel_data)) { df <- df[df$pos %in% sel_data$x, ]
+      colours <- g$data[[1]][g$data[[1]]$x %in% sel_data$x, ]$colour
+      }
+      df_3d <- df %>% select(c(pos, label))
+      df_3d <- na.omit(df_3d)
+      wuhan_data_js <- toJSON(df)
+      
+      # extract colours to be used in the scatterplot
+      plot_cols <- data.frame(colour=g$data[[1]]$colour, group=g$data[[1]]$group)
+      plot_cols <- plot_cols %>% arrange(group) %>% distinct() %>% select(colour)
+      plot_cols <- plot_cols %>% filter(colour!="grey50")
+      plot_cols <- unlist(plot_cols)
+      plot_cols <- unname(plot_cols)
+      
+      # update 3d spike protein structure
+      session$sendCustomMessage(type = 'vizSpike',
+                                message = list(a=wuhan_data_js, b = df_3d$label, c = df_3d$pos, d=index, e=colours, f=tolower(input$esm_structure_repr)))
+      
+      data <- data.frame(
+        x=df$pos,
+        y=df[ , index],
+        label = df$label,
+        evol_selection = df$evol_selection
+      )
+      
+      p <- plot_ly(data, x=~x, y=~y, source = 'esm_plot'
+      ) %>% highlight_key(~x) %>% 
+        add_markers(
+          text=~label, customdata=~label,
+          color = ~factor(evol_selection), colors = c(plot_cols),
+          marker = list(size = 12, color= "BrBG", line = list(
+            color = 'rgb(231, 99, 250)',
+            width = 1
+          )),
+          
+          alpha=0.7,
+          # custom tooltip box
+          hovertemplate = paste('<span style="color:white; background-color:#ddd; font-size:17px; font-family:Verdana;"><b>', 
+                                sprintf("%17s", "Position "), sprintf("<span style='color:yellow;'>%s", '%{x}'), 
+                                '</span></b><br>', sprintf(paste("<span style='text-decoration:underline; color:white; '>", 
+                                                                 ifelse(input$esm_score_index == "Relative grammaticality", "%38s", "%34s"), sep=""), ' '), 
+                                '</span><br><br><span style="font-size:13px; font-family:Verdana;"><span style="color:white;"><b>  Change </b></span><b>', 
+                                sprintf(paste("<b><span style='color:yellow;'>", 
+                                              ifelse(input$esm_score_index == "Entropy", "%29s", 
+                                                     ifelse(input$esm_score_index == "Relative grammaticality", "%37s", "%31s")), sep=""), '%{customdata}\n'), 
+                                "</b></span><span style='color:white;'><b>  ", ifelse(input$esm_score_index == "Relative grammaticality", "Rel.grammaticality", input$esm_score_index), 
+                                "  </b></span><b>", sprintf(paste("<b><span style='color:yellow;'>", 
+                                                                  ifelse(input$esm_score_index == "Entropy", "%22s",  ifelse(input$esm_score_index == "Accessibility", "%16s", "%11s")), sep=""), as.character('%{y:.2f}')), 
+                                "</b> </span></span><br><b>", sprintf(paste("<span style='text-decoration:underline; color:white; font-size:17px;'>", 
+                                                                            ifelse(input$esm_score_index == "Relative grammaticality", "%39s", "%35s"), sep=""), ' '), 
+                                "</span></b>", sep = ""),
+          showlegend = TRUE
+        ) %>%
+        add_segments(x = ~x, xend = ~x,
+                     y = 0, yend = ~y,
+                     color = I("#40B5AD4C"), showlegend = FALSE
+        )
+      
+      yy_max = max(abs(df[!is.na(abs(df[[index]])), ][[index]]))
+      yy_max1 = (1.7 * (yy_max)) / 100
+      yy_max2 = -(1.7 * (yy_max)) / 100
+      
+      p <- p %>% layout(hoverlabel=list(bgcolor="teal", align="left", bordercolor="white"), xaxis=list(title = "Position"),
+                        yaxis = list(title = input$esm_score_index), legend = list(title=list(text='Evol. Selection')),  
+                        shapes = list(
+                          list(
+                            type = 'rectangle',
+                            xref ='x', yref='y',
+                            text = c("fsafasfsa"),
+                            x0=14, y0=yy_max1,
+                            x1=305, y1=yy_max2,
+                            #opacity=0.25,
+                            line = list(color = "teal"),
+                            fillcolor = "teal"),
+                          
+                          list(
+                            type = 'rectangle',
+                            text = list(title="RBD", color="black"),
+                            xref ='x', yref='y',
+                            x0=319, y0=yy_max1,
+                            x1=541, y1=yy_max2,
+                            #opacity=0.25,
+                            line = list(color = "#4169E1"),
+                            fillcolor = "#4169E1"),
+                          
+                          list(
+                            type = 'rectangle',
+                            xref ='x', yref='y',
+                            x0=788, y0=yy_max1,
+                            x1=806, y1=yy_max2,
+                            #opacity=0.25,
+                            line = list(color = "#E6194BB2"),
+                            fillcolor = alpha("#E6194BB2", 1)),
+                          
+                          list(
+                            type = 'rectangle',
+                            xref ='x', yref='y',
+                            x0=912, y0=yy_max1,
+                            x1=984, y1=yy_max2,
+                            #opacity=0.25,
+                            line = list(color = "#3cb44b"),
+                            fillcolor = alpha("#3cb44b", 1)),
+                          
+                          list(
+                            type = 'rectangle',
+                            xref ='x', yref='y',
+                            x0=1163, y0=yy_max1,
+                            x1=1213, y1=yy_max2,
+                            #opacity=0.25,
+                            line = list(color = "orange"),
+                            fillcolor = alpha("orange", 1)),
+                          
+                          list(
+                            type = 'rectangle',
+                            xref ='x', yref='y',
+                            x0=1214, y0=yy_max1,
+                            x1=1237, y1=yy_max2,
+                            #opacity=0.25,
+                            line = list(color = "#40E0D0"),
+                            fillcolor = alpha("#40E0D0", 1)),
+                          
+                          list(
+                            type = 'rectangle',
+                            xref ='x', yref='y',
+                            x0=1238, y0=yy_max1,
+                            x1=1273, y1=yy_max2,
+                            #opacity=0.25,
+                            line = list(color = "#9E9D24"),
+                            fillcolor = alpha("#9E9D24", 1))
+                        ),
+                        annotations = list(
+                          list(text = "NTD",  x = 305 - (305-14)/2, y = 0, showarrow=F, font=list(color="white")),
+                          list(text = "RBD",  x = 541 - (541-319)/2, y = 0, showarrow=F, font=list(color="white")),
+                          list(text = "FP",  x = 806 - (806-788)/2, y = 0, showarrow=F, font=list(color="white")),
+                          list(text = "HR1",  x = 984 - (984-912)/2, y = 0, showarrow=F, font=list(color="white")),
+                          list(text = "HR2",  x = 1213 - (1213-1163)/2, y = 0, showarrow=F, font=list(color="white")),
+                          list(text = "TM",  x = 1237 - (1237-1214)/2, y = 0, showarrow=F, font=list(color="white")),
+                          list(text = "CD",  x = 1273 - (1273-1238)/2, y = 0, showarrow=F, font=list(color="white"))
+                        )
+      ) %>% rangeslider(title="AA position range:", bgcolor=alpha("lightblue", 0.4)) %>%
+        layout(title = list(text=titleTxt, xanchor="center"))
     } else {
       p <- ggplot() + theme_void()
+      
+      # update 3d spike protein structure
+      session$sendCustomMessage(type = 'vizSpikeEmpty',message = tolower(input$esm_structure_repr))
     }
     
-    g <- ggplot_build(p)
-    colours <- g$data[[1]]$colour
-    if(!is.null(sel_data)) { dms_antigenic_res <- dms_antigenic_res[dms_antigenic_res$position %in% sel_data$x, ]
-    colours <- g$data[[1]][g$data[[1]]$x %in% sel_data$x, ]$colour
-    }
-    wuhan_data_js <- toJSON(dms_antigenic_res)
-    
-    session$sendCustomMessage(type = 'vizSpike',
-                              message = list(a=wuhan_data_js, b = df$mut, c = df$pos, d=index, e=colours, f=tolower(input$esm_structure_repr)))
     p
+    
   }
   
-  output$table_esm <- renderDT({
+  updateRadarchart <- function(sel_data) {
     df <- data.frame()
-    if(input$variant_evol_selection != "None") {
-      if(input$textSpike != "" && nchar(input$textSpike) == 1273) {
-        query_seq_v <- unlist(strsplit(input$textSpike, split = "", fixed=T))
-        df <- as.data.frame(cbind(ref_wuhan, query_seq_v)) 
-        df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(mut = paste(ref_wuhan, paste(pos, query_seq_v, sep = ""), sep = "") )
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% df$mut, ]
-      } else {
-        dms_antigenic <- dms_antigenic[dms_antigenic$label %in% (mutations_s_uk[mutations_s_uk$lineage == input$variant_evol_selection,]$variant), ]
-        df <- as.data.frame(cbind(dms_antigenic$label, dms_antigenic$position)) 
-        df %<>% rename(mut = V1, pos = V2)
+    ref_wuhan_v <- unlist(strsplit(ref_wuhan, split = "", fixed=T))
+    
+    query_seq = gsub(
+      "[\r\n ]",
+      "",
+      input$textSpike
+    )
+    
+    colors_border = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
+                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', 
+                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', 
+                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', 
+                      '#ffffff', '#000000', '#7c43d8', '#6495ED')
+    colors_in = alpha(colors_border, 0.2)
+    
+    #TODO Define better the use-cases of invalid input
+    if (query_seq == "" || grepl("[^A-Za-z]", query_seq) || nchar(query_seq) < 1200 || nchar(query_seq) > 1320) {
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% (mutations_s_uk[mutations_s_uk$lineage == input$variant_evol_selection,]$variant), ]
+      df <- data.frame(position = seq(1 : length(ref_wuhan_v)))
+      df %<>% left_join(dms_antigenic, by="position")
+      df %<>% select(c(position, label))
+      df %<>% rename(pos = position)
+      
+    } else {
+      df_lis = list(Wuhan_Hu_1 = ref_wuhan, Query_seq = query_seq)
+      dio1s_vector <- rep(NA, length(df_lis))
+      
+      # populating the vector with the reference and query fasta sequences
+      for (i in 1:length(df_lis)) {
+        dio1s_vector[i] <- df_lis[[i]]
       }
+      #  labeling the sequences with the names from the list.
+      names(dio1s_vector) <- names(df_lis)
+      
+      dio1s_vector_ss <- Biostrings::AAStringSet(dio1s_vector)
+      dio1s_msa <- as.matrix(msa(dio1s_vector_ss, method="Muscle"))
+      ref_wuhan <- paste(dio1s_msa[1, ], collapse = "")
+      query_seq <- paste(dio1s_msa[2, ], collapse = "")
+      
+      query_seq_v <-
+        unlist(strsplit(query_seq, split = "", fixed = T))
+      ref_wuhan_v <- unlist(strsplit(ref_wuhan, split = "", fixed = T))
+      
+      df <- as.data.frame(cbind(ref_wuhan_v, query_seq_v)) 
+      df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(label = paste(ref_wuhan_v, paste(pos, query_seq_v, sep = ""), sep = "") )
     }
     
+    if(!is.null(dim(df))) {
+      dms_antigenic %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
+      #dms_antigenic %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
+      dms_antigenic %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
+      dms_antigenic %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
+      dms_antigenic %<>% filter(epitope_max >= input$esm_access_indx[1] & epitope_max <= input$esm_access_indx[2])
+      
+      dms_antigenic <- filterByEscapeProperty(dms_antigenic)
+      df %<>% left_join(dms_antigenic, by="label")
+    }
+    
+    df %<>% na.omit(df)
+    if(!is.null(dim(sel_data))) {
+      df <- df %>% filter(label %in% sel_data$customdata)
+    }
+    
+    radar_data_entr = data.frame(df$semantic_score,
+                                 df$evolutionary_index,
+                                 df$entropy,
+                                 df$epitope_max)  # entropy describes Sergei sarbecoviruses entropies
+    rownames(radar_data_entr) = df$label
+    radar_data_entr %<>%
+      filter(!is.na(df.semantic_score)) %>%
+      filter(!is.na(df.entropy)) %>%
+      filter(!is.na(df.epitope_max))
+    
+    radar_data_entr = as.data.frame(radar_data_entr)
+    radar_data_entr = scale(radar_data_entr, scale = TRUE, center = TRUE)
+    
+    radar_data_entr = t(radar_data_entr)
+    radar_data_entr = as.data.frame(radar_data_entr)
+    
+    radar_data_entr = rbind(rep(max(radar_data_entr), ncol(radar_data_entr)), rep(min(radar_data_entr), ncol(radar_data_entr)), radar_data_entr)
+    radar_data_entr = as.data.frame(radar_data_entr)
+    
+    fontSize <-
+      ifelse(dim(df)[1] > 150, 6, ifelse(dim(df)[1] > 100, 7, ifelse(dim(df)[1] > 70, 8, ifelse(dim(
+        df
+      )[1] > 50, 9, 10))))
+    fig <- plot_ly(type = 'scatterpolar',
+                   fill = 'toself',
+                   line = list(width = 2, alpha = 1))
+    fig <- fig %>%
+      add_closed_trace(
+        r = unlist(c(
+          radar_data_entr %>%
+            filter(row.names(radar_data_entr) %in% c('df.semantic_score'))
+        )),
+        # first two rows describe min and max values for the dataset
+        theta = colnames(radar_data_entr),
+        fillcolor = colors_in[24],
+        line = list(color = colors_border[24]),
+        marker=list(color=colors_border[24]),
+        name = 'Semantic score'
+      )
+    
+    fig <- fig %>%
+      add_closed_trace(
+        r = unlist(c(
+          radar_data_entr %>%
+            filter(row.names(radar_data_entr) %in% c('df.evolutionary_index'))
+        )),
+        theta = colnames(radar_data_entr),
+        fillcolor = colors_in[1],
+        line = list(color = colors_border[1]),
+        marker=list(color=colors_border[1]),
+        name = 'Rel.grammaticality'
+      )
+    fig <- fig %>%
+      add_closed_trace(
+        r = unlist(c(
+          radar_data_entr %>%
+            filter(row.names(radar_data_entr) %in% c('df.entropy'))
+        )),
+        theta = colnames(radar_data_entr),
+        fillcolor = colors_in[2],
+        line = list(color = colors_border[2]),
+        marker=list(color=colors_border[2]),
+        name = 'Entropy'
+      )
+    fig <- fig %>%
+      add_closed_trace(
+        r = unlist(c(
+          radar_data_entr %>%
+            filter(row.names(radar_data_entr) %in% c('df.epitope_max'))
+        )),
+        theta = colnames(radar_data_entr),
+        fillcolor = colors_in[5],
+        line = list(color = colors_border[5]),
+        marker=list(color=colors_border[5]),
+        name = 'Accessibility'
+      )
+    fig <- fig %>%
+      layout(polar = list(
+        radialaxis = list(visible = T,
+                          range = c(
+                            min(radar_data_entr), max(radar_data_entr)
+                          )),
+        angularaxis = list(tickfont = list(size = fontSize))
+      ))
+    
+    fig %>%
+      layout(legend = list(
+        orientation = "h",
+        # show entries horizontally
+        xanchor = "right",
+        # use center of legend as anchor
+        x = 1.15
+      ))
+  }
+  
+  add_closed_trace <- function(p, r, theta, ...) 
+  {
+    plotly::add_trace(p, r = c(r, r[1]), theta = c(theta, theta[1]), ...)
+  }
+  
+  filterByEscapeProperty <- function(dms_esm_table) {
+    
     if("escape" %in% input$escape_3d) {
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database[!is.na(database$escape), ]$mutation,]
+      dms_esm_table <- dms_esm_table[dms_esm_table$label %in% database[!is.na(database$escape), ]$mutation,]
     }
     
     if("monoclonal" %in% input$escape_3d){
       database %<>% filter(mab == TRUE)
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+      dms_esm_table <- dms_esm_table[dms_esm_table$label %in% database$mutation,]
     }
     
     if("convalescent" %in% input$escape_3d){
       database %<>% filter(plasma == TRUE)
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+      dms_esm_table <- dms_esm_table[dms_esm_table$label %in% database$mutation,]
     }
     
     if("vaccine" %in% input$escape_3d){
       database %<>% filter(vaccine_sera == TRUE)
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database$mutation,]
+      dms_esm_table <- dms_esm_table[dms_esm_table$label %in% database$mutation,]
     }
     
     if(input$esm_t_cell_experiment == "recognition"){
       database_tcell_predictions %<>% 
         filter(assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
+      dms_esm_table <- dms_esm_table[dms_esm_table$label %in% database_tcell_predictions$mutation, ]
     } else if(input$esm_t_cell_experiment == "epitope_studies"){ # epitope_studies
       database_tcell_predictions %<>% 
         filter(!assay %in% c("Reduced T-cell recognition (full)", "Reduced T-cell recognition (partial)"))
-      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% database_tcell_predictions$mutation, ]
+      dms_esm_table <- dms_esm_table[dms_esm_table$label %in% database_tcell_predictions$mutation, ]
     }
     
-    dms_antigenic %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
-    #dms_antigenic %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
-    dms_antigenic %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
-    dms_antigenic %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
+    dms_esm_table
+  }
+  
+  output$table_esm <- renderDT({
+    df <- data.frame()
+    ref_wuhan_v <- unlist(strsplit(ref_wuhan, split = "", fixed=T))
+    
+    query_seq = gsub(
+      "[\r\n ]",
+      "",
+      input$textSpike
+    )
+    
+    #TODO Define better the use-cases of invalid input
+    if (query_seq == "" || grepl("[^A-Za-z]", query_seq) || nchar(query_seq) < 1200 || nchar(query_seq) > 1320) {
+      dms_antigenic <- dms_antigenic[dms_antigenic$label %in% (mutations_s_uk[mutations_s_uk$lineage == input$variant_evol_selection,]$variant), ]
+      df <- data.frame(position = seq(1 : length(ref_wuhan_v)))
+      df %<>% left_join(dms_antigenic, by="position")
+      df %<>% select(c(position, label))
+      df %<>% rename(pos = position)
+    } else {
+      df_lis = list(Wuhan_Hu_1 = ref_wuhan, Query_seq = query_seq)
+      dio1s_vector <- rep(NA, length(df_lis))
+      
+      # populating the vector with the reference and query fasta sequences
+      for (i in 1:length(df_lis)) {
+        dio1s_vector[i] <- df_lis[[i]]
+      }
+      #  labeling the sequences with the names from the list.
+      names(dio1s_vector) <- names(df_lis)
+      
+      dio1s_vector_ss <- Biostrings::AAStringSet(dio1s_vector)
+      dio1s_msa <- as.matrix(msa(dio1s_vector_ss, method="Muscle"))
+      ref_wuhan <- paste(dio1s_msa[1, ], collapse = "")
+      query_seq <- paste(dio1s_msa[2, ], collapse = "")
+      
+      query_seq_v <- unlist(strsplit(query_seq, split = "", fixed=T))
+      ref_wuhan_v <- unlist(strsplit(ref_wuhan, split = "", fixed=T))
+      
+      df <- as.data.frame(cbind(ref_wuhan_v, query_seq_v)) 
+      df %<>% mutate(pos = seq(1 : dim(df)[1])) %>% mutate(label = paste(ref_wuhan_v, paste(pos, query_seq_v, sep = ""), sep = "") )
+      df %<>% select(-c(ref_wuhan_v, query_seq_v))
+    }
+    
+    if(!is.null(dim(df))) {
+      dms_antigenic %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
+      #dms_antigenic %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
+      dms_antigenic %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
+      dms_antigenic %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
+      dms_antigenic %<>% filter(epitope_max >= input$esm_access_indx[1] & epitope_max <= input$esm_access_indx[2])
+      
+      dms_antigenic <- filterByEscapeProperty(dms_antigenic)
+      df %<>% left_join(dms_antigenic, by="label")
+      df %<>% na.omit(df)
+    }
     
     # have excluded grammaticality until new scores become available
-    dms_antigenic %>% select(-c(grammaticality)) %>%
+    df %>% select(-c(grammaticality, pos)) %>%
       rename(Label = label,
              Reference = ref, 
              `Amino acid replacement` = alt, 
@@ -1476,13 +1823,425 @@ shinyServer(function(input, output, session) {
              Positive = positive,
              Negative = negative,
              `Evolutionary selection` =  evol_selection,
-             Entropy = entropy
+             Entropy = entropy,
+             Accessibility = epitope_max
       ) %>% 
       datatable(filter = "top", rownames = FALSE, 
                 options = list(lengthMenu = c(20, 50, 100, 200), pageLength = 20, scrollX = TRUE)) 
     
   })
-  ### 'Evolutionary selection' tab - outputs - end
+  
+  output$mult_seq_chart <- renderUI({
+    query_seq = gsub(
+      "[\r\n ]",
+      "",
+      input$textSpike
+    )
+    
+    colors_border = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
+                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', 
+                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', 
+                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', 
+                      '#ffffff', '#000000', '#7c43d8', '#6495ED')
+    colors_in = alpha(colors_border, 0.8)
+    
+    set_font_size_aa <-
+      formatter(
+        "span",
+        style = function(y)
+          formattable::style(
+            display = "block",
+            padding = "0 1px",
+            cellspacing = "0",
+            height = "15px",
+            `align-text` = "center",
+            `font-size` = "12px",
+            width = ifelse(
+              y == " ",
+              "font-size:2px; width:4px;",
+              "font-size:12px; width:15px;"
+            ),
+            `color`="white",
+            `background-color` = ifelse(
+              y %in% c("A", "I", "L", "M", "F", "W", "V", "C"),
+              "teal",
+              ifelse(
+                y %in% c("K", "R"),
+                colors_border[1],
+                ifelse(
+                  y %in% c("N", "Q", "S", "T"),
+                  "#F7BB0D",
+                  ifelse(
+                    y %in% c("E", "D"),
+                    colors_border[8],
+                    ifelse(
+                      y %in% c("G"),
+                      colors_border[13],
+                      ifelse(y %in% c("P"), "#0000ff", ifelse(y %in% c("H", "Y"), colors_border[6],""))
+                    )
+                  )
+                )
+              )
+            ),
+            `color` = ifelse(y == "X", "red;", "")
+          )
+      )
+    set_font_size_hide <-
+      formatter("span", style = "display:none;") # hide column names
+    set_font_size_aa_pos <-
+      formatter("span", style = "font-size:6px")
+    
+    df_chart <- data.frame()
+    #TODO Define better the use-cases of invalid input
+    if (query_seq == "" || grepl("[^A-Za-z]", query_seq) || nchar(query_seq) < 1200 || nchar(query_seq) > 1320) {
+      ref_wuhan_un <-
+        splitSeqByWindow(ref_wuhan) # split sequences in substrings so that the sparkline entropy/metadata can be overlayed in chunks on top of the cells
+      ref_wuhan_un <- unlist(strsplit(ref_wuhan_un, split = "", fixed = T))
+      
+      posRow <- getAminoAcidPositionsLabel(ref_wuhan_un)
+      seqs_table = rbind(ref_wuhan_un, posRow)
+      rownames(seqs_table) <-
+        c("&nbsp&nbspWuhan_Hu_1&nbsp&nbsp", " ")
+      seqs_table <- as.data.frame(seqs_table)
+      
+      names(seqs_table) <- set_font_size_hide(names(seqs_table))
+      seqs_table[1,] <-
+        set_font_size_aa(seqs_table[1,])
+      seqs_table[2,] <-
+        set_font_size_aa_pos(seqs_table[2,]) # amino acid position numbering should have a smaller font size
+    } else {
+      df_lis = list(Wuhan_Hu_1 = ref_wuhan, Query_seq = query_seq)
+      dio1s_vector <- rep(NA, length(df_lis))
+      
+      # populating the vector with the reference and query fasta sequences
+      for (i in 1:length(df_lis)) {
+        dio1s_vector[i] <- df_lis[[i]]
+      }
+      # labeling the sequences with the names from the list
+      names(dio1s_vector) <- names(df_lis)
+      
+      dio1s_vector_ss <- Biostrings::AAStringSet(dio1s_vector)
+      dio1s_msa <- as.matrix(msa(dio1s_vector_ss, method="Muscle"))
+      ref_wuhan <- paste(dio1s_msa[1, ], collapse = "")
+      query_seq <- paste(dio1s_msa[2, ], collapse = "")
+      
+      query_seq_v <-
+        unlist(strsplit(query_seq, split = "", fixed = T))
+      ref_wuhan_v <- unlist(strsplit(ref_wuhan, split = "", fixed = T))
+      
+      df_chart <- as.data.frame(cbind(ref_wuhan_v, query_seq_v)) 
+      df_chart %<>% mutate(pos = seq(1 : dim(df_chart)[1])) %>% mutate(label = paste(ref_wuhan_v, paste(pos, query_seq_v, sep = ""), sep = "") )
+      
+      query_seq <- splitSeqByWindow(query_seq)
+      ref_wuhan_un <- splitSeqByWindow(ref_wuhan)
+      
+      query_seq <-
+        unlist(strsplit(query_seq, split = "", fixed = T))
+      ref_wuhan_un <- unlist(strsplit(ref_wuhan_un, split = "", fixed = T))
+      
+      posRow <- getAminoAcidPositionsLabel(ref_wuhan_un)
+      consensus_row = ifelse (ref_wuhan_un == query_seq, ref_wuhan_un, "X")
+      seqs_table = rbind(ref_wuhan_un, query_seq, c(rep(" ", length(ref_wuhan_un))), consensus_row, posRow)
+      rownames(seqs_table) = c(
+        "&nbsp&nbspWuhan_Hu_1&nbsp&nbsp",
+        "&nbsp&nbspQuery_seq",
+        " ",
+        "&nbsp&nbspConsensus",
+        "   "
+      )
+      seqs_table <- as.data.frame(seqs_table)
+      
+      names(seqs_table) <- set_font_size_hide(names(seqs_table))
+      seqs_table[1:4,] <-
+        apply(seqs_table[1:4,], 2, set_font_size_aa)
+      seqs_table[5,] <-
+        set_font_size_aa_pos(seqs_table[5,]) # amino acid position numbering should have a smaller font size
+      
+      
+      if(!is.null(dim(df_chart))) {
+        dms_antigenic %<>% select(c("label","semantic_score", "evolutionary_index"))
+        # dms_antigenic %<>% filter(semantic_score >= input$esm_semantic_indx[1] & semantic_score <= input$esm_semantic_indx[2])
+        # #dms_antigenic %<>% filter(grammaticality >= input$esm_grammaticality_indx[1] & grammaticality <= input$esm_grammaticality_indx[2]) # have excluded grammaticality until new scores become available
+        # dms_antigenic %<>% filter(evolutionary_index >= input$esm_evol_indx[1] & evolutionary_index <= input$esm_evol_indx[2])
+        # dms_antigenic %<>% filter(entropy >= input$esm_entropy_indx[1] & entropy <= input$esm_entropy_indx[2])
+        # dms_antigenic %<>% filter(epitope_max >= input$esm_access_indx[1] & epitope_max <= input$esm_access_indx[2])
+        
+        # dms_antigenic <- filterByEscapeProperty(dms_antigenic)
+        df_chart %<>% left_join(dms_antigenic, by="label")
+      }
+    }
+    
+    first_column <- c(" ")
+    second_column <- c(" ")
+    
+    aa_table <- data.frame(first_column, second_column)
+    aa_table$first_column = ""
+    aa_table <- as.data.frame(aa_table)
+    
+    cap_access <- ""
+    cap_entropy <- ""
+    cap_semantic <- ""
+    cap_rel_gram <- ""
+    nRows <- nrow(aa_table)
+    if("Accessibility" %in% input$mult_seq_chart_index) {
+      df_access <- c()
+      indx = 1;
+      for(i in 1:nchar(ref_wuhan)) {
+        if(substr(ref_wuhan, i, i) != "-") {
+          if(!is.na(access_scores$epitope_max[indx]) && (access_scores$epitope_max[indx] >= input$esm_access_indx[1] && access_scores$epitope_max[indx] <= input$esm_access_indx[2] )) 
+            df_access <- c(df_access, access_scores$epitope_max[indx])
+          else df_access <- c(df_access, -0.00001)
+          indx = indx + 1
+        } else {
+          df_access <- c(df_access, -0.00001)
+        }
+      }
+      
+      startWindow = 1
+      lenWindow = 194
+      nWindows = ceiling(length(df_access) / lenWindow)
+      for(i in 1:nWindows) {
+        aa_table[nRows, i] = spk_chr(
+          df_access[startWindow:lenWindow],
+          width = ((lenWindow-startWindow) + 1) * 15, # multiply with barWidth size
+          type = "bar",
+          barColor = colors_border[5],
+          barWidth = "15px",
+          highlightColor = colors_in[5],
+          height = "40px",
+          tooltipFormat = 'Accessibility : {{value:levels}}',
+          tooltipValueLookups= htmlwidgets::JS(
+            "
+              {
+                levels: $.range_map({':-0.00001':'n/a'})
+              }
+              "
+          ),
+          chartRangeMin = 0,
+          chartRangeMax = max(df_access)
+        )
+        
+        startWindow = lenWindow + 1
+        lenWindow = lenWindow + 194
+        if(lenWindow > length(df_access)) lenWindow = length(df_access)
+      }
+      
+      cap_access = paste(
+        "<span style='color:white'>&nbsp&nbsp&nbspWuhan_Hu_..",
+        paste(paste(
+          paste(paste(
+            paste(paste(aa_table[nRows, 1], aa_table[nRows, 2], sep = ""), 
+                  aa_table[nRows, 3], sep = ""), aa_table[nRows, 4], sep = ""
+          ), aa_table[nRows, 5], sep = ""), aa_table[nRows, 6], sep = ""
+        ), aa_table[nRows, 7], sep = ""),
+        collapse = "</span>"
+      )
+    }
+    
+    if("Entropy" %in% input$mult_seq_chart_index) {
+      df_entr_sergei <- c()
+      indx = 1;
+      for(i in 1:nchar(ref_wuhan)) {
+        if(substr(ref_wuhan, i, i) != "-") {
+          if(!is.na(sergei_entropies_spike_all$entropy[indx]) && (sergei_entropies_spike_all$entropy[indx] >= input$esm_entropy_indx[1] && sergei_entropies_spike_all$entropy[indx] <= input$esm_entropy_indx[2] ) ) 
+            df_entr_sergei <- c(df_entr_sergei, sergei_entropies_spike_all$entropy[indx])
+          else df_entr_sergei <- c(df_entr_sergei, -0.00001)
+          indx = indx + 1
+        } else {
+          df_entr_sergei <- c(df_entr_sergei, -0.00001)
+        }
+      }
+      
+      startWindow = 1
+      lenWindow = 194
+      nWindows = ceiling(length(df_entr_sergei) / lenWindow)
+      nRows = nRows+1
+      for(i in 1:nWindows) {
+        aa_table[nRows, i] = spk_chr(
+          df_entr_sergei[startWindow:lenWindow],
+          width = ((lenWindow-startWindow) + 1) * 15, # multiply with barWidth size
+          type = "bar",
+          barColor = colors_border[2],
+          barWidth = "15px",
+          highlightColor = colors_in[2],
+          height = "40px",
+          tooltipFormat = 'Entropy : {{value:levels}}',
+          tooltipValueLookups= htmlwidgets::JS(
+            "
+              {
+                levels: $.range_map({':-0.00001':'n/a'})
+              }
+              "
+          ),
+          chartRangeMin = 0,
+          chartRangeMax = max(df_entr_sergei)
+        )
+        
+        startWindow = lenWindow + 1
+        lenWindow = lenWindow + 194
+        if(lenWindow > length(df_entr_sergei)) lenWindow = length(df_entr_sergei)
+      }
+      
+      cap_entropy = paste(
+        "<span style='color:white'>&nbsp&nbsp&nbspWuhan_Hu_..",
+        paste(paste(
+          paste(paste(
+            paste(paste(aa_table[nRows, 1], aa_table[nRows, 2], sep = ""), 
+                  aa_table[nRows, 3], sep = ""), aa_table[nRows, 4], sep = ""
+          ), aa_table[nRows, 5], sep = ""), aa_table[nRows, 6], sep = ""
+        ), aa_table[nRows, 7], sep = ""),
+        collapse = "</span>"
+      )
+    }
+    
+    if(nrow(df_chart) > 0) {
+      if("Semantic score" %in% input$mult_seq_chart_index) {
+        df_sem_score <- c()
+        indx = 1;
+        for(i in 1:nchar(ref_wuhan)) {
+          if(substr(ref_wuhan, i, i) != "-") {
+            if(!is.na(df_chart$semantic_score[indx]) && (df_chart$semantic_score[indx] >= input$esm_semantic_indx[1] && df_chart$semantic_score[indx] <= input$esm_semantic_indx[2] )) 
+              df_sem_score <- c(df_sem_score, df_chart$semantic_score[indx])
+            else df_sem_score <- c(df_sem_score, -0.00001)
+            indx = indx + 1
+          } else {
+            df_sem_score <- c(df_sem_score, -0.00001)
+          }
+        }
+        
+        startWindow = 1
+        lenWindow = 194
+        nWindows = ceiling(length(df_sem_score) / lenWindow)
+        nRows = nRows+1
+        for(i in 1:nWindows) {
+          aa_table[nRows, i] = spk_chr(
+            df_sem_score[startWindow:lenWindow],
+            width = ((lenWindow-startWindow) + 1) * 15, # multiply with barWidth size
+            type = "bar",
+            barColor = colors_border[24],
+            barWidth = "15px",
+            highlightColor = colors_in[24],
+            height = "40px",
+            tooltipFormat = 'Semantic score : {{value:levels}}',
+            tooltipValueLookups= htmlwidgets::JS(
+              "
+              {
+                levels: $.range_map({':-0.00001':'n/a'})
+              }
+              "
+            ),
+            chartRangeMin = 0,
+            chartRangeMax = max(df_sem_score)
+          )
+          
+          startWindow = lenWindow + 1
+          lenWindow = lenWindow + 194
+          if(lenWindow > length(df_sem_score)) lenWindow = length(df_sem_score)
+        }
+        
+        cap_semantic = paste(
+          "<span style='color:white'>&nbsp&nbsp&nbspWuhan_Hu_..",
+          paste(paste(
+            paste(paste(
+              paste(paste(aa_table[nRows, 1], aa_table[nRows, 2], sep = ""), 
+                    aa_table[nRows, 3], sep = ""), aa_table[nRows, 4], sep = ""
+            ), aa_table[nRows, 5], sep = ""), aa_table[nRows, 6], sep = ""
+          ), aa_table[nRows, 7], sep = ""),
+          collapse = "</span>"
+        )
+      }
+      
+      if("Rel.grammaticality" %in% input$mult_seq_chart_index) {
+        df_rel_gram_score <- c()
+        indx = 1;
+        for(i in 1:nchar(ref_wuhan)) {
+          if(substr(ref_wuhan, i, i) != "-") {
+            if(!is.na(df_chart$evolutionary_index[indx]) && (df_chart$evolutionary_index[indx] >= input$esm_evol_indx[1] && df_chart$evolutionary_index[indx] <= input$esm_evol_indx[2] )) 
+              df_rel_gram_score <- c(df_rel_gram_score, df_chart$evolutionary_index[indx])
+            else df_rel_gram_score <- c(df_rel_gram_score, 0.000)
+            indx = indx + 1
+          } else {
+            df_rel_gram_score <- c(df_rel_gram_score, 0.000)
+          }
+        }
+        
+        startWindow = 1
+        lenWindow = 194
+        nWindows = ceiling(length(df_rel_gram_score) / lenWindow)
+        nRows = nRows+1
+        for(i in 1:nWindows) {
+          aa_table[nRows, i] = spk_chr(
+            df_rel_gram_score[startWindow:lenWindow],
+            width = ((lenWindow-startWindow) + 1) * 15, # multiply with barWidth size
+            type = "bar",
+            barWidth = "15px",
+            height = "40px",
+            tooltipFormat = 'Rel.grammaticality : {{value:levels}}',
+            chartRangeMin = 0,
+            chartRangeMax = max(df_rel_gram_score)
+          )
+          
+          startWindow = lenWindow + 1
+          lenWindow = lenWindow + 194
+          if(lenWindow > length(df_rel_gram_score)) lenWindow = length(df_rel_gram_score)
+        }
+        
+        cap_rel_gram = paste(
+          "<span style='color:white'>&nbsp&nbsp&nbspWuhan_Hu_..",
+          paste(paste(
+            paste(paste(
+              paste(paste(aa_table[nRows, 1], aa_table[nRows, 2], sep = ""), 
+                    aa_table[nRows, 3], sep = ""), aa_table[nRows, 4], sep = ""
+            ), aa_table[nRows, 5], sep = ""), aa_table[nRows, 6], sep = ""
+          ), aa_table[nRows, 7], sep = ""),
+          collapse = "</span>"
+        )
+      }
+      
+    }
+    
+    res <-
+      kable(
+        seqs_table,
+        align = "c",
+        caption = paste(paste(paste(cap_access, cap_entropy, sep=""), cap_semantic, sep = ""), cap_rel_gram, sep = ""),
+        escape = FALSE,
+        full_width = T
+      ) %>%
+      htmltools::HTML() %>%
+      shiny::div() %>%
+      sparkline::spk_add_deps()
+    
+    res
+  })
+  
+  splitSeqByWindow <- function(seq) {
+    startVec <- 0:6 * 194 + 1
+    endVec <- 1:6 * 194
+    endVec <- c(endVec, nchar(seq))
+    seq <- paste(substring(seq, startVec, endVec), collapse = " ")
+    
+    seq
+  }
+  
+  getAminoAcidPositionsLabel <- function(seq) {
+    posRow = "."
+    count = 2
+    countIns = count
+    for (vec in 2:length(seq)) {
+      if (seq[vec] != " ") {
+        if (count %% 2 == 0)
+          posRow = c(posRow, count)
+        else
+          posRow = c(posRow, ".")
+        count = count + 1
+      }
+      else
+        posRow = c(posRow, " ")
+    }
+    
+    posRow
+  }
   
   ## Function to set axes to integer values in 'ggplot2'
   # Source: https://joshuacook.netlify.app/post/integer-values-ggplot-axis/
@@ -1494,5 +2253,6 @@ shinyServer(function(input, output, session) {
     }
     return(fxn)
   }
+  ### 'Variant Assessment' tab - outputs - end
   
 })
