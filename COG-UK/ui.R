@@ -375,22 +375,69 @@ dashboardPage(
                     ),
                     
                     fluidRow(
-                      box(width = 8, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("line-chart"),
+                      box(width = 12, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("line-chart"),
                           title = "ESM-2 model scores and evolutionary selection signals of spike amino acid replacements",
-                          plotlyOutput("esm_plot", height = '600px') # depends on input
-                      ),
-                      
-                      box(width = 4, height = 600, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("microscope"),
+                          plotlyOutput("esm_plot", height = "70vh"), # depends on input
+                          
+                          p("The plot displays the ESM-2 model or accessibility scores as well as evolutionary signals (see the bottom of the page for more details) of antigenic amino acid mutations present in the 
+                            spike protein either in VOCs/VUIs or for every possible amino acid mutation present in a given spike protein sequence. Use the slider provided to focus on 
+                            specific sites of the protein sequence. Box/lasso selected points will update both the protein structure and the radar chart below. The listed spike domain boundaries are defined according to Xia et al. (2019).")
+                      )
+                    ),
+                    
+                    fluidRow(
+                      box(width = 6, height = 600, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("microscope"),
                           title = "Structural context of spike amino acid replacements",
                           
                           htmltools::tagList(
                             tags$div(
                               id="viewportMut",
-                              style="height:600px;"
+                              style="height:570px;"
                             )
-                          )
-                      )
+                          ),
+                          
+                          selectInput('esm_structure_repr', 'Representation',
+                                      choices = c("Spacefill", "Cartoon", "Backbone", "Ball+stick"),
+                                      selected = "Spacefill")
+                      ),
                       
+                      box(width = 6, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("dashboard"),
+                          title = "Radar chart of spike amino acid replacements",
+                          plotlyOutput("radarchart", height = '590px'),
+                          
+                          footer = ("The chart shows centered and scaled values of original scores converted into a common measurement scale so that they can be compared to each other.")
+                      )
+                    ),
+                    
+                    fluidRow(
+                      box(width = 12, closable = FALSE,  status = "info", collapsible = FALSE, icon = icon("tasks"),
+                          title = "Reference and query sequence of spike protein",
+                          
+                          checkboxGroupInput(
+                            inputId = "mult_seq_chart_index",
+                            label = "", 
+                            choiceNames = list(
+                              tags$span("Accessibility", style = "color:white; background-color: #f58231; border-radius: 7px; padding: 3px; width: 150px; height: 10px;"),
+                              tags$span("Entropy", style = "color:white; background-color: #3cb44b; border-radius: 7px; padding: 3px; width: 150px; height: 10px;"), 
+                              tags$span("Semantic score", style = "color:white; background-color: #6495ED; border-radius: 7px; padding: 3px; width: 150px; height: 10px;"), 
+                              tags$span("Rel.grammaticality", style = "color:white; background-color: #e6194b; border-radius: 7px; padding: 3px; width: 150px; height: 10px;")
+                            ),
+                            choiceValues = c("Accessibility", "Entropy", "Semantic score", "Rel.grammaticality"),
+                            inline = TRUE, selected = c("Accessibility", "Entropy")
+                          ),
+                          
+                          div(style = 'overflow-x: scroll;', 
+                              withLoader(
+                                #formattableOutput("aa_table", width="100%", height = "120px"),
+                                htmlOutput("mult_seq_chart"),
+                                type = "html",
+                                loader = "loader4", proxy.height = "150px")),
+                          
+                          footer = ("Options for Semantic score and Rel.grammaticality become available upon a valid input spike protein sequence, 
+                                    which is aligned to the reference Wuhan-Hu-1 sequence. Index-based filtering options will apply on the overlayed 
+                                    bar plots of scores for each site by displaying those where specified criteria are met for a single index. 
+                                    Site numbering is based on spike protein of the reference genome Wuhan-Hu-1/2019 (NCBI accession: YP_009724390.1).")
+                      )
                     ),
                     
                     fluidRow(
@@ -409,8 +456,8 @@ dashboardPage(
                           icon = icon("info-circle"), 
                           
                           p("ESM-2 (",a("paper", href = "https://www.pnas.org/doi/10.1073/pnas.2016239118#:~:text=https%3A//doi.org/10.1073/pnas.2016239118", 
-                                         target = "_blank", .noWS = "outside"),", ",a("repository", href = "https://github.com/facebookresearch/esm", target = "_blank", 
-                                                                                      .noWS = "outside"),") is a machine learning (ML) technique for natural language processing 
+                                        target = "_blank", .noWS = "outside"),", ",a("repository", href = "https://github.com/facebookresearch/esm", target = "_blank", 
+                                                                                     .noWS = "outside"),") is a machine learning (ML) technique for natural language processing 
                             that has been found useful in assessing the effects of mutations on viral function and predicting 
                             mutations that may lead to viral escape. The model operates in an unsupervised fashion, meaning 
                             that it is trained to predict amino acids from the surrounding sequence context, with two components: 
@@ -461,10 +508,13 @@ dashboardPage(
                               "evolutionary \"flexibility\" of the site in the SARS-CoV-2 sequence; entropy of the predicted distribution of credible evolutionary states.",
                               .noWS = c("after-begin", "before-end")
                             )
-                          )
-                      )) # End of box and fluid row
+                          ),
+                          p("Structure-based epitope score (referred to as accessibility), which approximates antibody accessibility for each 
+                            spike protein amino acid position, has been calculated using BEpro software (Sweredoski M., Baldi P., 2008).")
+                      )
+                    ) # End of box and fluid row
                     
-            ), # end of 'Evolutionary Selection' tab
+            ), # end of 'Variant Assessment' tab
             
             tabItem(tabName = "about",
                     fluidRow(
