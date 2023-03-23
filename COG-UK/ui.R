@@ -381,7 +381,7 @@ dashboardPage(
                           
                           p("The plot displays the ESM-2 model or accessibility scores as well as evolutionary signals (see the bottom of the page for more details) of antigenic amino acid mutations present in the 
                             spike protein either in VOCs/VUIs or for every possible amino acid mutation present in a given spike protein sequence. Use the slider provided to focus on 
-                            specific sites of the protein sequence. Box/lasso selected points will update both the protein structure and the radar chart below. The listed spike domain boundaries are defined according to Xia et al. (2019).")
+                            specific sites of the protein sequence. Points selected based on box/lasso selection will be updated both on the protein structure and the radar chart below. The listed spike domain boundaries are defined according to Xia et al. (2019).")
                       )
                     ),
                     
