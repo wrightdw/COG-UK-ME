@@ -59,7 +59,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (Array.isArray(dms_spike_upload_filter_label)) {
                                 var indx = dms_spike_upload_filter_label.findIndex(isPresent);
                                 if (indx != -1) {
+                                  if( message.e[indx].length == 1) {
+                                    return message.e.replace('#', '0x');
+                                  }
+                                  else {
                                     return message.e[indx].replace('#', '0x');
+                                  }
                                 } else {
                                     return 0xbdb7b7;
                                 }
@@ -79,37 +84,50 @@ document.addEventListener('DOMContentLoaded', function () {
                             var cp = pickingProxy.canvasPosition;
                             var isPresent = (element) => element == atom.resno;
                             var indxFilter = dms_spike_upload_filter_label.findIndex(isPresent);
-                                
+
                             if (indxFilter != -1) {
                                 //collect any multiple mutations for a given spike position
                                 var indexes = getAllIndexes(wuhan_data_js, atom.resno);
-                                
+
                                 tooltip.innerText = "Ref: " + wuhan_data_js[indxFilter].label[0] + "\n" + "Pos: " + wuhan_data_js[indxFilter].label.match(/\d+/) + "\n";
-                                if(indexes.length > 1) {
-                                  tooltip.innerText += "Alt: " + indexes.join() + "\n";
-                                } else { 
-                                  tooltip.innerText += "Alt: " + indexes[0] + "\n";
+                                if (indexes.length > 1) {
+                                    tooltip.innerText += "Alt: " + indexes.join() + "\n";
+                                } else {
+                                    tooltip.innerText += "Alt: " + indexes[0] + "\n";
                                 }
-                                
+
                                 switch (message.d) {
                                     case "semantic_score": tooltip.innerText += "Semantic Score: " + wuhan_data_js[indxFilter].semantic_score + "\n";
                                         break;
                                     case "grammaticality": tooltip.innerText += "Grammaticality: " + wuhan_data_js[indxFilter].grammaticality + "\n";
                                         break;
-                                    case "evolutionary_index": tooltip.innerText += "Evol. Index: " + wuhan_data_js[indxFilter].evolutionary_index + "\n";
+                                    case "evolutionary_index": tooltip.innerText += "Rel. grammaticality: " + wuhan_data_js[indxFilter].evolutionary_index + "\n";
                                         break;
                                     case "entropy": tooltip.innerText += "Entropy: " + wuhan_data_js[indxFilter].entropy + "\n";
+                                        break;
+                                    case "epitope_max": tooltip.innerText += "Accessibility: " + wuhan_data_js[indxFilter].epitope_max + "\n";
                                         break;
                                 }
                                 tooltip.innerText += "Evol. Selection: " + wuhan_data_js[indxFilter].evol_selection;
                             } else {
-                                var indxAllMuts = uploaded_mutations_positions.findIndex(isPresent);
-                                if (indxAllMuts != -1) {
-                                    tooltip.innerText = "Ref: " + uploaded_mutations[indxAllMuts][0] + "\n" + "Pos: " + uploaded_mutations[indxAllMuts].match(/\d+/) + "\n"
-                                        + "Alt: " + uploaded_mutations[indxAllMuts].substring(1, uploaded_mutations[indxAllMuts].length).replace(/[0-9]/g, '');
+                                if(Array.isArray(uploaded_mutations_positions)){
+                                  var indxAllMuts = uploaded_mutations_positions.findIndex(isPresent);
+                                  
+                                  if (indxAllMuts != -1) {
+                                      tooltip.innerText = "Ref: " + uploaded_mutations[indxAllMuts][0] + "\n" + "Pos: " + uploaded_mutations[indxAllMuts].match(/\d+/) + "\n"
+                                          + "Alt: " + uploaded_mutations[indxAllMuts].substring(1, uploaded_mutations[indxAllMuts].length).replace(/[0-9]/g, '');
+                                  } else {
+                                      tooltip.innerText = "Ref: " + "-" + "\n" + "Pos: " + atom.resno + "\n"
+                                          + "Alt: " + "-";
+                                  }
                                 } else {
-                                    tooltip.innerText = "Ref: " + "-" + "\n" + "Pos: " + atom.resno + "\n"
-                                        + "Alt: " + "-";
+                                    if (uploaded_mutations_positions == atom.resno) {
+                                      tooltip.innerText = "Ref: " + uploaded_mutations[0][0] + "\n" + "Pos: " + uploaded_mutations[indxAllMuts].match(/\d+/) + "\n"
+                                          + "Alt: " + uploaded_mutations[0].substring(1, uploaded_mutations[0].length).replace(/[0-9]/g, '');
+                                    } else {
+                                        tooltip.innerText = "Ref: " + "-" + "\n" + "Pos: " + atom.resno + "\n"
+                                            + "Alt: " + "-";
+                                    }
                                 }
                             }
 
@@ -122,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
 
-                    stage.loadFile( "rcsb://6vxx").then(function (o) {
+                    stage.loadFile("rcsb://6vxx").then(function (o) {
                         o.addRepresentation(message.f, { color: schemeId }); // pass schemeId here
                         o.autoView();
                     });
