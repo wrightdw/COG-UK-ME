@@ -7,6 +7,7 @@ library(shinyjs)
 library(formattable)
 library(plotly)
 library(JBrowseR)
+library(shinycustomloader)
 
 dashboardPage(
     title = "COG-UK/Mutation Explorer",
@@ -37,7 +38,7 @@ dashboardPage(
             id = "sidebar_menu",
             menuItem("VOCs/VUIs in the UK", tabName = "vui_voc", selected = TRUE, icon = icon("viruses")),
             menuItem("VOC Spike Structures", tabName = "strucure_voc", icon = icon("virus")),
-            menuItem("Evolutionary Selection", tabName = "evol_selection", icon = icon("chain")),
+            menuItem("Variant Assessment", tabName = "evol_selection", icon = icon("clipboard-check")),
             menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
             menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
@@ -96,12 +97,12 @@ dashboardPage(
             picks %>% c("Delta non-AY.4" = "Delta_minus_AY.4",
                         "Delta non-AY.4.2" = "Delta_minus_AY.4.2")
           })(), 
-          selected = "BA.1"),
+          selected = "BA.4"),
           
-          textAreaInput("textSpike", "Or submit full spike sequence (1273aa in length):", ""),
+          textAreaInput("textSpike", "Or submit full spike sequence (max 1273aa in length):", ""),
           hr(style = "border-style: dotted;"),
           
-          selectInput("esm_score_index", "ESM-2 model index:", choices = c("Semantic score", "Relative grammaticality", "Entropy")), # have excluded grammaticality until new scores become available
+          selectInput("esm_score_index", "ESM-2 model index:", choices = c("Semantic score", "Relative grammaticality", "Entropy", "Accessibility")), # have excluded grammaticality until new scores become available
           sliderInput(
             inputId = "esm_semantic_indx",
             label = "Semantic score:",
@@ -131,6 +132,14 @@ dashboardPage(
             value = c(floor(dms_antigenic %>% select(entropy) %>% min()), ceiling(dms_antigenic %>% select(entropy) %>% max())),
             min = floor(dms_antigenic %>% select(entropy) %>% min()), max = ceiling(dms_antigenic %>% select(entropy) %>% max())
           ),
+          
+          sliderInput(
+            inputId = "esm_access_indx",
+            label = "Accessibility:",
+            value = c(floor(dms_antigenic %>% select(epitope_max) %>% min()), ceiling(dms_antigenic %>% select(epitope_max) %>% max())),
+            min = floor(dms_antigenic %>% select(epitope_max) %>% min()), max = ceiling(dms_antigenic %>% select(epitope_max) %>% max()),
+            step = 0.25
+          ),
           hr(style = "border-style: dotted;"),
           prettyCheckboxGroup("escape_3d", "Antigenic mutations:",
                               c("Escape (all)" = "escape",
@@ -144,9 +153,7 @@ dashboardPage(
                                "None" = "none"),
                              shape = "round",
                              status = "info",
-                             selected = "none"),
-          hr(style = "border-style: dotted;"),
-          selectInput("esm_structure_repr", "Spike structure representation:", choices = c("Spacefill", "Cartoon", "Backbone", "Ball+stick"))
+                             selected = "none")
         ),
         
         # mutation chart controls
