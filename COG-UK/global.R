@@ -1,3 +1,4 @@
+library(msa)
 library(tidyverse)
 library(lubridate)
 library(magrittr)
@@ -59,6 +60,7 @@ dms_antigenic %<>% select(-c("grammatical_rank", "semantic_rank", "aquisition_pr
   filter(!is.na(semantic_score)) %>%
   filter(!is.na(grammaticality)) %>%
   filter(!is.na(evolutionary_index))
+dms_antigenic %<>%  mutate(across(c(semantic_score, evolutionary_index), round, 3))
 
 sergei_entropies_spike_all = read.csv("sergei_entropies_spike_coordinates.csv", sep=";")
 sergei_entropies_spike_all$position = as.numeric(rownames(sergei_entropies_spike_all))
@@ -78,7 +80,12 @@ ref_wuhan = paste("MFVFLVLLPLVSSQCVNLTTRTQLPPAYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSN
                   "GQSKRVDFCGKGYHLMSFPQSAPHGVVFLHVTYVPAQEKNFTTAPAICHDGKAHFPREGVFVSNGTHWFVTQRNFYEPQIITTDNTFVSGNCDVVIGIVNNTVY",
                   "DPLQPELDSFKEELDKYFKNHTSPDVDLGDISGINASVVNIQKEIDRLNEVAKNLNESLIDLQELGKYEQYIKWPWYIWLGFIAGLIAIVMVTIMLCCMTSCCS",
                   "CLKGCCSCGSCCKFDEDDSEPVLKGVKLHYT", sep = "")
-ref_wuhan <- unlist(strsplit(ref_wuhan, split = "", fixed=T)) # Split into individual amino acid characters
+
+access_scores = read_csv("Woo_ab_accessibility.csv")
+access_scores %<>% mutate(across(c(epitope_max), round, 3))
+
+dms_antigenic <- dms_antigenic %>% left_join(access_scores[,c("epitope_max", "position"), ], by="position")
+dms_antigenic %<>% filter(!is.na(epitope_max))
 
 database <- 
   database_genome %>% 
