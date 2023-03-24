@@ -1863,22 +1863,18 @@ shinyServer(function(input, output, session) {
             ),
             `color`="white",
             `background-color` = ifelse(
-              y %in% c("A", "I", "L", "M", "F", "W", "V", "C"),
+              y %in% c("A", "S", "T", "G", "P"),
               "teal",
               ifelse(
-                y %in% c("K", "R"),
+                y %in% c("M", "I", "L", "V"),
                 colors_border[1],
                 ifelse(
-                  y %in% c("N", "Q", "S", "T"),
+                  y %in% c("K", "R", "E", "N", "D", "H", "Q"),
                   "#F7BB0D",
                   ifelse(
-                    y %in% c("E", "D"),
-                    colors_border[8],
-                    ifelse(
-                      y %in% c("G"),
-                      colors_border[13],
-                      ifelse(y %in% c("P"), "#0000ff", ifelse(y %in% c("H", "Y"), colors_border[6],""))
-                    )
+                    y %in% c("W", "Y", "F", "C"),
+                    colors_border[6],
+                    ""
                   )
                 )
               )
