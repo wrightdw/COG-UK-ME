@@ -10,6 +10,9 @@ library(viridis)
 library(JBrowseR)
 library(jsonlite)
 
+library(sparkline)
+library(kableExtra)
+
 ## Table functions
 # TODO table caching
 # 
