@@ -255,6 +255,8 @@ antigenic_mutations_lineages <- function(nation = c("UK", "England", "Scotland",
   antigenic_mutations_lineages
 }
 
+# TODO replace deprecated when() with if()
+# TODO replace superseded summarise_all()
 sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
   if(is_character(lineages)){
     n_nations_lineages <- sum_key_mutations_uk(lineage, adm1, date_from = date_from) # grouped by lineage, adm1
@@ -275,7 +277,7 @@ sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, u
         ) %>%
         group_by(adm1) %>% 
         select(-lineage) %>% 
-        summarise_all(funs(sum)) %>% #TODO replace deprecated funs
+        summarise_all(list(sum)) %>% 
         mutate(lineage = x, .before = 1)
     }) %>% 
       bind_rows() %>% 
