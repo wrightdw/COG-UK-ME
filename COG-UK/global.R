@@ -163,11 +163,8 @@ NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion.
   "BA.4.6" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
   "BA.2.75.5" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
   "BA.2.75.2" = "Asia and Australia. WHO label: <strong>Omicron</strong>.",
-  "XBB.1.5" = "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>."
-  
-#   "BA.2.75" = "Sublineage of BA.2. 33 non-synonymous mutations
-# in Spike. Reversion in Spike relative to BA.2: R493Q. K147E, W152R, F157L, I210V and G257S in the N-
-# terminal domain. G339H, G446S, and N460K in the receptor binding domain. WHO label: <strong>Omicron</strong>."
+  "XBB.1.9.1" = "Indonesia/Singapore/Malaysia/England. Mutation S:F486P. WHO label: <strong>Omicron</strong>.",
+  "XBB.1.9.2" = "Indonesia/Singapore. Mutation S:F486P. WHO label: <strong>Omicron</strong>."
   ) %>% 
   enframe("lineage", "reason")
 
@@ -259,7 +256,21 @@ n_uk_lineages_ch_1_1 <- sum_lineages(
   consortium_uk %>% 
     distinct(lineage, lineage_full) %>% 
     filter(lineage == "CH.1.1" | str_starts(lineage_full, fixed("B.1.1.529.2.75.3.4.1.1.1.1."))) %$% 
-    lineage # sum BQ.1 and sublineages
+    lineage # sum CH.1.1 and sublineages
+)
+
+n_uk_lineages_xbb_1_5 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "XBB.1.5" | str_starts(lineage_full, fixed("XBB.1.5."))) %$% 
+    lineage # sum XBB.1.5 and sublineages
+)
+
+n_uk_lineages_xbb_1_16 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "XBB.1.16" | str_starts(lineage_full, fixed("XBB.1.16."))) %$% 
+    lineage # sum XBB.1.16 and sublineages
 )
 
 n_uk_recombinants <- sum_lineages(
@@ -286,7 +297,11 @@ vui_voc_lineages <-
   setNames(levels(vui_voc_lineages$lineage_display)) %>% 
   append(list("B.1.177/B.1.177.x" = "B.1.177",
               "BQ.1/BQ.1.x (Omicron)" = "BQ.1", 
-              "XBB.1.5 (Omicron)" = "XBB.1.5")) # special cases, add only to lineage bar chart
+              "XBB.1.5 (Omicron)" = "XBB.1.5",
+              "CH.1.1 (Omicron)" = "CH.1.1",
+              "XBB.1.16 (Omicron)" = "XBB.1.16",
+              "XBB.1.9.1 (Omicron)" = "XBB.1.9.1",
+              "XBB.1.9.2 (Omicron)" = "XBB.1.9.2")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe

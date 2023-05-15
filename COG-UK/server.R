@@ -101,8 +101,19 @@ table_3 <- function(){
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
       mutate(lineage = "CH.1.1/CH.1.1.x",
-             reason =  "Southeast Asia. Descendant of BA.2.75, defined by S:L452R. WHO label: <strong>Omicron</strong>.")
+             reason =  "Southeast Asia. Descendant of BA.2.75, defined by S:L452R. WHO label: <strong>Omicron</strong>."),
     
+    n_uk_lineages_xbb_1_5 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "XBB.1.5/XBB.1.5.x",
+             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>."),
+    
+    n_uk_lineages_xbb_1_16 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "XBB.1.16/XBB.1.16.x",
+             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>.")
     
   ) %>% 
     lineages_table()
@@ -838,6 +849,10 @@ shinyServer(function(input, output, session) {
                                   "B.1.177" = "B.1.177",
                                   "BQ.1" = "BQ.1 (Omicron)",
                                   "XBB.1.5" = "XBB.1.5 (Omicron)",
+                                  "CH.1.1" = "CH.1.1 (Omicron)",
+                                  "XBB.1.16" = "XBB.1.16 (Omicron)",
+                                  "XBB.1.9.1" = "XBB.1.9.1 (Omicron)",
+                                  "XBB.1.9.2" = "XBB.1.9.2 (Omicron)",
                                   # "Unassigned" = "Unassigned (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
@@ -986,6 +1001,8 @@ shinyServer(function(input, output, session) {
                                          "B.1.177" = "B.1.177",
                                          "BQ.1" = "BQ.1",
                                          "XBB.1.5" = "XBB.1.5 (Omicron)",
+                                         "CH.1.1" = "CH.1.1 (Omicron)",
+                                         "XBB.1.16" = "XBB.1.16 (Omicron)",
                                          # "Unassigned" = "Unassigned (Omicron)",
                                          "Other" = "Other"
           )) %>% 
