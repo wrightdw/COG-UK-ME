@@ -381,7 +381,7 @@ dashboardPage(
                           plotlyOutput("esm_plot", height = "70vh"), # depends on input
                           
                           footer = ("The plot displays the ESM-2 model or accessibility scores as well as evolutionary signals (see the bottom of the page for more details) of antigenic amino acid mutations present in the 
-                            spike protein either in VOCs/VUIs or for every possible amino acid mutation present in a given spike protein sequence. Use the slider provided to focus on 
+                            spike protein either in VOCs/VUIs or for every possible amino acid mutation present in a given spike protein sequence. Sites with no evidence of selection are denoted as 'Undefined'. Use the slider provided to focus on 
                             specific sites of the protein sequence. Points selected based on box/lasso selection will be updated both on the spike protein structure and the radar chart below. The listed spike domain boundaries are defined according to Xia et al. (2019).")
                       )
                     ),
@@ -483,35 +483,16 @@ dashboardPage(
                             Filters are present to subset these mutations as needed or results can be refined further by filtering 
                             for mutations that were reported to confer antigenic change relevant specifically to antibodies or for amino acid 
                             replacements in T cell epitopes, based on published studies (see also 'Antigenic Mutations' tab)."),
-                          p("In addition to the ESM-2 scores, evolutionary selection signals obtained for the subset of sarbecoviruses 
-                            that are more closely related to SARS-CoV-2, referred to as the nCoV clade (Lytras et al. 2022) 
-                            are also displayed  and can be overlayed on the spike protein structure (RCSB Protein Data 
-                            Bank (PDB) ID: 6VXX (Walls et al., 2020)). Selection signals were inferred using the FEL (Kosakovsky 
-                            Pond and Frost 2005) and MEME (Murrell et al. 2015) methods as in MacLean et al. (2021) and include:"),
-                          tags$ul(
-                            tags$li(
-                              #span(style = "background-color:firebrick; color:snow", "High", .noWS = "after"),
-                              "Sites found to be under positive selection by MEME on internal branches in the nCOV clade.",
-                              .noWS = c("after-begin", "before-end")
-                            ),
-                            tags$li(
-                              #span(style = "background-color:darkorange; color:white", "Medium", .noWS = "after"),
-                              "Sites found to be under negative selection by FEL on internal branches in the nCOV clade.",
-                              .noWS = c("after-begin", "before-end")
-                            ),
-                            tags$li(
-                              #span(style = "background-color:lemonchiffon; color:darkslategrey", "Lower", .noWS = "after"),
-                              "SARS-CoV-2 sites that are conserved on the amino-acid level among all sequences and,",
-                              .noWS = c("after-begin", "before-end")
-                            ),
-                            tags$li(
-                              #span(style = "background-color:lemonchiffon; color:darkslategrey", "Lower", .noWS = "after"),
-                              "evolutionary \"flexibility\" of the site in the SARS-CoV-2 sequence; entropy of the predicted distribution of credible evolutionary states.",
-                              .noWS = c("after-begin", "before-end")
-                            )
-                          ),
-                          p("Structure-based epitope score (referred to as accessibility), which approximates antibody accessibility for each 
-                            spike protein amino acid position, has been calculated using BEpro software (Sweredoski M., Baldi P., 2008).")
+                          p("In addition to the ESM-2 scores, signals of ancestral evolutionary selection in the animal (bat and pangolin) sarbecoviruses 
+                            most closely related to SARS-CoV-2 (nCoV clade, defined in Lytras et al. 2022) are also displayed  and can be overlayed on 
+                            the spike protein structure (RCSB Protein Data Bank (PDB) ID: 6VXX (Walls et al., 2020)). Site-specific selection was inferred 
+                            on a set of 167 sarbecovirus genomes, accounting for recombination by inferring selection separately in each non-recombinant 
+                            segment (Martin et al., 2022). Briefly, sites under negative selection were inferred using the FEL (Kosakovsky Pond and Frost 2005) 
+                            and sites under positive selection using MEME (Murrell et al. 2015) by testing on internal branches of the nCoV clade. 
+                            Sites denoted as conserved have the same amino-acid residue among all sarbecovirus sequences in the analysis. "),
+                          p("Evolutionary \"diversity\" of the site in the SARS-CoV-2 sequence was obtained as the entropy of the predicted distribution 
+                            of credible evolutionary states. Structure-based epitope score (referred to as accessibility), which approximates antibody 
+                            accessibility for each spike protein amino acid position, has been calculated using BEpro software (Sweredoski M., Baldi P., 2008).")
                       )
                     ) # End of box and fluid row
                     
