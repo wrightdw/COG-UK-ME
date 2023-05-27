@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     case "epitope_max": tooltip.innerText += "Accessibility: " + wuhan_data_js[indxFilter].epitope_max + "\n";
                                         break;
                                 }
-                                tooltip.innerText += "Evol. Selection: " + wuhan_data_js[indxFilter].evol_selection;
+                                tooltip.innerText += "Sarbecovirus selection: " + wuhan_data_js[indxFilter].evol_selection;
                             } else {
                                 if(Array.isArray(uploaded_mutations_positions)){
                                   var indxAllMuts = uploaded_mutations_positions.findIndex(isPresent);
