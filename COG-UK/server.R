@@ -1404,14 +1404,17 @@ shinyServer(function(input, output, session) {
     df <- as.data.frame(df)
     if(dim(na.omit(df))[1] > 0) {
       
-      p <- df %>% rename(c(`Evol. Selection` = evol_selection, mutation = label)) %>% ggplot(
+      p <- df %>% rename(c(`Sarbecovirus Selection` = evol_selection, mutation = label)) %>% ggplot(
         aes_string(
           x = "position",
           y = index,
           # shape = "`Evol. Selection`",
           label = "mutation",
-          color = "`Evol. Selection`")
-      ) + geom_point() + guides(color = guide_legend(title = "Evol. Selection")) 
+          color = "`Sarbecovirus Selection`")
+      ) + geom_point() + scale_color_manual(values = c(Conserved = "#0080ff",
+                                                       Negative = "#F8766D",
+                                                       Positive = "#00cc66",
+                                                       Undefined = "#778899")) + guides(color = guide_legend(title = "Sarbecovirus Selection")) 
       
       
       # extract colours to be used in the 3d structure
@@ -1842,7 +1845,7 @@ shinyServer(function(input, output, session) {
              Conserved = conserved,
              Positive = positive,
              Negative = negative,
-             `Evolutionary selection` =  evol_selection,
+             `Sarbecovirus Selection` = evol_selection,
              Entropy = entropy,
              Accessibility = epitope_max
       ) %>% 
