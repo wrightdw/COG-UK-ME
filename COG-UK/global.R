@@ -28,7 +28,7 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2022-11-22")
+# dataset_date <- as.Date("2023-08-16")
 
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates) # TODO remove dependency
@@ -274,6 +274,13 @@ n_uk_lineages_xbb_1_16 <- sum_lineages(
     lineage # sum XBB.1.16 and sublineages
 )
 
+n_uk_lineages_eg_5_1 <- sum_lineages(
+  consortium_uk %>% 
+    distinct(lineage, lineage_full) %>% 
+    filter(lineage == "EG.5.1" | str_starts(lineage_full, fixed("XBB.1.9.2.5.1."))) %$% 
+    lineage # sum EG.5.1 and sublineages
+)
+
 n_uk_recombinants <- sum_lineages(
   consortium_uk %>% 
     distinct(lineage) %>% 
@@ -302,7 +309,8 @@ vui_voc_lineages <-
               "CH.1.1 (Omicron)" = "CH.1.1",
               "XBB.1.16 (Omicron)" = "XBB.1.16",
               "XBB.1.9.1 (Omicron)" = "XBB.1.9.1",
-              "XBB.1.9.2 (Omicron)" = "XBB.1.9.2")) # special cases, add only to lineage bar chart
+              "XBB.1.9.2 (Omicron)" = "XBB.1.9.2", 
+              "EG.5.1 (Omicron)" = "EG.5.1")) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe

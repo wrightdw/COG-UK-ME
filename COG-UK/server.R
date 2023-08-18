@@ -113,7 +113,14 @@ table_3 <- function(){
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
       mutate(lineage = "XBB.1.16/XBB.1.16.x",
-             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>.")
+             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>."),
+
+    n_uk_lineages_eg_5_1 %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "EG.5.1/EG.5.1.x",
+             reason =  "Recombinant (XBB + additional mutations). Alias of XBB.1.9.2.5.1, S:Q52H, China. WHO label: <strong>Omicron</strong>.")
+    
     
   ) %>% 
     lineages_table()
@@ -853,6 +860,7 @@ shinyServer(function(input, output, session) {
                                   "XBB.1.16" = "XBB.1.16 (Omicron)",
                                   "XBB.1.9.1" = "XBB.1.9.1 (Omicron)",
                                   "XBB.1.9.2" = "XBB.1.9.2 (Omicron)",
+                                  "EG.5.1" = "EG.5.1 (Omicron)",
                                   # "Unassigned" = "Unassigned (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
@@ -1003,6 +1011,9 @@ shinyServer(function(input, output, session) {
                                          "XBB.1.5" = "XBB.1.5 (Omicron)",
                                          "CH.1.1" = "CH.1.1 (Omicron)",
                                          "XBB.1.16" = "XBB.1.16 (Omicron)",
+                                         "XBB.1.9.1" = "XBB.1.9.1 (Omicron)",
+                                         "XBB.1.9.2" = "XBB.1.9.2 (Omicron)",
+                                         "EG.5.1" = "EG.5.1 (Omicron)",
                                          # "Unassigned" = "Unassigned (Omicron)",
                                          "Other" = "Other"
           )) %>% 

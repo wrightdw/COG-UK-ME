@@ -63,7 +63,7 @@ dashboardPage(
             prettyCheckboxGroup("variant_vui_voc", "Variant:",
                                 vui_voc_lineages,
                                 selected = c("B.1.1.7", "B.1.617.2", "BA.1", "BA.2", "BA.4", "BA.5", "BQ.1", 
-                                             "XBB.1.5", "CH.1.1", "XBB.1.16", "XBB.1.9.1", "XBB.1.9.2"),
+                                             "XBB.1.5", "CH.1.1", "XBB.1.16", "XBB.1.9.1", "XBB.1.9.2", "EG.5.1"),
                                 shape = "curve",
                                 status = "info",
                                 fill = TRUE),
