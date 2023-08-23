@@ -119,7 +119,7 @@ table_3 <- function(){
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
       mutate(lineage = "EG.5.1/EG.5.1.x",
-             reason =  "Recombinant (XBB + additional mutations). Alias of XBB.1.9.2.5.1, S:Q52H, China. WHO label: <strong>Omicron</strong>.")
+             reason =  "Recombinant (XBB + additional mutations). Alias of XBB.1.9.2.5.1, S:Q52H and S:F456L, China. WHO label: <strong>Omicron</strong>.")
     
     
   ) %>% 
