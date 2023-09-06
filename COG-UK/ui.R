@@ -596,7 +596,11 @@ dashboardPage(
                             a(href ="https://twitter.com/CovidGenomicsUK", target = "_blank", "COG-UK"), "to be notified of updates.", .noWS = c("after-begin", "before-end")),
                           
                           h3("Contact Us"),
-                          p("To request features or report issues, contact us on ", a(href = "https://github.com/wrightdw/COG-UK-ME/issues", target = "_blank", .noWS = "outside", "GitHub"), ".")
+                          p("Get in touch with us at ",
+                            a(href = "mailto:cvr-webresource-support@lists.cent.gla.ac.uk", .noWS = "outside", "cvr-webresource-support@lists.cent.gla.ac.uk"),
+                            ". To report issues with COG-UK-ME, use our issue tracker on ", 
+                            a(href = "https://github.com/wrightdw/COG-UK-ME/issues", target = "_blank", .noWS = "outside", "GitHub"),
+                            ".")
                         )
                     )),
             
