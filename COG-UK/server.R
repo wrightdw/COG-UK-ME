@@ -42,131 +42,10 @@ database_genome %>%
 
 # Variants
 # TODO precompute
+# Calculate lineages table and format for display
 table_3 <- function(){
-  bind_rows(
-    n_uk_lineages_all %>% 
-      filter(lineage %in% lineages_t3$lineage & variant == "sequences") %>% 
-      inner_join(lineages_t3) %>% # join descriptions
-      select(-variant) %>% 
-      relocate(reason, .after = lineage),
-    
-    n_uk_lineages_all %>%
-      filter(variant == "E484K" & lineage == "B.1.324.1") %>%
-      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
-      mutate(reason = "As B.1.324.1, with the addition of E484K."), # zero count - not displayed
-    
-    n_uk_lineages_ba_2 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BA.2/BA.2.x (includes BA.2.75 and other sublineages)",
-             reason =  "Southern Africa. Full Spike profile of BA.2: T19I, Δ24-26/A27S, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_ba_1 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BA.1/BA.1.x",
-             reason =  "Southern Africa. Full Spike profile of BA.1: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F. WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_ba_4 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BA.4/BA.4.x",
-             reason =  "Southern Africa. Full Spike profile of BA.4:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
-
-    n_uk_lineages_ba_3 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BA.3/BA.3.x",
-             reason =  "Southern Africa. Full Spike profile of BA.3: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, G339D, S371F, S373P, S375F, D405N, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_ba_5 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BA.5/BA.5.x (includes BQ.1, BF.7 and other sublineages)",
-             reason =  "Southern Africa. Full Spike profile of BA.5:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_ba_2_75 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BA.2.75/BA.2.75.x",
-             reason =  "India. Full Spike profile of BA.2.75: T19I, Δ24-26/A27S, G142D, K147E, W152R, F157L, I210V, V213G, G257S, G339H, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, G446S, N460K, S477N, T478K, E484A, R493Q, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_bq_1 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BQ.1/BQ.1.x",
-             reason =  "Nigeria. Descendant of BA.5. Full Spike profile of BQ.1: T19I, Δ24-26/A27S, Δ69-70, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, K444TL452R, N460, KS477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_ch_1_1 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "CH.1.1/CH.1.1.x",
-             reason =  "Southeast Asia. Descendant of BA.2.75, defined by S:L452R. WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_xbb_1_5 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "XBB.1.5/XBB.1.5.x",
-             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>."),
-    
-    n_uk_lineages_xbb_1_16 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "XBB.1.16/XBB.1.16.x",
-             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>."),
-
-    n_uk_lineages_eg_5_1 %>% 
-      filter(variant == "sequences") %>%
-      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "EG.5.1/EG.5.1.x",
-             reason =  "Recombinant (XBB + additional mutations). Alias of XBB.1.9.2.5.1, S:Q52H and S:F456L, China. WHO label: <strong>Omicron</strong>.")
-    
-    
-  ) %>% 
-    lineages_table()
-}
-
-table_recombinants <- function(){
-  n_uk_recombinants %>% 
-    filter(variant == "sequences") %>% 
-    left_join(lineages_recomb) %>% # descriptions 
-    select(-variant) %>% 
-    relocate(reason, .after = lineage) %>% 
-    lineages_table
-}
-
-# Format lineages table for display
-lineages_table <- function(summed_lineages){
-  summed_lineages %>% 
-  mutate(across(where(is.numeric), ~replace_na(.x, 0L))) %>% 
-    filter(n_sequences_UK > 0) %>%
-    relocate(n_sequences_UK, .after = reason) %>% 
-    mutate(`UK (%)` = n_sequences_UK / total_sequences,
-           .after = n_sequences_UK) %>%
-    relocate(n_sequences_28_UK, .after = `UK (%)`) %>% 
-    mutate(`UK 28 days (%)` = n_sequences_28_UK / total_sequences_28,
-           .after = n_sequences_28_UK) %>%
-    arrange(desc(n_sequences_28_UK), desc(n_sequences_UK), lineage) %>% 
-    relocate(n_sequences_28_England, .after = n_sequences_England) %>% 
-    relocate(n_sequences_28_Northern_Ireland, .after = n_sequences_Northern_Ireland) %>% 
-    relocate(n_sequences_28_Scotland, .after = n_sequences_Scotland) %>% 
-    relocate(n_sequences_28_Wales, .after = n_sequences_Wales) %>% 
-    rename(`Variant` = lineage,	
-           UK = n_sequences_UK,	 
-           `UK 28 days` = n_sequences_28_UK,                    
-           Description = reason, 
-           
-           England = n_sequences_England,
-           `Northern Ireland` = n_sequences_Northern_Ireland,
-           Scotland = n_sequences_Scotland,
-           Wales = n_sequences_Wales,
-           
-           `England 28 Days` = n_sequences_28_England,
-           `Northern Ireland 28 Days` = n_sequences_28_Northern_Ireland,
-           `Scotland 28 Days` = n_sequences_28_Scotland,
-           `Wales 28 Days` = n_sequences_28_Wales
-    ) 
-  
+  bind_table_3 %>% 
+  lineages_table()
 }
 
 # T cell table
@@ -404,7 +283,7 @@ shinyServer(function(input, output, session) {
     
     # Render recombinants table
     output$table_recomb <- renderDT({
-      table_recombinants() %>% 
+      table_recombinants %>% 
         datatable(filter = "none", escape = FALSE, rownames = FALSE, 
                   options = list(dom = 't', paging = FALSE, scrollX = TRUE)) %>% 
         formatPercentage(c("UK (%)", "UK 28 days (%)"), digits = 2)

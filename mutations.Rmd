@@ -41,6 +41,7 @@ sublineage_regex_gsub <- function(lineage){
   str_replace_all(lineage, "\\.", "\\\\\\.") %>% 
     paste0("^", ., "\\..*")
 }
+
 ```
 ## CLIMB
 ```{r climb}
@@ -791,7 +792,6 @@ epitopes_gff %<>%
   write_tsv(str_c("COG-UK/", params$dataset_date, "/spike_epitopes.gff3"), col_names = FALSE) 
 ```
 
-
 # Lineages
 ```{r lineage_counts}
 n_uk_lineages <- 
@@ -1037,7 +1037,6 @@ vui_voc %T>% write_rds(str_c("COG-UK/", "vui_voc.rds"))
 ```
 
 ### VUI and VOC plot
-
 ```{r lineages_plot, eval=FALSE, include=TRUE}
 lineages_weeks_nations <-
   consortium_uk %>% dplyr::count(lineage, epi_week, adm1)
@@ -1060,7 +1059,6 @@ lineages_weeks_uk %>%
 ```
 
 ### Constellations UpSet plot
-
 ```{r upset, eval=FALSE, include=FALSE}
 mutations_s_uk_wide <-
   mutations_s_uk %>% 
@@ -1075,6 +1073,7 @@ mutations_s_uk_wide
 ### VUI/VOC/other
 
 ```{r vui_voc_other}
+## Count VOC/VUI lineages by month, week and nation, including sublineages, for visualisation
 # TODO count all lineages to include sublineages
 # TODO fix colours in chart for missing lineages when changing time frame - include zero values?
 
@@ -1186,8 +1185,200 @@ lineages_days_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/line
 lineages_weeks_uk_all %T>% write_rds(str_c("COG-UK/", params$dataset_date, "/lineages_weeks_uk_all.rds"))
 ```
 
-## GISAID
+### Precompute sublineage counts
+```{r precompute}
+# TODO create common helper functions include for both CLIMB and Shiny app
 
+# Construct a regular expression to match the sublineages of a lineage
+sublineage_regex <- function(lineage){
+  str_replace_all(lineage, "\\.", "\\\\\\.") %>% 
+    paste0("^", ., "\\.")
+}
+
+# TODO replace deprecated when() with if()
+# TODO replace superseded summarise_all()
+sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
+  if(is_character(lineages)){
+    n_nations_lineages <- sum_key_mutations_uk(lineage, adm1, date_from = date_from) # grouped by lineage, adm1
+    
+    n_uk_lineages <- 
+      n_nations_lineages %>% 
+      group_by(lineage) %>% 
+      summarise(across(sequences:`N501Y + E484K`, sum)) %>% 
+      mutate(adm1 = "UK", .after = lineage)
+    
+    n_uk_lineages_uk_nations <- bind_rows(n_nations_lineages, n_uk_lineages) # grouped by lineage, adm1
+    
+    lapply(lineages, function(x){
+      n_uk_lineages_uk_nations %>% 
+        when(
+          use_regex ~filter(., lineage == x | str_detect(lineage, sublineage_regex(x))),
+          ~filter(., lineage == x)
+        ) %>%
+        group_by(adm1) %>% 
+        select(-lineage) %>% 
+        summarise_all(list(sum)) %>% 
+        mutate(lineage = x, .before = 1)
+    }) %>% 
+      bind_rows() %>% 
+      gather(key = "variant", value = "n_sequences", sequences:`N501Y + E484K`)
+  }
+}
+
+sum_lineages <- function(lineages, use_regex = FALSE){
+  left_join(
+    sum_key_mutations_by_lineage_uk(lineages, use_regex = use_regex),
+    sum_key_mutations_by_lineage_uk(lineages, date_from = sample_date_28, use_regex = use_regex) %>%
+      rename(n_sequences_28 = n_sequences)
+  ) %>% 
+    pivot_wider(names_from = adm1, values_from = c(n_sequences, n_sequences_28)) %>% 
+    mutate(across(where(is.numeric), ~replace_na(.x, 0L)))
+}
+
+# Table of counts and reasons including sublineages
+sublineages_reasons <- 
+  bind_rows(
+    # count Omicron sublineages by filtering full lineage names to include renamed sublineages
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BA.1" | str_starts(lineage_full, fixed("B.1.1.529.1."))) %$% 
+        lineage # sum BA.1 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.1/BA.1.x",
+             reason =  "Southern Africa. Full Spike profile of BA.1: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, ins214EPE, G339D, S371L, S373P, S375F, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, G496S, Q498R, N501Y, Y505H, T547K, D614G, H655Y, N679K, P681H, N764K, D796Y, N856K, Q954H, N969K, L981F. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BA.2" | str_starts(lineage_full, fixed("B.1.1.529.2."))) %$% 
+        lineage # sum BA.2 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.2/BA.2.x (includes BA.2.75 and other sublineages)",
+             reason =  "Southern Africa. Full Spike profile of BA.2: T19I, Δ24-26/A27S, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    n_uk_lineages_ba_3 <- sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BA.3" | str_starts(lineage_full, fixed("B.1.1.529.3."))) %$% 
+        lineage # sum BA.1 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.3/BA.3.x",
+             reason =  "Southern Africa. Full Spike profile of BA.3: A67V, Δ69-70, T95I, G142D/Δ143-145, Δ211/L212I, G339D, S371F, S373P, S375F, D405N, K417N, N440K, G446S, S477N, T478K, E484A, Q493R, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BA.4" | str_starts(lineage_full, fixed("B.1.1.529.4."))) %$% 
+        lineage # sum BA.1 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.4/BA.4.x",
+             reason =  "Southern Africa. Full Spike profile of BA.4:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BA.5" | str_starts(lineage_full, fixed("B.1.1.529.5."))) %$% 
+        lineage # sum BA.1 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.5/BA.5.x (includes BQ.1, BF.7 and other sublineages)",
+             reason =  "Southern Africa. Full Spike profile of BA.5:  T19I, Δ24-26/A27S, Δ69-70, G142D, V213G, G339D, S371F, S373P, S375F, T376A, D405N, K417N, N440K, L452R, S477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BA.2.75" | str_starts(lineage_full, fixed("B.1.1.529.2.75."))) %$% 
+        lineage # sum BA.2.75 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.2.75/BA.2.75.x",
+             reason =  "India. Full Spike profile of BA.2.75: T19I, Δ24-26/A27S, G142D, K147E, W152R, F157L, I210V, V213G, G257S, G339H, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, G446S, N460K, S477N, T478K, E484A, R493Q, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BQ.1" | str_starts(lineage_full, fixed("B.1.1.529.5.3.1.1.1.1.1."))) %$% 
+        lineage # sum BQ.1 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BQ.1/BQ.1.x",
+             reason =  "Nigeria. Descendant of BA.5. Full Spike profile of BQ.1: T19I, Δ24-26/A27S, Δ69-70, V213G, G339D, S371F, S373P, S375F, T376A, D405N, R408S, K417N, N440K, K444TL452R, N460, KS477N, T478K, E484A, F486V, Q498R, N501Y, Y505H, D614G, H655Y, N679K, P681H, N764K, D796Y, Q954H, N969K. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "CH.1.1" | str_starts(lineage_full, fixed("B.1.1.529.2.75.3.4.1.1.1.1."))) %$% 
+        lineage # sum CH.1.1 and sublineages
+    )
+    %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "CH.1.1/CH.1.1.x",
+             reason =  "Southeast Asia. Descendant of BA.2.75, defined by S:L452R. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "XBB.1.5" | str_starts(lineage_full, fixed("XBB.1.5."))) %$% 
+        lineage # sum XBB.1.5 and sublineages
+    )
+    %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "XBB.1.5/XBB.1.5.x",
+             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "XBB.1.16" | str_starts(lineage_full, fixed("XBB.1.16."))) %$% 
+        lineage # sum XBB.1.16 and sublineages
+    )
+    %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "XBB.1.16/XBB.1.16.x",
+             reason =  "Recombinant (XBB + additional mutations). WHO label: <strong>Omicron</strong>."),
+    
+      sum_lineages(
+        consortium_uk %>% 
+          distinct(lineage, lineage_full) %>% 
+          filter(lineage == "EG.5.1" | str_starts(lineage_full, fixed("XBB.1.9.2.5.1."))) %$% 
+          lineage # sum EG.5.1 and sublineages
+      ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "EG.5.1/EG.5.1.x",
+             reason =  "Recombinant (XBB + additional mutations). Alias of XBB.1.9.2.5.1, S:Q52H and S:F456L, China. WHO label: <strong>Omicron</strong>."),
+    
+    sum_lineages(
+      consortium_uk %>% 
+        distinct(lineage, lineage_full) %>% 
+        filter(lineage == "BA.2.86" | str_starts(lineage_full, fixed("B.1.1.529.2.86."))) %$% 
+        lineage # sum EG.5.1 and sublineages
+    ) %>% 
+      filter(variant == "sequences") %>%
+      summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
+      mutate(lineage = "BA.2.86/BA.2.86.x",
+             reason =  "Recombinant (XBB + additional mutations). Alias of XBB.1.9.2.5.1, S:Q52H and S:F456L, China. WHO label: <strong>Omicron</strong>.")
+  )%T>% write_rds(str_c("COG-UK/", params$dataset_date, "/sublineages_reasons.rds"))
+
+
+```
+
+## GISAID
 ```{r gisaid, eval=FALSE, include=TRUE}
 # GISAID Delta sequences
 gisaid <- 

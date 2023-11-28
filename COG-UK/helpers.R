@@ -368,3 +368,37 @@ lineage_plus_variant <- function(lineage, variant, variant2 = NULL, use_regex = 
       ~mutate(., variant = str_c(!!variant, " + ", !!variant2))
     ) 
 }
+
+# Format lineages table for display
+lineages_table <- function(summed_lineages){
+  summed_lineages %>% 
+    mutate(across(where(is.numeric), ~replace_na(.x, 0L))) %>% 
+    filter(n_sequences_UK > 0) %>%
+    relocate(n_sequences_UK, .after = reason) %>% 
+    mutate(`UK (%)` = n_sequences_UK / total_sequences,
+           .after = n_sequences_UK) %>%
+    relocate(n_sequences_28_UK, .after = `UK (%)`) %>% 
+    mutate(`UK 28 days (%)` = n_sequences_28_UK / total_sequences_28,
+           .after = n_sequences_28_UK) %>%
+    arrange(desc(n_sequences_28_UK), desc(n_sequences_UK), lineage) %>% 
+    relocate(n_sequences_28_England, .after = n_sequences_England) %>% 
+    relocate(n_sequences_28_Northern_Ireland, .after = n_sequences_Northern_Ireland) %>% 
+    relocate(n_sequences_28_Scotland, .after = n_sequences_Scotland) %>% 
+    relocate(n_sequences_28_Wales, .after = n_sequences_Wales) %>% 
+    rename(`Variant` = lineage,	
+           UK = n_sequences_UK,	 
+           `UK 28 days` = n_sequences_28_UK,                    
+           Description = reason, 
+           
+           England = n_sequences_England,
+           `Northern Ireland` = n_sequences_Northern_Ireland,
+           Scotland = n_sequences_Scotland,
+           Wales = n_sequences_Wales,
+           
+           `England 28 Days` = n_sequences_28_England,
+           `Northern Ireland 28 Days` = n_sequences_28_Northern_Ireland,
+           `Scotland 28 Days` = n_sequences_28_Scotland,
+           `Wales 28 Days` = n_sequences_28_Wales
+    ) 
+  
+}

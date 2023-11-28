@@ -22,13 +22,13 @@ get_dataset_date <- function(rollover = 7){
   max(dirs, na.rm = TRUE)
 }
 
-# Dataset directories are named according to date e.g. "2021-11-24".
+# Dataset directories are named according to date e.g. "2023-11-24".
 # if after midnight, use yesterday
 # else before midnight, use 2 days ago
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2023-08-16")
+# dataset_date <- as.Date("2023-11-28")
 
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates) # TODO remove dependency
@@ -52,6 +52,7 @@ lineages_days_uk_all <- read_rds(str_c(dataset_date, "/lineages_days_uk_all.rds"
 therapeutics <- read_rds(str_c(dataset_date, "/therapeutics.rds")) # antiviral drug resistance mutations
 spike_tab <- read_rds(str_c(dataset_date, "/spike_table.rds"))
 database_insertions <- read_rds(str_c(dataset_date, "/database_insertions.rds"))
+sublineages_reasons <- read_rds(str_c(dataset_date, "/sublineages_reasons.rds")) # hierarchical counts of lineages including sublineages with reasons
 
 source("helpers.R")
 
@@ -165,8 +166,7 @@ NSP3: Gamma + I441V; NSP4: A446V; ORF3a: S216L; ORF8: G8*STOP; N: TRS insertion.
   "BA.2.75.5" = "USA, England and Denmark. WHO label: <strong>Omicron</strong>.",
   "BA.2.75.2" = "Asia and Australia. WHO label: <strong>Omicron</strong>.",
   "XBB.1.9.1" = "Indonesia/Singapore/Malaysia/England. Mutation S:F486P. WHO label: <strong>Omicron</strong>.",
-  "XBB.1.9.2" = "Indonesia/Singapore. Mutation S:F486P. WHO label: <strong>Omicron</strong>.",
-  "BA.2.86" = "Denmark, USA, Israel. WHO label: <strong>Omicron</strong>."
+  "XBB.1.9.2" = "Indonesia/Singapore. Mutation S:F486P. WHO label: <strong>Omicron</strong>."
   ) %>% 
   enframe("lineage", "reason")
 
@@ -188,8 +188,6 @@ lineages_recomb <-
   ) %>% 
   enframe("lineage", "reason")
 
-lineages_t2 <- c(vui_voc %$% levels(lineage), lineages_t3$lineage) %>% unique # lineages for counting
-
 sum_lineages <- function(lineages, use_regex = FALSE){
   left_join(
     sum_key_mutations_by_lineage_uk(lineages, use_regex = use_regex),
@@ -200,88 +198,10 @@ sum_lineages <- function(lineages, use_regex = FALSE){
     mutate(across(where(is.numeric), ~replace_na(.x, 0L)))
 }
 
-# TODO precompute and include lineage/mutation combinations
-## count VOC/VUI
-n_uk_lineages_all <- sum_lineages(lineages_t2) # count non-omicron VOC/VUI
+lineages_t2 <- c(vui_voc %$% levels(lineage), lineages_t3$lineage) %>% unique # lineages for counting
+n_uk_lineages_all <- sum_lineages(lineages_t2) # count non-omicron/recombinant VOC/VUI
 
-# TODO refactor
-# count Omicron sublineages by filtering full lineage names to include renamed sublineages
-n_uk_lineages_ba_1 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "BA.1" | str_starts(lineage_full, fixed("B.1.1.529.1."))) %$% 
-    lineage # sum BA.1 and sublineages
-)
-
-n_uk_lineages_ba_2 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "BA.2" | str_starts(lineage_full, fixed("B.1.1.529.2."))) %$% 
-    lineage # sum BA.2 and sublineages
-)
-
-n_uk_lineages_ba_3 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "BA.3" | str_starts(lineage_full, fixed("B.1.1.529.3."))) %$% 
-    lineage # sum BA.1 and sublineages
-)
-n_uk_lineages_ba_4 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "BA.4" | str_starts(lineage_full, fixed("B.1.1.529.4."))) %$% 
-    lineage # sum BA.1 and sublineages
-)
-
-n_uk_lineages_ba_5 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "BA.5" | str_starts(lineage_full, fixed("B.1.1.529.5."))) %$% 
-    lineage # sum BA.1 and sublineages
-)
-
-n_uk_lineages_ba_2_75 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "BA.2.75" | str_starts(lineage_full, fixed("B.1.1.529.2.75."))) %$% 
-    lineage # sum BA.2.75 and sublineages
-)
-
-n_uk_lineages_bq_1 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "BQ.1" | str_starts(lineage_full, fixed("B.1.1.529.5.3.1.1.1.1.1."))) %$% 
-    lineage # sum BQ.1 and sublineages
-)
-
-n_uk_lineages_ch_1_1 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "CH.1.1" | str_starts(lineage_full, fixed("B.1.1.529.2.75.3.4.1.1.1.1."))) %$% 
-    lineage # sum CH.1.1 and sublineages
-)
-
-n_uk_lineages_xbb_1_5 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "XBB.1.5" | str_starts(lineage_full, fixed("XBB.1.5."))) %$% 
-    lineage # sum XBB.1.5 and sublineages
-)
-
-n_uk_lineages_xbb_1_16 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "XBB.1.16" | str_starts(lineage_full, fixed("XBB.1.16."))) %$% 
-    lineage # sum XBB.1.16 and sublineages
-)
-
-n_uk_lineages_eg_5_1 <- sum_lineages(
-  consortium_uk %>% 
-    distinct(lineage, lineage_full) %>% 
-    filter(lineage == "EG.5.1" | str_starts(lineage_full, fixed("XBB.1.9.2.5.1."))) %$% 
-    lineage # sum EG.5.1 and sublineages
-)
-
+# Count recombinants
 n_uk_recombinants <- sum_lineages(
   consortium_uk %>% 
     distinct(lineage) %>% 
@@ -289,6 +209,32 @@ n_uk_recombinants <- sum_lineages(
     lineage
 ) %>% 
   bind_rows(n_uk_lineages_all %>% slice(0)) # dirty hack to ensure all nations columns are included for missing values
+
+# Format recombinant table for display
+table_recombinants <-
+  n_uk_recombinants %>% 
+    filter(variant == "sequences") %>% 
+    left_join(lineages_recomb) %>% # descriptions 
+    select(-variant) %>% 
+    relocate(reason, .after = lineage) %>% 
+    lineages_table
+
+# Lineage table for display
+bind_table_3 <- 
+  bind_rows(
+    n_uk_lineages_all %>% 
+      filter(lineage %in% lineages_t3$lineage & variant == "sequences") %>% 
+      inner_join(lineages_t3) %>% # join descriptions
+      select(-variant) %>% 
+      relocate(reason, .after = lineage),
+    
+    n_uk_lineages_all %>%
+      filter(variant == "E484K" & lineage == "B.1.324.1") %>%
+      mutate(lineage = str_c(lineage, " + ", variant), .keep = "unused")  %>%
+      mutate(reason = "As B.1.324.1, with the addition of E484K."), # zero count - not displayed
+    
+    sublineages_reasons
+  )
 
 # remove VOCs/VUIs with zero counts
 vui_voc %<>% 
