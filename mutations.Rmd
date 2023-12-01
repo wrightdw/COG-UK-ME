@@ -1195,6 +1195,33 @@ sublineage_regex <- function(lineage){
     paste0("^", ., "\\.")
 }
 
+sum_key_mutations_uk <- function(..., date_from = NULL){
+  if(!is_null(date_from)){
+    date_from %<>% ymd()
+  }
+  
+  if(is.Date(date_from)){
+    consortium_uk %<>% filter(sample_date >= date_from)
+  }
+  
+  consortium_uk %>%
+    group_by(...) %>%
+    summarise(sequences = n(),
+              D614G = sum(d614g == "G"),
+              A222V = sum(a222v == "V"),
+              N439K = sum(n439k == "K"),
+              N501Y = sum(n501y == "Y"),
+              Y453F = sum(y453f == "F"),
+              E484K = sum(e484k == "K"),
+              `∆69-70` = sum(del_21765_6 == "del"),
+              `N439K + ∆69-70` = sum(n439k == "K" & del_21765_6 == "del"),
+              `N501Y + ∆69-70` = sum(n501y == "Y" & del_21765_6 == "del"),
+              `Y453F + ∆69-70` = sum(y453f == "F" & del_21765_6 == "del"),
+              `N501Y + E484K` = sum(n501y == "Y" & e484k == "K"),
+              .groups = "keep"
+    )
+}
+
 # TODO replace deprecated when() with if()
 # TODO replace superseded summarise_all()
 sum_key_mutations_by_lineage_uk <- function(lineages = NULL, date_from = NULL, use_regex = FALSE){
