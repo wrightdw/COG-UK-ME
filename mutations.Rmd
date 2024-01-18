@@ -1398,11 +1398,9 @@ sublineages_reasons <-
     ) %>% 
       filter(variant == "sequences") %>%
       summarise(across(where(is.numeric), ~ sum(., is.na(.), 0))) %>% 
-      mutate(lineage = "BA.2.86/BA.2.86.x",
-             reason =  "Recombinant (XBB + additional mutations). Alias of XBB.1.9.2.5.1, S:Q52H and S:F456L, China. WHO label: <strong>Omicron</strong>.")
+      mutate(lineage = "BA.2.86/JN.x",
+             reason =  "Alias of B.1.1.529.2.86. Denmark and Israel. WHO label: <strong>Omicron</strong>. Includes aliased JN.x sublineages of BA.2.86.")
   )%T>% write_rds(str_c("COG-UK/", params$dataset_date, "/sublineages_reasons.rds"))
-
-
 ```
 
 ## GISAID
