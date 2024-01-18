@@ -37,21 +37,23 @@ dashboardPage(
         sidebarMenu(
             id = "sidebar_menu",
             menuItem("VOCs/VUIs in the UK", tabName = "vui_voc", selected = TRUE, icon = icon("viruses")),
-            menuItem("VOC Spike Structures", tabName = "strucure_voc", icon = icon("virus")),
             menuItem("Variant Assessment", tabName = "evol_selection", icon = icon("clipboard-check")),
-            menuItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
-            menuItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
             menuItem("T Cell Epitope Mutations", tabName = "t_cell", icon = icon("disease")),
             menuItem("T Cell Epitope Browser", tabName = "t_cell_browser", icon = icon("bars-staggered")),
-            # menuItem("Mutation Counts", tabName = "report", icon = icon("virus")),
             menuItem("Mutations by Week", icon = icon("eye"), tabName = "dashboard"),
             menuItem("Spike Profiles", icon = icon("chart-line"), tabName = "spike_profiles"),
-            menuItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
             menuItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
-            # menuItem("Geographical Distribution", tabName = "map", icon = icon("map")),
             menuItem("Omicron and mAb", tabName = "omicron", icon = icon("disease")),
             menuItem(" Recombinants", tabName = "recombinants", icon = icon("mixer")),
-            menuItem("About", tabName = "about", icon = icon("info-circle"))
+            menuItem("About", tabName = "about", icon = icon("info-circle")),
+            menuItem("Archive", icon = icon("caret-down"), 
+                     menuSubItem("VOC Spike Structures", tabName = "strucure_voc", icon = icon("virus")),
+                     menuSubItem("Antigenic Mutations", tabName = "immunology", icon = icon("shield-virus")),
+                     menuSubItem("VOCs/VUIs + Antigenicity", tabName = "figure_1", icon = icon("fire-alt")),
+                     menuSubItem("Drug Resistance", icon = icon("prescription-bottle-alt"), tabName = "therapeutics"),
+                     menuSubItem("Ronapreve",  tabName = "ronapreve", icon = icon("pills")),
+                     menuSubItem("Omicron and mAb", tabName = "omicron", icon = icon("disease"))
+           )
         ),
         
         conditionalPanel(
