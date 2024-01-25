@@ -721,7 +721,7 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                   "BA.1" = "BA.1 (Omicron)",
-                                  "BA.2" = "BA.2 (Omicron)",
+                                  "BA.2" = "BA.2 minus BA.2.86 (Omicron)",
                                   "BA.4" = "BA.4 (Omicron)",
                                   "BA.5" = "BA.5 minus BQ.1 (Omicron)",
                                   
@@ -740,6 +740,7 @@ shinyServer(function(input, output, session) {
                                   "XBB.1.9.1" = "XBB.1.9.1 (Omicron)",
                                   "XBB.1.9.2" = "XBB.1.9.2 (Omicron)",
                                   "EG.5.1" = "EG.5.1 (Omicron)",
+                                  "BA.2.86" = "BA.2.86 (Omicron)",
                                   # "Unassigned" = "Unassigned (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
@@ -874,7 +875,7 @@ shinyServer(function(input, output, session) {
                                   "Delta_minus_AY.4" = "Other Delta")) %>%
           mutate(lineage = recode_factor(lineage, # recode WHO Greek display names as factor and order levels to define colour/legend order
                                          "BA.1" = "BA.1 (Omicron)",
-                                         "BA.2" = "BA.2 (Omicron)",
+                                         "BA.2" = "BA.2 minus BA.2.86 (Omicron)",
                                          "BA.4" = "BA.4 (Omicron)",
                                          "BA.5" = "BA.5 minus BQ.1 (Omicron)",
                                          
@@ -893,6 +894,7 @@ shinyServer(function(input, output, session) {
                                          "XBB.1.9.1" = "XBB.1.9.1 (Omicron)",
                                          "XBB.1.9.2" = "XBB.1.9.2 (Omicron)",
                                          "EG.5.1" = "EG.5.1 (Omicron)",
+                                         "BA.2.86" = "BA.2.86 (Omicron)",
                                          # "Unassigned" = "Unassigned (Omicron)",
                                          "Other" = "Other"
           )) %>% 
