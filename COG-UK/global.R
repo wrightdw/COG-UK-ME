@@ -28,7 +28,7 @@ get_dataset_date <- function(rollover = 7){
 dataset_date <- get_dataset_date(0)
 
 # Alternatively, set date here instead to switch to specific dataset.
-# dataset_date <- as.Date("2024-01-24")
+# dataset_date <- as.Date("2024-03-20")
 
 consortium_uk <- str_c(dataset_date, "/consortium_uk.rds") %>% read_rds
 deletions <- str_c(dataset_date, "/deletions.rds") %>% read_rds # deletions (genomic coordinates) # TODO remove dependency
@@ -258,7 +258,9 @@ vui_voc_lineages <-
               "XBB.1.9.1 (Omicron)" = "XBB.1.9.1",
               "XBB.1.9.2 (Omicron)" = "XBB.1.9.2", 
               "EG.5.1 (Omicron)" = "EG.5.1",
-              "BA.2.86 (Omicron)" = "BA.2.86")) # special cases, add only to lineage bar chart
+              "BA.2.86 (Omicron)" = "BA.2.86",
+              "JN.1 (Omicron)" = "JN.1")
+         ) # special cases, add only to lineage bar chart
 
 geo_all <- str_c(dataset_date, "/geo_all.rds") %>% read_rds # geographical NUTS1 counts
 mapdata <- read_rds("mapdata.rds") # UK map NUTS1 topology as dataframe

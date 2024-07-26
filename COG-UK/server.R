@@ -740,7 +740,8 @@ shinyServer(function(input, output, session) {
                                   "XBB.1.9.1" = "XBB.1.9.1 (Omicron)",
                                   "XBB.1.9.2" = "XBB.1.9.2 (Omicron)",
                                   "EG.5.1" = "EG.5.1 (Omicron)",
-                                  "BA.2.86" = "BA.2.86 (Omicron)",
+                                  "BA.2.86" = "BA.2.86 minus JN.1 (Omicron)",
+                                  "JN.1" = "JN.1 (Omicron)",
                                   # "Unassigned" = "Unassigned (Omicron)",
                                   "Other" = "Other"
                                   )) %>% 
@@ -894,7 +895,8 @@ shinyServer(function(input, output, session) {
                                          "XBB.1.9.1" = "XBB.1.9.1 (Omicron)",
                                          "XBB.1.9.2" = "XBB.1.9.2 (Omicron)",
                                          "EG.5.1" = "EG.5.1 (Omicron)",
-                                         "BA.2.86" = "BA.2.86 (Omicron)",
+                                         "BA.2.86" = "BA.2.86 minus JN.1 (Omicron)",
+                                         "JN.1" = "JN.1 (Omicron)",
                                          # "Unassigned" = "Unassigned (Omicron)",
                                          "Other" = "Other"
           )) %>% 
